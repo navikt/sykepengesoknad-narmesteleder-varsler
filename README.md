@@ -1,1 +1,1 @@
-# sykepengesoknad-nermeste-leder-varsler
+# sykepengesoknad-narmesteleder-varsler

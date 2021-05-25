@@ -1,1 +1,1 @@
-rootProject.name = "sykepengesoknad-nermeste-leder-varsler"
+rootProject.name = "sykepengesoknad-narmesteleder-varsler"
