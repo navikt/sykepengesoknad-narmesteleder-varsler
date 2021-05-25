@@ -6,6 +6,4 @@ import org.springframework.boot.runApplication
 @SpringBootApplication
 class SykepengesoknadNermesteLederVarslerApplication
 
-fun main(args: Array<String>) {
-	runApplication<SykepengesoknadNermesteLederVarslerApplication>(*args)
-}
+fun main(args: Array<String>) { runApplication<SykepengesoknadNermesteLederVarslerApplication>(*args) }
