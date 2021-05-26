@@ -61,15 +61,15 @@ tasks {
 		}
 	}
 
-}
-
-tasks.withType<KotlinCompile> {
-	kotlinOptions {
-		freeCompilerArgs = listOf("-Xjsr305=strict")
-		jvmTarget = "11"
+	withType<KotlinCompile> {
+		kotlinOptions {
+			freeCompilerArgs = listOf("-Xjsr305=strict")
+			jvmTarget = "11"
+		}
 	}
-}
 
-tasks.withType<Test> {
-	useJUnitPlatform()
+	withType<Test> {
+		useJUnitPlatform()
+	}
+
 }
