@@ -24,7 +24,7 @@ repositories {
 }
 
 dependencies {
-	ktlint("com.pinterest:ktlint:0.40.0")
+	ktlint("com.pinterest:ktlint:0.41.0")
 
 	implementation("org.springframework.boot:spring-boot-starter")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
