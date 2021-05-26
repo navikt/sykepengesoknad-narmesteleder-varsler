@@ -1,0 +1,48 @@
+apiVersion: "nais.io/v1alpha1"
+kind: "Application"
+metadata:
+  name: sykepengesoknad-narmesteleder-varsler
+  namespace: flex
+  labels:
+    team: flex
+spec:
+  image: {{ image }}
+  replicas:
+    min: 2
+    max: 2
+    cpuThresholdPercentage: 90
+  port: 8080
+  liveness:
+    path: /is_alive
+    initialDelay: 10
+    timeout: 1
+    periodSeconds: 10
+    failureThreshold: 5
+  readiness:
+    path: /is_ready
+    initialDelay: 10
+    periodSeconds: 5
+    timeout: 3
+  leaderElection: true
+  prometheus:
+    enabled: true
+    path: /prometheus
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 400m
+      memory: 768Mi
+
+  env:
+    - name: KAFKA_BOOTSTRAP_SERVERS_URL
+      value: SASL_SSL://a01apvl00145.adeo.no:8443,SASL_SSL://a01apvl00146.adeo.no:8443,SASL_SSL://a01apvl00147.adeo.no:8443,SASL_SSL://a01apvl00149.adeo.no:8443
+    - name: VEILEDER_WELLKNOWN_URI
+      value: "https://login.microsoftonline.com/navno.onmicrosoft.com/.well-known/openid-configuration"
+    - name: VEILEDER_EXPECTED_AUDIENCE
+      value: "9b4e07a3-4f4c-4bab-b866-87f62dff480d,ffca591d-dfc9-4ecf-9ac2-050d75b39fc0"
+    - name: KAFKA_SCHEMA_REGISTRY_URL
+      value: https://kafka-schema-registry.nais.adeo.no
+    - name: API_GATEWAY_URL
+      value: https://api-gw.oera.no
