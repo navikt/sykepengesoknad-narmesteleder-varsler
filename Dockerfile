@@ -1,3 +1,4 @@
 FROM navikt/java:16
-COPY build/libs/*.jar app.jar
-ENV JAVA_OPTS='-Dlogback.configurationFile=logback.xml'
+COPY build/libs/app.jar /app/
+
+ENV JAVA_OPTS="-Djava.security.egd=file:/dev/./urandom"
