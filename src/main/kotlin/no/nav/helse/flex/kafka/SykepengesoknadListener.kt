@@ -10,8 +10,7 @@ import org.springframework.kafka.support.Acknowledgment
 import org.springframework.stereotype.Component
 
 @Component
-class SykepengesoknadListener(
-) {
+class SykepengesoknadListener {
 
     private val log = logger()
 
