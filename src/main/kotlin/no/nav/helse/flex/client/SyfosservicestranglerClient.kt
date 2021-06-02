@@ -34,6 +34,7 @@ class SyfoservicestranglerClient(
                     HttpEntity<Any>(headers),
                     OpprettHendelseResponse::class.java
                 )
+            log.info("result er: ${result.body}")
 
             if (result.statusCode != OK) {
                 val message = "Kall mot syfoservicestrangler feiler med HTTP-" + result.statusCode
