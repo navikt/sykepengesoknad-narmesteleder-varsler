@@ -17,7 +17,7 @@ class VerselService(
 
     fun opprettVarsel(soknadString: String) {
         val soknad = soknadString.tilSykepengesoknadDTO()
-        log.debug("Mottok soknad ${soknad.id}")
+        log.info("Mottok soknad ${soknad.id}")
 
         syfoservicestranglerClient.opprettOppgave(
             OpprettHendelseRequest(
