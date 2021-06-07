@@ -22,7 +22,7 @@ class VerselService(
         syfoservicestranglerClient.opprettOppgave(
             OpprettHendelseRequest(
                 soknadId = soknad.id,
-                aktorId = "", // TODO: trengs det?
+                aktorId = null, // TODO: trengs det?
                 orgnummer = soknad.arbeidsgiver?.orgnummer,
                 type = soknad.type.name
             )
