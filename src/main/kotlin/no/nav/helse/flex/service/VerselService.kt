@@ -10,7 +10,8 @@ import org.springframework.stereotype.Service
 
 @Service
 class VerselService(
-    val syfoservicestranglerClient: SyfoservicestranglerClient
+    val syfoservicestranglerClient: SyfoservicestranglerClient,
+    val identService: IdentService
 ) {
 
     val log = logger()
@@ -19,10 +20,12 @@ class VerselService(
         val soknad = soknadString.tilSykepengesoknadDTO()
         log.debug("Mottok soknad ${soknad.id}")
 
+        val aktorId = identService.hentAktorIdForFnr(soknad.fnr)
+
         syfoservicestranglerClient.opprettOppgave(
             OpprettHendelseRequest(
                 soknadId = soknad.id,
-                aktorId = null, // TODO: trengs det?
+                aktorId = aktorId,
                 orgnummer = soknad.arbeidsgiver?.orgnummer,
                 type = soknad.type.name
             )
