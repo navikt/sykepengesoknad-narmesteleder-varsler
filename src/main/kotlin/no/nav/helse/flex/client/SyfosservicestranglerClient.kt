@@ -42,7 +42,7 @@ class SyfoservicestranglerClient(
             }
             result.body
         } catch (ex: HttpClientErrorException.BadRequest) {
-            throw OppgaveBleIkkeOpprettetException("Kunne ikke opprette oppgave for søknad med id: ${oppgave.soknadId}")
+            throw OppgaveBleIkkeOpprettetException("Kunne ikke opprette oppgave for søknad med id: ${oppgave.soknadId}, $ex")
         }
     }
 }
