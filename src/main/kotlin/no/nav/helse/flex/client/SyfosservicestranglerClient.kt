@@ -31,7 +31,7 @@ class SyfoservicestranglerClient(
                 .exchange(
                     uriBuilder.toUriString(),
                     HttpMethod.POST,
-                    HttpEntity<Any>(headers),
+                    HttpEntity<Any>(oppgave, headers),
                     OpprettHendelseResponse::class.java
                 )
 
