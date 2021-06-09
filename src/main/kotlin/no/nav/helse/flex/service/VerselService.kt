@@ -25,10 +25,13 @@ class VerselService(
 
         val aktorId = identService.hentAktorIdForFnr(soknad.fnr)
 
-        if ((SoknadstypeDTO.ARBEIDSTAKERE == soknad.type ||
-                (SoknadstypeDTO.BEHANDLINGSDAGER == soknad.type && soknad.arbeidssituasjon == ArbeidssituasjonDTO.ARBEIDSTAKER))
-            && SoknadsstatusDTO.SENDT == soknad.status
-            && soknad.sendtArbeidsgiver != null) {
+        if ((
+            SoknadstypeDTO.ARBEIDSTAKERE == soknad.type ||
+                (SoknadstypeDTO.BEHANDLINGSDAGER == soknad.type && soknad.arbeidssituasjon == ArbeidssituasjonDTO.ARBEIDSTAKER)
+            ) &&
+            SoknadsstatusDTO.SENDT == soknad.status &&
+            soknad.sendtArbeidsgiver != null
+        ) {
             syfoservicestranglerClient.opprettOppgave(
                 OpprettHendelseRequest(
                     soknadId = soknad.id,
