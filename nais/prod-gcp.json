@@ -4,13 +4,15 @@
   "team": "flex",
   "kafkaPool": "nav-prod",
   "externalHosts": [
-    "flex-fss-proxy.prod-fss-pub.nais.io"
+    "flex-fss-proxy.prod-fss-pub.nais.io",
+    "pdl-api.prod-fss-pub.nais.io"
   ],
   "pdl-cluster": "prod-fss",
   "azureTenant": "nav.no",
   "env": {
     "FLEX_FSS_PROXY_AAD_CLIENT_ID": "prod-fss.flex.flex-fss-proxy",
     "FLEX_FSS_PROXY_URL": "https://flex-fss-proxy.prod-fss-pub.nais.io",
+    "PDL_BASE_URL": "https://pdl-api.prod-fss-pub.nais.io",
     "PDL_API_AAD_CLIENT_ID": "prod-fss.pdl.pdl-api"
   }
 }
