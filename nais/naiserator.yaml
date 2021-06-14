@@ -38,7 +38,6 @@ spec:
       external:
       {{#each externalHosts as |url|}}
           - host: {{url}}
-          - host: {{}}
       {{/each}}
   kafka:
     pool: {{kafkaPool}}
