@@ -34,5 +34,3 @@ data class ErrorExtension(
     val code: String?,
     val classification: String?
 )
-
-

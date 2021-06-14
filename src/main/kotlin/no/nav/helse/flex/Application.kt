@@ -25,4 +25,3 @@ val objectMapper: ObjectMapper = ObjectMapper().apply {
 }
 
 fun Any.serialisertTilString(): String = objectMapper.writeValueAsString(this)
-
