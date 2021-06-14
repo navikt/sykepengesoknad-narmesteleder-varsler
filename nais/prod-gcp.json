@@ -6,6 +6,7 @@
   "externalHosts": [
     "flex-fss-proxy.prod-fss-pub.nais.io"
   ],
+  "pdl-cluster": "prod-fss",
   "azureTenant": "nav.no",
   "env": {
     "FLEX_FSS_PROXY_AAD_CLIENT_ID": "prod-fss.flex.flex-fss-proxy",

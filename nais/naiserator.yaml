@@ -35,6 +35,10 @@ spec:
       memory: 400Mi
   accessPolicy:
     outbound:
+      rules:
+        - application: pdl-api
+          namespace: pdl
+          cluster: {{pdl-cluster}}
       external:
       {{#each externalHosts as |url|}}
           - host: {{url}}
