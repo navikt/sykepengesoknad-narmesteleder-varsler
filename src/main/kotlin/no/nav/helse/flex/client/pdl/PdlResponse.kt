@@ -1,9 +1,10 @@
 package no.nav.helse.flex.client.pdl
 
 const val AKTORID = "AKTORID"
+const val FOLKEREGISTERIDENT = "FOLKEREGISTERIDENT"
 
-data class GetPersonResponse(
-    val data: ResponseData,
+data class HentIdenterResponse(
+    val data: HentIdenterResponseData,
     val errors: List<ResponseError>?
 )
 
@@ -14,7 +15,7 @@ data class ResponseError(
     val extensions: ErrorExtension?
 )
 
-data class ResponseData(
+data class HentIdenterResponseData(
     val hentIdenter: HentIdenter? = null,
 )
 
@@ -33,3 +34,5 @@ data class ErrorExtension(
     val code: String?,
     val classification: String?
 )
+
+

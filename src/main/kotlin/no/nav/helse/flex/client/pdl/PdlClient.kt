@@ -1,11 +1,9 @@
 package no.nav.helse.flex.client.pdl
 
 import com.fasterxml.jackson.core.JsonProcessingException
-import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
+import no.nav.helse.flex.objectMapper
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.*
 import org.springframework.retry.annotation.Retryable
@@ -15,18 +13,14 @@ import java.util.*
 
 @Component
 class PdlClient(
-    private val flexFssProxyRestTemplate: RestTemplate,
-    @Value("\${flex.fss.proxy.url}") private val flexFssProxyUrl: String
+    @Value("\${pdl.api.url}")
+    private val pdlApiUrl: String,
+    private val pdlRestTemplate: RestTemplate
 ) {
 
     private val TEMA = "Tema"
     private val TEMA_SYK = "SYK"
     private val IDENT = "ident"
-    private val objectMapper = ObjectMapper()
-        .registerModule(JavaTimeModule())
-        .registerModule(KotlinModule())
-        .configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE, true)
-        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
     private val HENT_PERSON_QUERY =
         """
@@ -41,20 +35,25 @@ query(${"$"}ident: ID!){
 """
 
     @Retryable(exclude = [FunctionalPdlError::class])
-    fun hentPerson(ident: String): ResponseData {
+    fun hentPerson(ident: String): HentIdenterResponseData {
 
         val graphQLRequest = GraphQLRequest(
             query = HENT_PERSON_QUERY,
             variables = Collections.singletonMap(IDENT, ident)
         )
 
-        val responseEntity = flexFssProxyRestTemplate.exchange("$flexFssProxyUrl/api/pdl/graphql", HttpMethod.POST, HttpEntity(requestToJson(graphQLRequest), createHeaderWithTema()), String::class.java)
+        val responseEntity = pdlRestTemplate.exchange(
+            "$pdlApiUrl/graphql",
+            HttpMethod.POST,
+            HttpEntity(requestToJson(graphQLRequest), createHeaderWithTema()),
+            String::class.java
+        )
 
         if (responseEntity.statusCode != HttpStatus.OK) {
             throw RuntimeException("PDL svarer med status ${responseEntity.statusCode} - ${responseEntity.body}")
         }
 
-        val parsedResponse: GetPersonResponse? = responseEntity.body?.let { objectMapper.readValue(it) }
+        val parsedResponse: HentIdenterResponse? = responseEntity.body?.let { objectMapper.readValue(it) }
 
         parsedResponse?.data?.let {
             return it
@@ -82,7 +81,7 @@ query(${"$"}ident: ID!){
         }
     }
 
-    private fun GetPersonResponse?.hentErrors(): String? {
+    private fun HentIdenterResponse?.hentErrors(): String? {
         return this?.errors?.map { it.message }?.joinToString(" - ")
     }
 

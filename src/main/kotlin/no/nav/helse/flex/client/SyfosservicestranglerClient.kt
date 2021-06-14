@@ -1,6 +1,7 @@
 package no.nav.helse.flex.client
 
 import no.nav.helse.flex.logger
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
@@ -14,7 +15,7 @@ import org.springframework.web.util.UriComponentsBuilder
 
 @Component
 class SyfoservicestranglerClient(
-    private val syfoservicestranglerRestTemplate: RestTemplate,
+    @Qualifier("flexFssProxyRestTemplate")private val syfoservicestranglerRestTemplate: RestTemplate,
     @Value("\${flex.fss.proxy.url}") private val url: String
 ) {
 

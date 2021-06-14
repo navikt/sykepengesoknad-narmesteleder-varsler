@@ -9,6 +9,7 @@
   "azureTenant": "nav.no",
   "env": {
     "FLEX_FSS_PROXY_AAD_CLIENT_ID": "prod-fss.flex.flex-fss-proxy",
-    "FLEX_FSS_PROXY_URL": "https://flex-fss-proxy.prod-fss-pub.nais.io"
+    "FLEX_FSS_PROXY_URL": "https://flex-fss-proxy.prod-fss-pub.nais.io",
+    "PDL_API_AAD_CLIENT_ID": "prod-fss.pdl.pdl-api"
   }
 }
