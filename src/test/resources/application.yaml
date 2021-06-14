@@ -49,4 +49,4 @@ aiven-kafka:
   auto-offset-reset: latest #TODO none
   security-protocol: SSL
 
-pdl.api.url: "http://pdl-api.pdl"
+PDL_BASE_URL: "https://pdl-api.dev-fss-pub.nais.io"
