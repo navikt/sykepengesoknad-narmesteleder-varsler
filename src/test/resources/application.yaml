@@ -35,3 +35,18 @@ no.nav.security.jwt:
           client-id: client-id
           client-secret: secretzz
           client-auth-method: client_secret_basic
+
+      pdl-api-client-credentials:
+        token-endpoint-url: http://localhost:${mock-oauth2-server.port}/azureator/token
+        grant-type: client_credentials
+        scope: pdl-api
+        authentication:
+          client-id: client-id
+          client-secret: secretzz
+          client-auth-method: client_secret_basic
+
+aiven-kafka:
+  auto-offset-reset: latest #TODO none
+  security-protocol: SSL
+
+PDL_BASE_URL: "https://pdl-api.dev-fss-pub.nais.io"
