@@ -1,7 +1,7 @@
 package no.nav.helse.flex.kafka
 
 import no.nav.helse.flex.logger
-import no.nav.helse.flex.service.VerselService
+import no.nav.helse.flex.service.BrukerOppgaveService
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.springframework.context.event.EventListener
 import org.springframework.kafka.annotation.KafkaListener
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class SykepengesoknadListener(
-    private val varselService: VerselService
+    private val varselService: BrukerOppgaveService
 ) {
 
     private val log = logger()

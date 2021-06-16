@@ -12,7 +12,7 @@ import no.nav.syfo.kafka.felles.SykepengesoknadDTO
 import org.springframework.stereotype.Service
 
 @Service
-class VerselService(
+class BrukerOppgaveService(
     val syfoservicestranglerClient: SyfoservicestranglerClient,
     val identService: IdentService
 ) {

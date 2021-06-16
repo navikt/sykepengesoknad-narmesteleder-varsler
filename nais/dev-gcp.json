@@ -7,7 +7,6 @@
     "flex-fss-proxy.dev-fss-pub.nais.io",
     "pdl-api.dev-fss-pub.nais.io"
   ],
-  "pdl-cluster": "dev-fss",
   "azureTenant": "trygdeetaten.no",
   "env": {
     "FLEX_FSS_PROXY_AAD_CLIENT_ID": "dev-fss.flex.flex-fss-proxy",
