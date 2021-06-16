@@ -19,7 +19,6 @@ class SykepengesoknadListener(
 
     @KafkaListener(topics = [FLEX_SYKEPENGESOKNAD_TOPIC])
     fun listen(cr: ConsumerRecord<String, String>, acknowledgment: Acknowledgment) {
-        if (cr.key() == "11290bfa-2404-483d-af13-8d00b3cdd283") return
         try {
             varselService.opprettVarsel(cr.value())
             acknowledgment.acknowledge()

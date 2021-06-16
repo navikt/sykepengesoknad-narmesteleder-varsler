@@ -22,7 +22,7 @@ class PdlClient(
     private val TEMA_SYK = "SYK"
     private val IDENT = "ident"
 
-    private val HENT_PERSON_QUERY =
+    private val HENT_IDENTER_QUERY =
         """
 query(${"$"}ident: ID!){
   hentIdenter(ident: ${"$"}ident, historikk: false) {
@@ -35,11 +35,11 @@ query(${"$"}ident: ID!){
 """
 
     @Retryable(exclude = [FunctionalPdlError::class])
-    fun hentPerson(ident: String): HentIdenterResponseData {
+    fun hentIdenter(norskIdentitetsnummer: String): HentIdenterResponseData {
 
         val graphQLRequest = GraphQLRequest(
-            query = HENT_PERSON_QUERY,
-            variables = Collections.singletonMap(IDENT, ident)
+            query = HENT_IDENTER_QUERY,
+            variables = Collections.singletonMap(IDENT, norskIdentitetsnummer)
         )
 
         val responseEntity = pdlRestTemplate.exchange(
