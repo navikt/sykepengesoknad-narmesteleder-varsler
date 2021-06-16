@@ -1,19 +1,9 @@
 package no.nav.helse.flex.testUtils
 
-import no.nav.helse.flex.Application
-import no.nav.helse.flex.client.OpprettHendelseResponse
 import no.nav.helse.flex.client.pdl.*
-import no.nav.helse.flex.objectMapper
-import no.nav.syfo.kafka.felles.SykepengesoknadDTO
 import org.springframework.http.HttpHeaders
 import org.springframework.http.client.ClientHttpRequest
 import org.springframework.test.web.client.RequestMatcher
-
-val mockSykepengesoknadDTO: SykepengesoknadDTO =
-    objectMapper.readValue(
-        Application::class.java.getResource("/arbeidstakersoknad.json"),
-        SykepengesoknadDTO::class.java
-    )
 
 fun harBearerToken(): RequestMatcher {
     return RequestMatcher { request: ClientHttpRequest ->
@@ -35,11 +25,5 @@ fun getIdentResponse(identer: List<PdlIdent>): HentIdenterResponse {
                 identer
             )
         )
-    )
-}
-
-fun getOpprettHendelseResponse(): OpprettHendelseResponse {
-    return OpprettHendelseResponse(
-        melding = "Opprettet bruker oppgave"
     )
 }
