@@ -41,7 +41,6 @@ class PdlClientTest : AbstractContainerBaseTest() {
         pdlMockServer = createServer(pdlRestTemplate)
     }
 
-
     @Test
     fun `Vi tester happycase`() {
 
@@ -62,7 +61,8 @@ class PdlClientTest : AbstractContainerBaseTest() {
             .andRespond(
                 withStatus(OK)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(identResponse.serialisertTilString()
+                    .body(
+                        identResponse.serialisertTilString()
                     )
             )
 

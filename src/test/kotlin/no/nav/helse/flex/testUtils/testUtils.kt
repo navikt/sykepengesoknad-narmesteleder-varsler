@@ -43,4 +43,3 @@ fun getOpprettHendelseResponse(): OpprettHendelseResponse {
         melding = "Opprettet bruker oppgave"
     )
 }
-
