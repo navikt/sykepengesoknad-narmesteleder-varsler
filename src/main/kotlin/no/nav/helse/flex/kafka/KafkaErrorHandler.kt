@@ -18,13 +18,13 @@ class KafkaErrorHandler : SeekToCurrentErrorHandler(
 
     override fun handle(
         thrownException: Exception,
-        records: List<ConsumerRecord<*, *>>,
+        records: List<ConsumerRecord<*, *>>?,
         consumer: Consumer<*, *>,
         container: MessageListenerContainer
     ) {
         log.error("Feil i listener:", thrownException)
 
-        records.forEach { record ->
+        records?.forEach { record ->
             log.error(
                 "Feil i prossesseringen av record med offset: ${record.offset()}, key: ${record.key()}",
             )
