@@ -1,10 +1,10 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.springframework.boot") version "2.5.0"
+    id("org.springframework.boot") version "2.5.3"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
-    kotlin("jvm") version "1.5.10"
-    kotlin("plugin.spring") version "1.5.10"
+    kotlin("jvm") version "1.5.21"
+    kotlin("plugin.spring") version "1.5.21"
 }
 
 group = "no.nav.helse.flex"
@@ -21,7 +21,6 @@ buildscript {
     }
 }
 
-ext["nimbus-jose-jwt.version"] = "8.20" // https://nav-it.slack.com/archives/C01381BAT62/p1611056940004800
 ext["okhttp3.version"] = "4.9.0" // For at token support testen kjører (tror jeg)
 
 apply(plugin = "org.jlleitschuh.gradle.ktlint")
@@ -47,10 +46,10 @@ repositories {
     }
 }
 
-val testContainersVersion = "1.15.3"
-val tokenSupportVersion = "1.3.7"
+val testContainersVersion = "1.16.0"
+val tokenSupportVersion = "1.3.8"
 val logstashLogbackEncoderVersion = "6.6"
-val kluentVersion = "1.67"
+val kluentVersion = "1.68"
 val syfoKafkaVersion = "2021.07.20-09.39-6be2c52c"
 
 dependencies {
