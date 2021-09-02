@@ -32,7 +32,7 @@ spring:
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       group-id: "sykepengesoknad-narmesteleder-varsler"
       max-poll-records: 1
-      auto-offset-reset: latest #TODO sett til none når offsett er etablert i prod
+      auto-offset-reset: earliest #TODO sett til none når offsett er etablert i prod
       enable-auto-commit: false
 
 

@@ -1,12 +1,3 @@
-KAFKA_TRUSTSTORE_PATH: ""
-KAFKA_CREDSTORE_PASSWORD: ""
-KAFKA_SECURITY_PROTOCOL: "PLAINTEXT"
-KAFKA_KEYSTORE_PATH: ""
-KAFKA_AUTO_OFFSET_RESET: "earliest"
-SERVICEUSER_USERNAME: "user"
-SERVICEUSER_PASSWORD: "pwd"
-
-
 spring:
   profiles:
     active: test
@@ -51,8 +42,5 @@ no.nav.security.jwt:
           client-secret: secretzz
           client-auth-method: client_secret_basic
 
-aiven-kafka:
-  auto-offset-reset: latest #TODO none
-  security-protocol: SSL
 
 PDL_BASE_URL: "https://pdl-api.dev-fss-pub.nais.io"
