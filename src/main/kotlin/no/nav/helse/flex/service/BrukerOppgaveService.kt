@@ -1,8 +1,8 @@
 package no.nav.helse.flex.service
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import no.nav.helse.flex.client.OpprettHendelseRequest
-import no.nav.helse.flex.client.SyfoservicestranglerClient
+import no.nav.helse.flex.client.syfoservicestrangler.OpprettHendelseRequest
+import no.nav.helse.flex.client.syfoservicestrangler.SyfoservicestranglerClient
 import no.nav.helse.flex.logger
 import no.nav.helse.flex.objectMapper
 import no.nav.syfo.kafka.felles.ArbeidssituasjonDTO
@@ -19,9 +19,9 @@ class BrukerOppgaveService(
 
     val log = logger()
 
-    fun opprettVarsel(soknadString: String) {
+    fun opprettBrukeroppgave(soknadString: String) {
         val soknad = soknadString.tilSykepengesoknadDTO()
-        log.info("Mottok soknad ${soknad.id}")
+        log.info("Mottok sykepengesøknad ${soknad.id}")
 
         val aktorId = identService.hentAktorIdForFnr(soknad.fnr)
 
@@ -40,6 +40,7 @@ class BrukerOppgaveService(
                     type = soknad.type.name
                 )
             )
+            log.info("Opprettet brukeroppgave for sykepengesøknad ${soknad.id}")
         }
     }
 
