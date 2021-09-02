@@ -30,5 +30,3 @@ class KafkaConfig {
         return factory
     }
 }
-
-const val FLEX_SYKEPENGESOKNAD_TOPIC = "flex.sykepengesoknad"

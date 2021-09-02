@@ -2,26 +2,25 @@ package no.nav.helse.flex.client.pdl
 
 import no.nav.helse.flex.AbstractContainerBaseTest
 import no.nav.helse.flex.serialisertTilString
-import no.nav.helse.flex.testUtils.getIdentResponse
-import no.nav.helse.flex.testUtils.harBearerToken
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus.*
 import org.springframework.http.MediaType
-import org.springframework.test.annotation.DirtiesContext
+import org.springframework.http.client.ClientHttpRequest
 import org.springframework.test.web.client.ExpectedCount.once
 import org.springframework.test.web.client.MockRestServiceServer
 import org.springframework.test.web.client.MockRestServiceServer.createServer
+import org.springframework.test.web.client.RequestMatcher
 import org.springframework.test.web.client.match.MockRestRequestMatchers.*
 import org.springframework.test.web.client.response.MockRestResponseCreators.withStatus
 import org.springframework.web.client.RestTemplate
 import java.net.URI
 
-@DirtiesContext
 @EnableMockOAuth2Server
 class PdlClientTest : AbstractContainerBaseTest() {
 
@@ -72,4 +71,27 @@ class PdlClientTest : AbstractContainerBaseTest() {
 
         pdlMockServer.verify()
     }
+}
+
+fun harBearerToken(): RequestMatcher {
+    return RequestMatcher { request: ClientHttpRequest ->
+
+        val authHeader = request.headers.getFirst(HttpHeaders.AUTHORIZATION)
+            ?: throw AssertionError("Mangler ${HttpHeaders.AUTHORIZATION} header")
+
+        if (!authHeader.startsWith("Bearer ey")) {
+            throw AssertionError("${HttpHeaders.AUTHORIZATION} ser ikke ut til å være bearertoken")
+        }
+    }
+}
+
+fun getIdentResponse(identer: List<PdlIdent>): HentIdenterResponse {
+    return HentIdenterResponse(
+        errors = emptyList(),
+        data = HentIdenterResponseData(
+            hentIdenter = HentIdenter(
+                identer
+            )
+        )
+    )
 }

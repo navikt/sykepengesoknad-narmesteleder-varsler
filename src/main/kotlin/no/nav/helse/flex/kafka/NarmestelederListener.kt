@@ -1,23 +1,23 @@
 package no.nav.helse.flex.kafka
 
 import no.nav.helse.flex.logger
-import no.nav.helse.flex.service.BrukerOppgaveService
+import no.nav.helse.flex.service.NarmesteLederService
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.kafka.support.Acknowledgment
 import org.springframework.stereotype.Component
 
 @Component
-class SykepengesoknadListener(
-    private val brukerOppgaveService: BrukerOppgaveService
+class NarmestelederListener(
+    private val narmesteLederService: NarmesteLederService
 ) {
 
     private val log = logger()
 
-    @KafkaListener(topics = [FLEX_SYKEPENGESOKNAD_TOPIC])
+    @KafkaListener(topics = [NARMESTELEDER_LEESAH_TOPIC])
     fun listen(cr: ConsumerRecord<String, String>, acknowledgment: Acknowledgment) {
         try {
-            brukerOppgaveService.opprettBrukeroppgave(cr.value())
+            narmesteLederService.behandleMeldingFraKafka(cr.value())
             acknowledgment.acknowledge()
         } catch (e: Exception) {
             log.error("Feil ved mottak av record med key: ${cr.key()} offset: ${cr.offset()} partition: ${cr.partition()}", e)
@@ -25,4 +25,5 @@ class SykepengesoknadListener(
         }
     }
 }
-const val FLEX_SYKEPENGESOKNAD_TOPIC = "flex.sykepengesoknad"
+
+const val NARMESTELEDER_LEESAH_TOPIC = "teamsykmelding.syfo-narmesteleder-leesah"
