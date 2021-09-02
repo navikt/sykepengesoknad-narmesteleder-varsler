@@ -36,7 +36,6 @@ spec:
   gcp:
     sqlInstances:
       - type: POSTGRES_12
-        diskSize: {{dbSize}}
         databases:
           - name: sykepengesoknad-nl-varsel-db
             diskAutoresize: true

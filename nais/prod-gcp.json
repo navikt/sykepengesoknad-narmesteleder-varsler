@@ -8,7 +8,6 @@
     "pdl-api.prod-fss-pub.nais.io"
   ],
   "azureTenant": "nav.no",
-  "dbSize": 2,
   "env": {
     "FLEX_FSS_PROXY_AAD_CLIENT_ID": "prod-fss.flex.flex-fss-proxy",
     "FLEX_FSS_PROXY_URL": "https://flex-fss-proxy.prod-fss-pub.nais.io",
