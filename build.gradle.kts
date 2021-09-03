@@ -61,6 +61,9 @@ dependencies {
     implementation("no.nav.security:token-client-spring:$tokenSupportVersion")
     implementation("no.nav.security:token-validation-spring:$tokenSupportVersion")
     implementation("org.slf4j:slf4j-api")
+    implementation("org.flywaydb:flyway-core")
+    implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
+    implementation("org.postgresql:postgresql")
     implementation("org.springframework.boot:spring-boot-starter-logging")
     implementation("net.logstash.logback:logstash-logback-encoder:$logstashLogbackEncoderVersion")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -73,10 +76,9 @@ dependencies {
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.testcontainers:kafka:$testContainersVersion")
-    testImplementation("org.testcontainers:junit-jupiter:$testContainersVersion")
+    testImplementation("org.testcontainers:postgresql:$testContainersVersion")
     testImplementation("no.nav.security:token-validation-spring-test:$tokenSupportVersion")
     testImplementation("org.awaitility:awaitility")
-    testImplementation("org.hamcrest:hamcrest-library")
     testImplementation("org.amshove.kluent:kluent:$kluentVersion")
 }
 
@@ -94,6 +96,6 @@ tasks.withType<KotlinCompile> {
 tasks.withType<Test> {
     useJUnitPlatform()
     testLogging {
-        events("PASSED", "FAILED", "SKIPPED")
+        events("STANDARD_OUT", "STARTED", "PASSED", "FAILED", "SKIPPED")
     }
 }
