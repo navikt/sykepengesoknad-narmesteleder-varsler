@@ -32,13 +32,6 @@ repositories {
     mavenCentral()
     maven {
         url = uri("https://maven.pkg.github.com/navikt/maven-release")
-    }
-
-    maven {
-        url = uri("https://maven.pkg.github.com/navikt/freg-security")
-    }
-    maven {
-        url = uri("https://maven.pkg.github.com/navikt/syfokafka")
         credentials {
             username = githubUser
             password = githubPassword
