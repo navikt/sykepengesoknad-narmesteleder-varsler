@@ -1,4 +1,4 @@
-package no.nav.helse.flex.domain
+package no.nav.helse.flex.narmesteleder.domain
 
 import java.time.LocalDate
 import java.time.OffsetDateTime

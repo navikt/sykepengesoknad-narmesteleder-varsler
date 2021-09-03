@@ -1,10 +1,9 @@
-package no.nav.helse.flex.service
+package no.nav.helse.flex.narmesteleder
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import no.nav.helse.flex.db.NarmesteLederRepository
-import no.nav.helse.flex.domain.NarmesteLeder
-import no.nav.helse.flex.domain.NarmesteLederLeesah
 import no.nav.helse.flex.logger
+import no.nav.helse.flex.narmesteleder.domain.NarmesteLeder
+import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
 import no.nav.helse.flex.objectMapper
 import org.springframework.stereotype.Service
 import java.time.Instant

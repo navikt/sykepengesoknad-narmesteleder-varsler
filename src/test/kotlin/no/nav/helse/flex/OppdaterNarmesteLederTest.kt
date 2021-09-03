@@ -1,8 +1,8 @@
 package no.nav.helse.flex
 
-import no.nav.helse.flex.db.NarmesteLederRepository
-import no.nav.helse.flex.domain.NarmesteLederLeesah
 import no.nav.helse.flex.kafka.NARMESTELEDER_LEESAH_TOPIC
+import no.nav.helse.flex.narmesteleder.NarmesteLederRepository
+import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldNotBeNull

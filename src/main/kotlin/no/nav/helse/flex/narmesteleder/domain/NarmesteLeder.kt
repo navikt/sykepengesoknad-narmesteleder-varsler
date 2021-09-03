@@ -1,4 +1,4 @@
-package no.nav.helse.flex.domain
+package no.nav.helse.flex.narmesteleder.domain
 
 import org.springframework.data.annotation.Id
 import java.time.Instant

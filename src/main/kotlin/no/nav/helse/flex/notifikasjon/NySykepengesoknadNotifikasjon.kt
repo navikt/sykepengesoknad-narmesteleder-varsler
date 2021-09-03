@@ -1,8 +1,8 @@
-package no.nav.helse.flex.varsel
+package no.nav.helse.flex.notifikasjon
 
 import no.nav.doknotifikasjon.schemas.NotifikasjonMedkontaktInfo
 import no.nav.doknotifikasjon.schemas.PrefererteKanal
-import no.nav.helse.flex.domain.NarmesteLeder
+import no.nav.helse.flex.narmesteleder.domain.NarmesteLeder
 
 const val SMS_TEKST = """
 Hei!

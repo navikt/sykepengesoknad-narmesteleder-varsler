@@ -1,8 +1,9 @@
-package no.nav.helse.flex.service
+package no.nav.helse.flex.brukeroppgave
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.helse.flex.client.syfoservicestrangler.OpprettHendelseRequest
 import no.nav.helse.flex.client.syfoservicestrangler.SyfoservicestranglerClient
+import no.nav.helse.flex.ident.FnrTilAktorId
 import no.nav.helse.flex.logger
 import no.nav.helse.flex.objectMapper
 import no.nav.syfo.kafka.felles.ArbeidssituasjonDTO
@@ -12,9 +13,9 @@ import no.nav.syfo.kafka.felles.SykepengesoknadDTO
 import org.springframework.stereotype.Service
 
 @Service
-class BrukerOppgaveService(
+class BrukeroppgaveOpprettelse(
     val syfoservicestranglerClient: SyfoservicestranglerClient,
-    val identService: IdentService
+    val fnrTilAktorId: FnrTilAktorId
 ) {
 
     val log = logger()
@@ -23,7 +24,7 @@ class BrukerOppgaveService(
         val soknad = soknadString.tilSykepengesoknadDTO()
         log.info("Mottok sykepengesøknad ${soknad.id}")
 
-        val aktorId = identService.hentAktorIdForFnr(soknad.fnr)
+        val aktorId = fnrTilAktorId.hentAktorIdForFnr(soknad.fnr)
 
         if ((
             SoknadstypeDTO.ARBEIDSTAKERE == soknad.type ||
