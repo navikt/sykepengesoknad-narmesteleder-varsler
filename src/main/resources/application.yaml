@@ -14,27 +14,10 @@ spring:
     hikari:
       minimum-idle: 1
       maximum-pool-size: 3
-  kafka:
-    bootstrap-servers: ${KAFKA_BROKERS}
-    properties:
-      security.protocol: SSL
-      ssl:
-        keystore:
-          type: PKCS12
-          location: ${KAFKA_KEYSTORE_PATH}
-          password: ${KAFKA_CREDSTORE_PASSWORD}
-        truststore:
-          location: ${KAFKA_TRUSTSTORE_PATH}
-          password: ${KAFKA_CREDSTORE_PASSWORD}
-        endpoint.identification.algorithm:
-    consumer:
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      group-id: "sykepengesoknad-narmesteleder-varsler"
-      max-poll-records: 1
-      auto-offset-reset: earliest #TODO sett til none når offsett er etablert i prod
-      enable-auto-commit: false
 
+aiven-kafka:
+  auto-offset-reset: none
+  security-protocol: SSL
 
 management:
   endpoint.prometheus.enabled: true
