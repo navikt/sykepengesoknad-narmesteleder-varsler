@@ -1,7 +1,11 @@
 package no.nav.helse.flex.kafka
 
+import io.confluent.kafka.serializers.KafkaAvroSerializer
+import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
+import no.nav.doknotifikasjon.schemas.NotifikasjonMedkontaktInfo
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.config.SslConfigs
 import org.apache.kafka.common.serialization.StringDeserializer
@@ -9,6 +13,7 @@ import org.apache.kafka.common.serialization.StringSerializer
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Profile
 import org.springframework.kafka.annotation.EnableKafka
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory
@@ -23,6 +28,9 @@ class KafkaConfig(
     @Value("\${KAFKA_TRUSTSTORE_PATH}") private val kafkaTruststorePath: String,
     @Value("\${KAFKA_CREDSTORE_PASSWORD}") private val kafkaCredstorePassword: String,
     @Value("\${KAFKA_KEYSTORE_PATH}") private val kafkaKeystorePath: String,
+    @Value("\${KAFKA_SCHEMA_REGISTRY}") private val schemaRegistryUrl: String,
+    @Value("\${KAFKA_SCHEMA_REGISTRY_USER}") private val kafkaSchemaRegistryUsername: String,
+    @Value("\${KAFKA_SCHEMA_REGISTRY_PASSWORD}") private val kafkaSchemaRegistryPassword: String,
 ) {
 
     private val JAVA_KEYSTORE = "JKS"
@@ -65,11 +73,26 @@ class KafkaConfig(
         return factory
     }
 
-    fun producerConfig() = mapOf(
+    @Bean
+    @Profile("default")
+    fun doknotifikasjonProducer(): KafkaProducer<String, NotifikasjonMedkontaktInfo> {
+
+        return KafkaProducer<String, NotifikasjonMedkontaktInfo>(
+            producerConfig(KafkaAvroSerializer::class.java) + mapOf(
+                KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG to schemaRegistryUrl,
+                KafkaAvroSerializerConfig.USER_INFO_CONFIG to "$kafkaSchemaRegistryUsername:$kafkaSchemaRegistryPassword",
+                KafkaAvroSerializerConfig.BASIC_AUTH_CREDENTIALS_SOURCE to "USER_INFO"
+            )
+        )
+    }
+
+    fun producerConfig(valueSerializer: Class<*>) = mapOf(
         ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG to StringSerializer::class.java,
-        ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to StringSerializer::class.java,
+        ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to valueSerializer,
         ProducerConfig.ACKS_CONFIG to "all",
         ProducerConfig.RETRIES_CONFIG to 10,
         ProducerConfig.RETRY_BACKOFF_MS_CONFIG to 100
     ) + commonConfig()
 }
+
+const val doknotifikasjonTopic = "teamdokumenthandtering.privat-dok-notifikasjon-med-kontakt-info"

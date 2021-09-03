@@ -17,7 +17,7 @@ import java.time.ZoneOffset
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-class OppdaterNarmesteLederTest : AbstractContainerBaseTest() {
+class OppdaterNarmesteLederTest : BaseTestClass() {
 
     @Autowired
     lateinit var kafkaProducer: KafkaProducer<String, String>

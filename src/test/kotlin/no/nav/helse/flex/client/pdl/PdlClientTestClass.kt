@@ -1,6 +1,6 @@
 package no.nav.helse.flex.client.pdl
 
-import no.nav.helse.flex.AbstractContainerBaseTest
+import no.nav.helse.flex.BaseTestClass
 import no.nav.helse.flex.serialisertTilString
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import org.amshove.kluent.`should be equal to`
@@ -22,7 +22,7 @@ import org.springframework.web.client.RestTemplate
 import java.net.URI
 
 @EnableMockOAuth2Server
-class PdlClientTest : AbstractContainerBaseTest() {
+class PdlClientTestClass : BaseTestClass() {
 
     @Autowired
     private lateinit var pdlClient: PdlClient
