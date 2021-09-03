@@ -1,11 +1,11 @@
-package no.nav.helse.flex.service
+package no.nav.helse.flex.ident
 
 import no.nav.helse.flex.client.pdl.AKTORID
 import no.nav.helse.flex.client.pdl.PdlClient
 import org.springframework.stereotype.Component
 
 @Component
-class IdentService(private val pdlClient: PdlClient) {
+class FnrTilAktorId(private val pdlClient: PdlClient) {
 
     fun hentAktorIdForFnr(fnr: String): String {
         val hentPerson = pdlClient.hentIdenter(fnr)

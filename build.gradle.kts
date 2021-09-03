@@ -30,15 +30,10 @@ val githubPassword: String by project
 
 repositories {
     mavenCentral()
+    maven(url = "https://jitpack.io")
+    maven(url = "https://packages.confluent.io/maven/")
     maven {
         url = uri("https://maven.pkg.github.com/navikt/maven-release")
-    }
-
-    maven {
-        url = uri("https://maven.pkg.github.com/navikt/freg-security")
-    }
-    maven {
-        url = uri("https://maven.pkg.github.com/navikt/syfokafka")
         credentials {
             username = githubUser
             password = githubPassword
@@ -51,6 +46,8 @@ val tokenSupportVersion = "1.3.8"
 val logstashLogbackEncoderVersion = "6.6"
 val kluentVersion = "1.68"
 val syfoKafkaVersion = "2021.07.20-09.39-6be2c52c"
+val confluentVersion = "6.2.0"
+val doknotifikasjonAvroVersion = "1.2021.06.22-11.27-265ce1fe1ab4"
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter")
@@ -73,6 +70,8 @@ dependencies {
     implementation("org.hibernate.validator:hibernate-validator")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("io.micrometer:micrometer-registry-prometheus")
+    implementation("com.github.navikt:doknotifikasjon-schemas:$doknotifikasjonAvroVersion")
+    implementation("io.confluent:kafka-avro-serializer:$confluentVersion")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.testcontainers:kafka:$testContainersVersion")
