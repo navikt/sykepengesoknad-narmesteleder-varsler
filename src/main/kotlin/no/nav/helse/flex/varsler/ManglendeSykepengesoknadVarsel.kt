@@ -1,23 +1,24 @@
-package no.nav.helse.flex.notifikasjon
+package no.nav.helse.flex.varsler
 
 import no.nav.doknotifikasjon.schemas.NotifikasjonMedkontaktInfo
 import no.nav.doknotifikasjon.schemas.PrefererteKanal
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLeder
 
-const val SMS_TEKST = """
-Hei!
-Du har fått tilgang til en søknad om sykepenger for en av dine ansatte.
-Logg inn på "Min side - arbeidsgiver" og finn søknaden der. 
+private const val SMS_TEKST = """
+En av dine ansatte har mottatt en digital søknad om sykepenger, men har ikke sendt den inn ennå.
+Dersom søknaden ikke allerede er sendt til NAV på papir, bør du be den ansatte sende den digitale søknaden nå.
+Logg inn på "Min side - arbeidsgiver" for å se hvem det gjelder.
 Vennlig hilsen NAV
 """
 
-const val EPOST_TEKST = """
+private const val EPOST_TEKST = """
 <!DOCTYPE html>
 <html>
 <body>
 <p>Hei.</p>
-<p>Du har fått tilgang til en søknad om sykepenger for en av dine ansatte fordi du er meldt inn som nærmeste leder med personalansvar.</p>
-<p>Logg inn på "Min side - arbeidsgiver" og finn søknaden der.</p>
+<p>En av dine ansatte har mottatt en digital søknad om sykepenger, men har ikke sendt den inn ennå.</p>
+<p>Dersom søknaden ikke allerede er sendt på papir, bør du be den ansatte sende den digitale søknaden nå.</p>
+<p>Logg inn på "Min side - arbeidsgiver" for å se hvem det gjelder.</p>
 <p>Du må logge inn med BankID eller tilsvarende for at vi skal være sikre på at søknaden kommer fram til rett person.</p>
 <p>Vennlig hilsen</p>
 <p> NAV</p>
@@ -25,7 +26,7 @@ const val EPOST_TEKST = """
 </html>
 """
 
-fun skapNySøknadNotifikasjon(bestillingsId: String, narmesteLeder: NarmesteLeder): NotifikasjonMedkontaktInfo {
+fun skapManglendeSøknadVarsel(bestillingsId: String, narmesteLeder: NarmesteLeder): NotifikasjonMedkontaktInfo {
     return NotifikasjonMedkontaktInfo.newBuilder()
         .setBestillingsId(bestillingsId)
         .setBestillerId("sykepengesoknad-narmesteleder-varsel")
@@ -34,7 +35,7 @@ fun skapNySøknadNotifikasjon(bestillingsId: String, narmesteLeder: NarmesteLede
         .setEpostadresse(narmesteLeder.narmesteLederEpost)
         .setAntallRenotifikasjoner(0)
         .setRenotifikasjonIntervall(0)
-        .setTittel("Ny søknad om sykepenger")
+        .setTittel("Vi mangler en søknad fra en av dine ansatte")
         .setEpostTekst(EPOST_TEKST)
         .setSmsTekst(SMS_TEKST)
         .setPrefererteKanaler(listOf(PrefererteKanal.EPOST)).build()

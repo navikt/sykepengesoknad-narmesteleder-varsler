@@ -1,18 +1,16 @@
 package no.nav.helse.flex.brukeroppgave
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.helse.flex.client.syfoservicestrangler.OpprettHendelseRequest
 import no.nav.helse.flex.client.syfoservicestrangler.SyfoservicestranglerClient
 import no.nav.helse.flex.ident.FnrTilAktorId
 import no.nav.helse.flex.logger
-import no.nav.helse.flex.objectMapper
 import no.nav.syfo.kafka.felles.ArbeidssituasjonDTO
 import no.nav.syfo.kafka.felles.SoknadsstatusDTO
 import no.nav.syfo.kafka.felles.SoknadstypeDTO
 import no.nav.syfo.kafka.felles.SykepengesoknadDTO
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
 
-@Service
+@Component
 class BrukeroppgaveOpprettelse(
     val syfoservicestranglerClient: SyfoservicestranglerClient,
     val fnrTilAktorId: FnrTilAktorId
@@ -20,11 +18,7 @@ class BrukeroppgaveOpprettelse(
 
     val log = logger()
 
-    fun opprettBrukeroppgave(soknadString: String) {
-        val soknad = soknadString.tilSykepengesoknadDTO()
-        log.info("Mottok sykepengesøknad ${soknad.id}")
-
-        val aktorId = fnrTilAktorId.hentAktorIdForFnr(soknad.fnr)
+    fun opprettBrukeroppgave(soknad: SykepengesoknadDTO) {
 
         if ((
             SoknadstypeDTO.ARBEIDSTAKERE == soknad.type ||
@@ -33,6 +27,7 @@ class BrukeroppgaveOpprettelse(
             SoknadsstatusDTO.SENDT == soknad.status &&
             soknad.sendtArbeidsgiver != null
         ) {
+            val aktorId = fnrTilAktorId.hentAktorIdForFnr(soknad.fnr)
             syfoservicestranglerClient.opprettOppgave(
                 OpprettHendelseRequest(
                     soknadId = soknad.id,
@@ -44,6 +39,4 @@ class BrukeroppgaveOpprettelse(
             log.info("Opprettet brukeroppgave for sykepengesøknad ${soknad.id}")
         }
     }
-
-    fun String.tilSykepengesoknadDTO(): SykepengesoknadDTO = objectMapper.readValue(this)
 }

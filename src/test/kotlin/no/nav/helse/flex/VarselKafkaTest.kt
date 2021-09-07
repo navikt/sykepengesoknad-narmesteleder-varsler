@@ -3,7 +3,7 @@ package no.nav.helse.flex
 import no.nav.doknotifikasjon.schemas.NotifikasjonMedkontaktInfo
 import no.nav.helse.flex.kafka.doknotifikasjonTopic
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLeder
-import no.nav.helse.flex.notifikasjon.skapNySøknadNotifikasjon
+import no.nav.helse.flex.varsler.skapSendtSøknadVarsel
 import org.amshove.kluent.`should be equal to`
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -35,7 +35,7 @@ class VarselKafkaTest : BaseTestClass() {
             oppdatert = Instant.now()
         )
         val bestillingsId = UUID.randomUUID().toString()
-        val notifikasjon = skapNySøknadNotifikasjon(bestillingsId, narmesteLeder)
+        val notifikasjon = skapSendtSøknadVarsel(bestillingsId, narmesteLeder)
 
         kafkaProducer.send(
             ProducerRecord(

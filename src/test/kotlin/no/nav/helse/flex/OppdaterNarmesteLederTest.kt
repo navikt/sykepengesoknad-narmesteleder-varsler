@@ -1,7 +1,6 @@
 package no.nav.helse.flex
 
 import no.nav.helse.flex.kafka.NARMESTELEDER_LEESAH_TOPIC
-import no.nav.helse.flex.narmesteleder.NarmesteLederRepository
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.shouldBeNull
@@ -21,9 +20,6 @@ class OppdaterNarmesteLederTest : BaseTestClass() {
 
     @Autowired
     lateinit var kafkaProducer: KafkaProducer<String, String>
-
-    @Autowired
-    lateinit var narmesteLederRepository: NarmesteLederRepository
 
     @Test
     fun `Oppretter ny nærmeste leder hvis den ikke finnes fra før og er aktiv`() {
