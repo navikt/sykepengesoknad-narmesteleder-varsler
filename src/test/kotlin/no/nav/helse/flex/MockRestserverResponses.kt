@@ -1,6 +1,7 @@
 package no.nav.helse.flex
 
 import no.nav.helse.flex.client.pdl.*
+import no.nav.helse.flex.client.syfoservicestrangler.OpprettHendelseResponse
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
@@ -8,9 +9,7 @@ import org.springframework.http.MediaType
 import org.springframework.http.client.ClientHttpRequest
 import org.springframework.test.web.client.ExpectedCount
 import org.springframework.test.web.client.RequestMatcher
-import org.springframework.test.web.client.match.MockRestRequestMatchers
-import org.springframework.test.web.client.match.MockRestRequestMatchers.header
-import org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo
+import org.springframework.test.web.client.match.MockRestRequestMatchers.*
 import org.springframework.test.web.client.response.MockRestResponseCreators
 import java.net.URI
 
@@ -27,7 +26,7 @@ fun BaseTestClass.mockPdlResponse(
         expectedCount,
         requestTo(URI("https://pdl-api.dev-fss-pub.nais.io/graphql"))
     )
-        .andExpect(MockRestRequestMatchers.method(HttpMethod.POST))
+        .andExpect(method(HttpMethod.POST))
         .andExpect(header("TEMA", "SYK"))
         .andExpect(harBearerToken())
         .andRespond(
@@ -35,6 +34,25 @@ fun BaseTestClass.mockPdlResponse(
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(
                     identResponse.serialisertTilString()
+                )
+        )
+}
+
+fun BaseTestClass.mockSyfoserviceStranglerBrukeroppgavePost(
+    response: OpprettHendelseResponse = OpprettHendelseResponse(melding = "Mocket kall"),
+    expectedCount: ExpectedCount = ExpectedCount.once()
+) {
+    syfoServiceStanglerMockServer!!.expect(
+        expectedCount,
+        requestTo(URI("http://flex-fss-proxy/api/syfoservicestrangler/brukeroppgave/soknad"))
+    )
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(harBearerToken())
+        .andRespond(
+            MockRestResponseCreators.withStatus(HttpStatus.OK)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(
+                    response.serialisertTilString()
                 )
         )
 }
