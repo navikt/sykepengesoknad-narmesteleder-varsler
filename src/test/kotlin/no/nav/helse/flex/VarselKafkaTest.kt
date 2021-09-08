@@ -13,10 +13,10 @@ import java.time.Instant
 import java.time.LocalDate
 import java.util.*
 
-class VarselKafkaTest : BaseTestClass() {
+class VarselKafkaTest : Testoppsett() {
 
     @Autowired
-    lateinit var kafkaProducer: Producer<String, NotifikasjonMedkontaktInfo>
+    lateinit var dokNotkafkaProducer: Producer<String, NotifikasjonMedkontaktInfo>
 
     @Test
     fun `Producer og consumer funker i test oppsettet`() {
@@ -37,7 +37,7 @@ class VarselKafkaTest : BaseTestClass() {
         val bestillingsId = UUID.randomUUID().toString()
         val notifikasjon = skapSendtSøknadVarsel(bestillingsId, narmesteLeder)
 
-        kafkaProducer.send(
+        dokNotkafkaProducer.send(
             ProducerRecord(
                 doknotifikasjonTopic,
                 null,

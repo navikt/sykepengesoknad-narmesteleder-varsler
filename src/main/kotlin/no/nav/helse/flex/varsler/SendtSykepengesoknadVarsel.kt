@@ -11,7 +11,7 @@ Logg inn på "Min side - arbeidsgiver" og finn søknaden der.
 Vennlig hilsen NAV
 """
 
-private const val EPOST_TEKST = """
+const val SENDT_SYKEPENGESOKNAD_EPOST_TEKST = """
 <!DOCTYPE html>
 <html>
 <body>
@@ -25,6 +25,7 @@ private const val EPOST_TEKST = """
 </html>
 """
 
+const val SENDT_SYKEPENGESOKNAD_TITTEL = "Ny søknad om sykepenger"
 fun skapSendtSøknadVarsel(bestillingsId: String, narmesteLeder: NarmesteLeder): NotifikasjonMedkontaktInfo {
     return NotifikasjonMedkontaktInfo.newBuilder()
         .setBestillingsId(bestillingsId)
@@ -34,8 +35,8 @@ fun skapSendtSøknadVarsel(bestillingsId: String, narmesteLeder: NarmesteLeder):
         .setEpostadresse(narmesteLeder.narmesteLederEpost)
         .setAntallRenotifikasjoner(0)
         .setRenotifikasjonIntervall(0)
-        .setTittel("Ny søknad om sykepenger")
-        .setEpostTekst(EPOST_TEKST)
+        .setTittel(SENDT_SYKEPENGESOKNAD_TITTEL)
+        .setEpostTekst(SENDT_SYKEPENGESOKNAD_EPOST_TEKST)
         .setSmsTekst(SMS_TEKST)
         .setPrefererteKanaler(listOf(PrefererteKanal.EPOST)).build()
 }

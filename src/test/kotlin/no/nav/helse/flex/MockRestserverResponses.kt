@@ -13,7 +13,7 @@ import org.springframework.test.web.client.match.MockRestRequestMatchers.*
 import org.springframework.test.web.client.response.MockRestResponseCreators
 import java.net.URI
 
-fun BaseTestClass.mockPdlResponse(
+fun Testoppsett.mockPdlResponse(
     identResponse: HentIdenterResponse = getIdentResponse(
         listOf(
             PdlIdent(gruppe = AKTORID, ident = aktorId),
@@ -38,7 +38,7 @@ fun BaseTestClass.mockPdlResponse(
         )
 }
 
-fun BaseTestClass.mockSyfoserviceStranglerBrukeroppgavePost(
+fun Testoppsett.mockSyfoserviceStranglerBrukeroppgavePost(
     response: OpprettHendelseResponse = OpprettHendelseResponse(melding = "Mocket kall"),
     expectedCount: ExpectedCount = ExpectedCount.once()
 ) {

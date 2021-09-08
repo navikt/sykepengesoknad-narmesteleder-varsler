@@ -11,7 +11,7 @@ Logg inn på "Min side - arbeidsgiver" for å se hvem det gjelder.
 Vennlig hilsen NAV
 """
 
-private const val EPOST_TEKST = """
+const val MANGLENDE_VARSEL_EPOST_TEKST = """
 <!DOCTYPE html>
 <html>
 <body>
@@ -26,6 +26,7 @@ private const val EPOST_TEKST = """
 </html>
 """
 
+const val MANGLENDE_VARSEL_TITTEL = "Vi mangler en søknad fra en av dine ansatte"
 fun skapManglendeSøknadVarsel(bestillingsId: String, narmesteLeder: NarmesteLeder): NotifikasjonMedkontaktInfo {
     return NotifikasjonMedkontaktInfo.newBuilder()
         .setBestillingsId(bestillingsId)
@@ -35,8 +36,8 @@ fun skapManglendeSøknadVarsel(bestillingsId: String, narmesteLeder: NarmesteLed
         .setEpostadresse(narmesteLeder.narmesteLederEpost)
         .setAntallRenotifikasjoner(0)
         .setRenotifikasjonIntervall(0)
-        .setTittel("Vi mangler en søknad fra en av dine ansatte")
-        .setEpostTekst(EPOST_TEKST)
+        .setTittel(MANGLENDE_VARSEL_TITTEL)
+        .setEpostTekst(MANGLENDE_VARSEL_EPOST_TEKST)
         .setSmsTekst(SMS_TEKST)
         .setPrefererteKanaler(listOf(PrefererteKanal.EPOST)).build()
 }

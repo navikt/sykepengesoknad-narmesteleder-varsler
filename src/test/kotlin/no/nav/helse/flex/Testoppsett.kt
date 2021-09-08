@@ -1,12 +1,18 @@
 package no.nav.helse.flex
 
 import no.nav.doknotifikasjon.schemas.NotifikasjonMedkontaktInfo
+import no.nav.helse.flex.kafka.FLEX_SYKEPENGESOKNAD_TOPIC
+import no.nav.helse.flex.kafka.NARMESTELEDER_LEESAH_TOPIC
 import no.nav.helse.flex.kafka.doknotifikasjonTopic
 import no.nav.helse.flex.narmesteleder.NarmesteLederRepository
+import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
 import no.nav.helse.flex.varsler.PlanlagtVarselRepository
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
+import no.nav.syfo.kafka.felles.SykepengesoknadDTO
 import org.amshove.kluent.shouldBeEmpty
 import org.apache.kafka.clients.consumer.Consumer
+import org.apache.kafka.clients.producer.Producer
+import org.apache.kafka.clients.producer.ProducerRecord
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
@@ -24,7 +30,10 @@ private class PostgreSQLContainer12 : PostgreSQLContainer<PostgreSQLContainer12>
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest
 @EnableMockOAuth2Server
-abstract class BaseTestClass {
+abstract class Testoppsett {
+
+    @Autowired
+    lateinit var kafkaProducer: Producer<String, String>
 
     @Autowired
     lateinit var doknotifikasjonKafkaConsumer: Consumer<String, NotifikasjonMedkontaktInfo>
@@ -88,5 +97,27 @@ abstract class BaseTestClass {
     fun `Vi leser sykepengesoknad kafka topicet og feiler om noe eksisterer`() {
         doknotifikasjonKafkaConsumer.subscribeHvisIkkeSubscribed(doknotifikasjonTopic)
         doknotifikasjonKafkaConsumer.hentProduserteRecords().shouldBeEmpty()
+    }
+
+    fun sendNarmesteLederLeesah(nl: NarmesteLederLeesah) {
+        kafkaProducer.send(
+            ProducerRecord(
+                NARMESTELEDER_LEESAH_TOPIC,
+                null,
+                nl.narmesteLederId.toString(),
+                nl.serialisertTilString()
+            )
+        ).get()
+    }
+
+    fun sendSykepengesoknad(soknad: SykepengesoknadDTO) {
+        kafkaProducer.send(
+            ProducerRecord(
+                FLEX_SYKEPENGESOKNAD_TOPIC,
+                null,
+                soknad.id,
+                soknad.serialisertTilString()
+            )
+        ).get()
     }
 }

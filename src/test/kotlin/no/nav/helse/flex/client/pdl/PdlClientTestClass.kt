@@ -1,13 +1,13 @@
 package no.nav.helse.flex.client.pdl
 
-import no.nav.helse.flex.BaseTestClass
+import no.nav.helse.flex.Testoppsett
 import no.nav.helse.flex.mockPdlResponse
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.client.ExpectedCount
 
-class PdlClientTestClass : BaseTestClass() {
+class PdlClientTestClass : Testoppsett() {
 
     @Autowired
     private lateinit var pdlClient: PdlClient
