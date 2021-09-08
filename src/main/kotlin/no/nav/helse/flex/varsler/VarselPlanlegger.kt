@@ -84,6 +84,7 @@ class VarselPlanlegger(
             narmesteLederId = null,
         )
         planlagtVarselRepository.save(planlagtVarsel)
+        log.info("Planlegger varsel ${planlagtVarsel.varselType} for soknad $id som sendes ${planlagtVarsel.sendes}")
     }
 
     private fun SykepengesoknadDTO.planleggVarselForStatusSendt() {
@@ -107,6 +108,7 @@ class VarselPlanlegger(
             narmesteLederId = null,
         )
         planlagtVarselRepository.save(planlagtVarsel)
+        log.info("Planlegger varsel ${planlagtVarsel.varselType} for soknad $id som sendes ${planlagtVarsel.sendes}")
     }
 }
 

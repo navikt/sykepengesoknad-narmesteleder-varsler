@@ -12,14 +12,14 @@ class CronJob(
 ) {
     val log = logger()
 
-    @Scheduled(cron = "0 0/10 * * * ?")
+    @Scheduled(cron = "0 0/5 * * * ?")
     fun run() {
         if (leaderElection.isLeader()) {
             log.info("Kjører varsel utsendelse job")
             val antall = varselUtsendelse.sendVarsler()
-            log.info("Ferdig med brukernotifikasjonjob. $antall notifikasjoner sendt")
+            log.info("Ferdig med varsel utsendelse job. $antall varsler sendt")
         } else {
-            log.info("Kjører ikke brukernotifikasjonjob siden denne podden ikke er leader")
+            log.info("Kjører ikke varsel utsendelse job siden denne podden ikke er leader")
         }
     }
 }
