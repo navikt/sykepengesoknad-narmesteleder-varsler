@@ -51,6 +51,7 @@ spec:
     application:
       enabled: true
       tenant: {{azureTenant}}
+  leaderElection: true
   env:
   {{#each env}}
      - name: {{@key}}

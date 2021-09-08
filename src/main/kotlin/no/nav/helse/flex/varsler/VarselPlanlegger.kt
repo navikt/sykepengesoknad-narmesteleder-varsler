@@ -80,8 +80,8 @@ class VarselPlanlegger(
             orgnummer = arbeidsgiver!!.orgnummer!!,
             sendes = omToUkerFornuftigDagtid().toInstant(),
             status = PLANLAGT,
-            varselType = MANGLENDE_SYKEPENGESOKNAD
-
+            varselType = MANGLENDE_SYKEPENGESOKNAD,
+            narmesteLederId = null,
         )
         planlagtVarselRepository.save(planlagtVarsel)
     }
@@ -103,8 +103,8 @@ class VarselPlanlegger(
             orgnummer = this.arbeidsgiver!!.orgnummer!!,
             sendes = nærmesteFornuftigDagtid().toInstant(),
             status = PLANLAGT,
-            varselType = SENDT_SYKEPENGESOKNAD
-
+            varselType = SENDT_SYKEPENGESOKNAD,
+            narmesteLederId = null,
         )
         planlagtVarselRepository.save(planlagtVarsel)
     }

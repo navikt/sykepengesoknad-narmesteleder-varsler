@@ -14,10 +14,11 @@ data class PlanlagtVarsel(
     val status: PlanlagtVarselStatus,
     val varselType: PlanlagtVarselType,
     val sendes: Instant,
+    val narmesteLederId: UUID?
 )
 
 enum class PlanlagtVarselStatus {
-    PLANLAGT, SENDT, AVBRUTT
+    PLANLAGT, SENDT, AVBRUTT, INGEN_LEDER
 }
 
 enum class PlanlagtVarselType {

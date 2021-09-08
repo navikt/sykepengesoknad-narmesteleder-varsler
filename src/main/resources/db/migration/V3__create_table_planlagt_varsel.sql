@@ -7,7 +7,8 @@ CREATE TABLE PLANLAGT_VARSEL
     SYKEPENGESOKNAD_ID VARCHAR                  NOT NULL,
     STATUS             VARCHAR                  NOT NULL,
     VARSEL_TYPE        VARCHAR                  NOT NULL,
-    SENDES             TIMESTAMP WITH TIME ZONE NOT NULL
+    SENDES             TIMESTAMP WITH TIME ZONE NOT NULL,
+    NARMESTE_LEDER_ID  UUID                     NULL
 );
 
 

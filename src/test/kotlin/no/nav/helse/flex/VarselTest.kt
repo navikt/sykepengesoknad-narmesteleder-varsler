@@ -18,7 +18,6 @@ import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
 import org.springframework.beans.factory.annotation.Autowired
-import java.time.Instant
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.*
@@ -30,7 +29,6 @@ class VarselTest : BaseTestClass() {
     @Autowired
     lateinit var kafkaProducer: Producer<String, String>
 
-
     val soknad = SykepengesoknadDTO(
         fnr = fnr,
         id = UUID.randomUUID().toString(),
@@ -40,10 +38,10 @@ class VarselTest : BaseTestClass() {
         arbeidsgiver = ArbeidsgiverDTO(navn = "Bedriften AS", orgnummer = "999111555")
     )
 
-    fun planlagteVarslerSomSendesFør(tidspunkt: OffsetDateTime): List<PlanlagtVarsel> {
-        return planlagtVarselRepository.findByStatusAndSendesIsBefore(
+    fun planlagteVarslerSomSendesFør(dager: Int): List<PlanlagtVarsel> {
+        return planlagtVarselRepository.findFirst100ByStatusAndSendesIsBefore(
             PLANLAGT,
-            tidspunkt
+            OffsetDateTime.now().plusDays(dager.toLong())
         )
     }
 
@@ -51,7 +49,7 @@ class VarselTest : BaseTestClass() {
     @Order(1)
     fun `Vi mottar en søknad med status NY og planlegger et manglende søknad varsel`() {
 
-        planlagteVarslerSomSendesFør(OffsetDateTime.now().plusDays(20)).size `should be equal to` 0
+        planlagteVarslerSomSendesFør(dager = 20).size `should be equal to` 0
 
         kafkaProducer.send(
             ProducerRecord(
@@ -75,7 +73,7 @@ class VarselTest : BaseTestClass() {
         planlagtVarsel.sendes.shouldBeBefore(OffsetDateTime.now().plusDays(17).toInstant())
         planlagtVarsel.sendes.shouldBeAfter(OffsetDateTime.now().plusDays(13).toInstant())
 
-        planlagteVarslerSomSendesFør(OffsetDateTime.now().plusDays(20)).size `should be equal to` 1
+        planlagteVarslerSomSendesFør(dager = 20).size `should be equal to` 1
     }
 
     @Test
@@ -84,8 +82,8 @@ class VarselTest : BaseTestClass() {
         mockPdlResponse()
         mockSyfoserviceStranglerBrukeroppgavePost()
         planlagtVarselRepository.findBySykepengesoknadId(soknad.id).size `should be equal to` 1
-        planlagteVarslerSomSendesFør(OffsetDateTime.now().plusDays(20)).size `should be equal to` 1
-        planlagteVarslerSomSendesFør(OffsetDateTime.now().plusDays(3)).size `should be equal to` 0
+        planlagteVarslerSomSendesFør(dager = 20).size `should be equal to` 1
+        planlagteVarslerSomSendesFør(dager = 3).size `should be equal to` 0
         kafkaProducer.send(
             ProducerRecord(
                 FLEX_SYKEPENGESOKNAD_TOPIC,
@@ -102,7 +100,6 @@ class VarselTest : BaseTestClass() {
         val planlagteVarsler = planlagtVarselRepository.findBySykepengesoknadId(soknad.id)
         planlagteVarsler.size `should be equal to` 2
 
-
         val planlagtVarsel = planlagteVarsler.first { it.status == PLANLAGT }
         planlagtVarsel.brukerFnr `should be equal to` soknad.fnr
         planlagtVarsel.sykepengesoknadId `should be equal to` soknad.id
@@ -110,7 +107,7 @@ class VarselTest : BaseTestClass() {
         planlagtVarsel.varselType `should be equal to` PlanlagtVarselType.SENDT_SYKEPENGESOKNAD
         planlagtVarsel.status `should be equal to` PLANLAGT
         planlagtVarsel.sendes.shouldBeBefore(OffsetDateTime.now().plusDays(3).toInstant())
-        planlagtVarsel.sendes.shouldBeAfter(OffsetDateTime.now().toInstant())
+        planlagtVarsel.sendes.shouldBeAfter(OffsetDateTime.now().minusMinutes(1).toInstant())
 
         val avbruttVarsel = planlagteVarsler.first { it.status == PlanlagtVarselStatus.AVBRUTT }
         avbruttVarsel.brukerFnr `should be equal to` soknad.fnr
@@ -119,6 +116,6 @@ class VarselTest : BaseTestClass() {
         avbruttVarsel.varselType `should be equal to` PlanlagtVarselType.MANGLENDE_SYKEPENGESOKNAD
         avbruttVarsel.status `should be equal to` PlanlagtVarselStatus.AVBRUTT
 
-        planlagteVarslerSomSendesFør(OffsetDateTime.now().plusDays(3)).size `should be equal to` 1
+        planlagteVarslerSomSendesFør(dager = 3).size `should be equal to` 1
     }
 }

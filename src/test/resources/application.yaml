@@ -48,3 +48,4 @@ no.nav.security.jwt:
 
 
 PDL_BASE_URL: "https://pdl-api.dev-fss-pub.nais.io"
+elector.path: dont_look_for_leader
