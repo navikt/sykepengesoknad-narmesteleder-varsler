@@ -8,7 +8,6 @@ import no.nav.helse.flex.varsler.domain.PlanlagtVarselType.MANGLENDE_SYKEPENGESO
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselType.SENDT_SYKEPENGESOKNAD
 import no.nav.syfo.kafka.felles.ArbeidssituasjonDTO.ARBEIDSTAKER
 import no.nav.syfo.kafka.felles.SoknadsstatusDTO.*
-import no.nav.syfo.kafka.felles.SoknadstypeDTO.GRADERT_REISETILSKUDD
 import no.nav.syfo.kafka.felles.SoknadstypeDTO.REISETILSKUDD
 import no.nav.syfo.kafka.felles.SykepengesoknadDTO
 import org.springframework.beans.factory.annotation.Value
@@ -133,7 +132,7 @@ fun omToUkerFornuftigDagtid(now: ZonedDateTime = ZonedDateTime.now(osloZone)): Z
 }
 
 fun SykepengesoknadDTO.skalSendeVarselTilArbeidsgiver() =
-    ARBEIDSTAKER == arbeidssituasjon && type != REISETILSKUDD && type != GRADERT_REISETILSKUDD
+    ARBEIDSTAKER == arbeidssituasjon && type != REISETILSKUDD
 
 fun SykepengesoknadDTO.bleSendtTilArbeidsgiver() =
     status == SENDT && sendtArbeidsgiver != null && (sendtNav == null || !sendtArbeidsgiver!!.isBefore(sendtNav))
