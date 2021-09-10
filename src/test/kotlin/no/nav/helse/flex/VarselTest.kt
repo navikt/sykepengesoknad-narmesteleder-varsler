@@ -42,7 +42,7 @@ class VarselTest : Testoppsett() {
     )
 
     fun planlagteVarslerSomSendesFør(dager: Int): List<PlanlagtVarsel> {
-        return planlagtVarselRepository.findFirst100ByStatusAndSendesIsBefore(
+        return planlagtVarselRepository.findFirst300ByStatusAndSendesIsBefore(
             PLANLAGT,
             OffsetDateTime.now().plusDays(dager.toLong())
         )

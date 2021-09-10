@@ -28,12 +28,12 @@ class VarselUtsendelse(
 
     fun sendVarsler(now: OffsetDateTime = OffsetDateTime.now()): Int {
         val planlagteVarsler =
-            planlagtVarselRepository.findFirst100ByStatusAndSendesIsBefore(PLANLAGT, now)
+            planlagtVarselRepository.findFirst300ByStatusAndSendesIsBefore(PLANLAGT, now)
         var varslerSendt = 0
 
         log.info("Fant ${planlagteVarsler.size} planlagte varsler som skal sendes før $now")
 
-        planlagteVarsler.take(5).forEach { pv ->
+        planlagteVarsler.forEach { pv ->
             val planlagtVarsel = planlagtVarselRepository.findByIdOrNull(pv.id!!)!!
             if (planlagtVarsel.status != PLANLAGT) {
                 log.warn("Planlagt varsel ${planlagtVarsel.id} er ikke lengre planlagt")
