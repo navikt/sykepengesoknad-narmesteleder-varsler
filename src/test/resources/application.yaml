@@ -23,8 +23,6 @@ flex.fss.proxy.url: http://flex-fss-proxy
 
 logging.config: "classpath:logback-local.xml"
 
-varsel-kafka-timestamp-start: 2021-09-06T12:00:00.000000+02:00
-
 no.nav.security.jwt:
   client:
     registration:

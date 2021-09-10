@@ -10,7 +10,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.kafka.support.Acknowledgment
 import org.springframework.stereotype.Component
-import java.time.Instant
 
 @Component
 class SykepengesoknadListener(
@@ -28,7 +27,7 @@ class SykepengesoknadListener(
         try {
             val soknad = cr.value().tilSykepengesoknadDTO()
             brukeroppgaveOpprettelse.opprettBrukeroppgave(soknad)
-            varselPlanlegger.planleggVarsler(soknad, Instant.ofEpochMilli(cr.timestamp()))
+            varselPlanlegger.planleggVarsler(soknad)
             acknowledgment.acknowledge()
         } catch (e: Exception) {
             log.error("Feil ved mottak av record med key: ${cr.key()} offset: ${cr.offset()} partition: ${cr.partition()}", e)
