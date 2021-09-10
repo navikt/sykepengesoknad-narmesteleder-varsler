@@ -10,25 +10,17 @@ import no.nav.syfo.kafka.felles.ArbeidssituasjonDTO.ARBEIDSTAKER
 import no.nav.syfo.kafka.felles.SoknadsstatusDTO.*
 import no.nav.syfo.kafka.felles.SoknadstypeDTO.REISETILSKUDD
 import no.nav.syfo.kafka.felles.SykepengesoknadDTO
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.time.*
 
 @Component
 class VarselPlanlegger(
     private val planlagtVarselRepository: PlanlagtVarselRepository,
-    @Value("\${varsel-kafka-timestamp-start}")
-    private val varselKafkaTimestampStart: String,
 ) {
 
     val log = logger()
-    val featureSwitchTimestamp = OffsetDateTime.parse(varselKafkaTimestampStart)
 
-    fun planleggVarsler(soknad: SykepengesoknadDTO, recordTimestamp: Instant) {
-
-        if (featureSwitchTimestamp.toInstant().isAfter(recordTimestamp)) {
-            return
-        }
+    fun planleggVarsler(soknad: SykepengesoknadDTO) {
 
         if (!soknad.skalSendeVarselTilArbeidsgiver()) {
             return
