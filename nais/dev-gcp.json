@@ -12,6 +12,7 @@
     "FLEX_FSS_PROXY_AAD_CLIENT_ID": "dev-fss.flex.flex-fss-proxy",
     "FLEX_FSS_PROXY_URL": "https://flex-fss-proxy.dev-fss-pub.nais.io",
     "PDL_BASE_URL": "https://pdl-api.dev-fss-pub.nais.io",
-    "PDL_API_AAD_CLIENT_ID": "dev-fss.pdl.pdl-api"
+    "PDL_API_AAD_CLIENT_ID": "dev-fss.pdl.pdl-api",
+    "VARSEL_KAFKA_TIMESTAMP_START": "2021-09-08T12:00:00.000000+02:00"
   }
 }

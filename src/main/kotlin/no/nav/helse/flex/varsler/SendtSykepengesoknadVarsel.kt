@@ -1,17 +1,17 @@
-package no.nav.helse.flex.notifikasjon
+package no.nav.helse.flex.varsler
 
 import no.nav.doknotifikasjon.schemas.NotifikasjonMedkontaktInfo
 import no.nav.doknotifikasjon.schemas.PrefererteKanal
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLeder
 
-const val SMS_TEKST = """
+private const val SMS_TEKST = """
 Hei!
 Du har fått tilgang til en søknad om sykepenger for en av dine ansatte.
 Logg inn på "Min side - arbeidsgiver" og finn søknaden der. 
 Vennlig hilsen NAV
 """
 
-const val EPOST_TEKST = """
+const val SENDT_SYKEPENGESOKNAD_EPOST_TEKST = """
 <!DOCTYPE html>
 <html>
 <body>
@@ -25,7 +25,8 @@ const val EPOST_TEKST = """
 </html>
 """
 
-fun skapNySøknadNotifikasjon(bestillingsId: String, narmesteLeder: NarmesteLeder): NotifikasjonMedkontaktInfo {
+const val SENDT_SYKEPENGESOKNAD_TITTEL = "Ny søknad om sykepenger"
+fun skapSendtSøknadVarsel(bestillingsId: String, narmesteLeder: NarmesteLeder): NotifikasjonMedkontaktInfo {
     return NotifikasjonMedkontaktInfo.newBuilder()
         .setBestillingsId(bestillingsId)
         .setBestillerId("sykepengesoknad-narmesteleder-varsel")
@@ -34,8 +35,8 @@ fun skapNySøknadNotifikasjon(bestillingsId: String, narmesteLeder: NarmesteLede
         .setEpostadresse(narmesteLeder.narmesteLederEpost)
         .setAntallRenotifikasjoner(0)
         .setRenotifikasjonIntervall(0)
-        .setTittel("Ny søknad om sykepenger")
-        .setEpostTekst(EPOST_TEKST)
+        .setTittel(SENDT_SYKEPENGESOKNAD_TITTEL)
+        .setEpostTekst(SENDT_SYKEPENGESOKNAD_EPOST_TEKST)
         .setSmsTekst(SMS_TEKST)
         .setPrefererteKanaler(listOf(PrefererteKanal.EPOST)).build()
 }

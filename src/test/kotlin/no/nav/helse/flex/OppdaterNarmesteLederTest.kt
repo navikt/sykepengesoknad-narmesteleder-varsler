@@ -1,29 +1,18 @@
 package no.nav.helse.flex
 
-import no.nav.helse.flex.kafka.NARMESTELEDER_LEESAH_TOPIC
-import no.nav.helse.flex.narmesteleder.NarmesteLederRepository
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldNotBeNull
-import org.apache.kafka.clients.producer.KafkaProducer
-import org.apache.kafka.clients.producer.ProducerRecord
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-class OppdaterNarmesteLederTest : BaseTestClass() {
-
-    @Autowired
-    lateinit var kafkaProducer: KafkaProducer<String, String>
-
-    @Autowired
-    lateinit var narmesteLederRepository: NarmesteLederRepository
+class OppdaterNarmesteLederTest : Testoppsett() {
 
     @Test
     fun `Oppretter ny nærmeste leder hvis den ikke finnes fra før og er aktiv`() {
@@ -32,14 +21,7 @@ class OppdaterNarmesteLederTest : BaseTestClass() {
         narmesteLederRepository.findByNarmesteLederId(narmesteLederId).shouldBeNull()
 
         val narmesteLederLeesah = getNarmesteLederLeesah(narmesteLederId)
-        kafkaProducer.send(
-            ProducerRecord(
-                NARMESTELEDER_LEESAH_TOPIC,
-                null,
-                narmesteLederId.toString(),
-                narmesteLederLeesah.serialisertTilString()
-            )
-        ).get()
+        sendNarmesteLederLeesah(narmesteLederLeesah)
 
         await().atMost(10, TimeUnit.SECONDS).until {
             narmesteLederRepository.findByNarmesteLederId(narmesteLederId) != null
@@ -54,14 +36,8 @@ class OppdaterNarmesteLederTest : BaseTestClass() {
     fun `Ignorerer melding om ny nærmeste leder hvis den ikke finnes fra før og er inaktiv`() {
         val narmesteLederId = UUID.randomUUID()
         val narmesteLederLeesah = getNarmesteLederLeesah(narmesteLederId, aktivTom = LocalDate.now())
-        kafkaProducer.send(
-            ProducerRecord(
-                NARMESTELEDER_LEESAH_TOPIC,
-                null,
-                narmesteLederId.toString(),
-                narmesteLederLeesah.serialisertTilString()
-            )
-        ).get()
+
+        sendNarmesteLederLeesah(narmesteLederLeesah)
 
         await().during(2, TimeUnit.SECONDS).until {
             narmesteLederRepository.findByNarmesteLederId(narmesteLederId) == null
@@ -74,15 +50,8 @@ class OppdaterNarmesteLederTest : BaseTestClass() {
     fun `Oppdaterer nærmeste leder hvis den finnes fra før og er aktiv`() {
         val narmesteLederId = UUID.randomUUID()
         val narmesteLederLeesah = getNarmesteLederLeesah(narmesteLederId)
-        kafkaProducer.send(
-            ProducerRecord(
-                NARMESTELEDER_LEESAH_TOPIC,
-                null,
-                narmesteLederId.toString(),
-                narmesteLederLeesah.serialisertTilString()
-            )
-        ).get()
 
+        sendNarmesteLederLeesah(narmesteLederLeesah)
         await().atMost(10, TimeUnit.SECONDS).until {
             narmesteLederRepository.findByNarmesteLederId(narmesteLederId) != null
         }
@@ -91,18 +60,13 @@ class OppdaterNarmesteLederTest : BaseTestClass() {
         narmesteLeder.narmesteLederTelefonnummer `should be equal to` "90909090"
         narmesteLeder.narmesteLederEpost `should be equal to` "test@nav.no"
 
-        kafkaProducer.send(
-            ProducerRecord(
-                NARMESTELEDER_LEESAH_TOPIC,
-                null,
-                narmesteLederId.toString(),
-                getNarmesteLederLeesah(
-                    narmesteLederId,
-                    telefonnummer = "98989898",
-                    epost = "mail@banken.no"
-                ).serialisertTilString()
+        sendNarmesteLederLeesah(
+            getNarmesteLederLeesah(
+                narmesteLederId,
+                telefonnummer = "98989898",
+                epost = "mail@banken.no"
             )
-        ).get()
+        )
 
         await().atMost(10, TimeUnit.SECONDS).until {
             narmesteLederRepository.findByNarmesteLederId(narmesteLederId)!!.narmesteLederEpost == "mail@banken.no"
@@ -117,14 +81,7 @@ class OppdaterNarmesteLederTest : BaseTestClass() {
     fun `Sletter nærmeste leder hvis den finnes fra før og er inaktiv`() {
         val narmesteLederId = UUID.randomUUID()
         val narmesteLederLeesah = getNarmesteLederLeesah(narmesteLederId)
-        kafkaProducer.send(
-            ProducerRecord(
-                NARMESTELEDER_LEESAH_TOPIC,
-                null,
-                narmesteLederId.toString(),
-                narmesteLederLeesah.serialisertTilString()
-            )
-        ).get()
+        sendNarmesteLederLeesah(narmesteLederLeesah)
 
         await().atMost(10, TimeUnit.SECONDS).until {
             narmesteLederRepository.findByNarmesteLederId(narmesteLederId) != null
@@ -132,17 +89,12 @@ class OppdaterNarmesteLederTest : BaseTestClass() {
 
         narmesteLederRepository.findByNarmesteLederId(narmesteLederId).shouldNotBeNull()
 
-        kafkaProducer.send(
-            ProducerRecord(
-                NARMESTELEDER_LEESAH_TOPIC,
-                null,
-                narmesteLederId.toString(),
-                getNarmesteLederLeesah(
-                    narmesteLederId,
-                    aktivTom = LocalDate.now(),
-                ).serialisertTilString()
+        sendNarmesteLederLeesah(
+            getNarmesteLederLeesah(
+                narmesteLederId,
+                aktivTom = LocalDate.now(),
             )
-        ).get()
+        )
 
         await().atMost(10, TimeUnit.SECONDS).until {
             narmesteLederRepository.findByNarmesteLederId(narmesteLederId) == null

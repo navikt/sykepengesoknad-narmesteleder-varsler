@@ -5,11 +5,11 @@ import no.nav.helse.flex.logger
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLeder
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
 import no.nav.helse.flex.objectMapper
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
 import java.time.Instant
 
-@Service
-class NarmesteLederService(
+@Component
+class OppdateringAvNarmesteLeder(
     val narmesteLederRepository: NarmesteLederRepository,
 ) {
 
@@ -21,7 +21,7 @@ class NarmesteLederService(
 
         if (narmesteLeder != null) {
             if (narmesteLederLeesah.aktivTom == null) {
-                narmesteLederRepository.save(narmesteLederLeesah.toNarmesteLeder(id = narmesteLeder.id))
+                narmesteLederRepository.save(narmesteLederLeesah.tilNarmesteLeder(id = narmesteLeder.id))
                 log.info("Oppdatert narmesteleder med id ${narmesteLederLeesah.narmesteLederId}")
             } else {
                 narmesteLederRepository.delete(narmesteLeder)
@@ -29,7 +29,7 @@ class NarmesteLederService(
             }
         } else {
             if (narmesteLederLeesah.aktivTom == null) {
-                narmesteLederRepository.save(narmesteLederLeesah.toNarmesteLeder(id = null))
+                narmesteLederRepository.save(narmesteLederLeesah.tilNarmesteLeder(id = null))
                 log.info("Lagret narmesteleder med id ${narmesteLederLeesah.narmesteLederId}")
             } else {
                 log.info("Ignorerer ny inaktiv narmesteleder med id ${narmesteLederLeesah.narmesteLederId}")
@@ -40,7 +40,7 @@ class NarmesteLederService(
     fun String.tilNarmesteLederLeesah(): NarmesteLederLeesah = objectMapper.readValue(this)
 }
 
-private fun NarmesteLederLeesah.toNarmesteLeder(id: String?): NarmesteLeder = NarmesteLeder(
+private fun NarmesteLederLeesah.tilNarmesteLeder(id: String?): NarmesteLeder = NarmesteLeder(
     id = id,
     narmesteLederId = narmesteLederId,
     brukerFnr = fnr,

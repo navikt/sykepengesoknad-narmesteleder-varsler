@@ -8,4 +8,5 @@ import java.util.*
 @Repository
 interface NarmesteLederRepository : CrudRepository<NarmesteLeder, String> {
     fun findByNarmesteLederId(narmesteLederId: UUID): NarmesteLeder?
+    fun findByBrukerFnrAndOrgnummer(brukerFnr: String, orgnummer: String): List<NarmesteLeder>
 }

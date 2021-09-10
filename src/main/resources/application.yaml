@@ -28,6 +28,7 @@ management:
 
 logging.config: "classpath:logback.xml"
 
+varsel-kafka-timestamp-start: 2021-09-10T12:30:00.000000+02:00
 
 no.nav.security.jwt:
   client:
