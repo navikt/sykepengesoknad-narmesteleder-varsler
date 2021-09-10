@@ -26,17 +26,14 @@ class VarselUtsendelse(
 
     val log = logger()
 
-    fun sendVarsler(now: OffsetDateTime = OffsetDateTime.now(), dryrun: Boolean = true): Int {
+    fun sendVarsler(now: OffsetDateTime = OffsetDateTime.now()): Int {
         val planlagteVarsler =
             planlagtVarselRepository.findFirst100ByStatusAndSendesIsBefore(PLANLAGT, now)
         var varslerSendt = 0
 
         log.info("Fant ${planlagteVarsler.size} planlagte varsler som skal sendes før $now")
-        if (dryrun) {
-            log.info("Kjører kun dry run, ingen varsel vil bli sendt")
-            return 0
-        }
-        planlagteVarsler.forEach { pv ->
+
+        planlagteVarsler.take(5).forEach { pv ->
             val planlagtVarsel = planlagtVarselRepository.findByIdOrNull(pv.id!!)!!
             if (planlagtVarsel.status != PLANLAGT) {
                 log.warn("Planlagt varsel ${planlagtVarsel.id} er ikke lengre planlagt")

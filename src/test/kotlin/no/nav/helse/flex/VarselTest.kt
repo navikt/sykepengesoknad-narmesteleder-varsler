@@ -148,7 +148,7 @@ class VarselTest : Testoppsett() {
         val planlagtVarsel = planlagteVarslerSomSendesFør(dager = 3).first()
         planlagtVarsel.status `should be equal to` PLANLAGT
 
-        val antallVarsel = varselUtsendelse.sendVarsler(OffsetDateTime.now().plusDays(3), dryrun = false)
+        val antallVarsel = varselUtsendelse.sendVarsler(OffsetDateTime.now().plusDays(3))
         antallVarsel `should be equal to` 0
         doknotifikasjonKafkaConsumer.ventPåRecords(antall = 0)
 
@@ -215,7 +215,7 @@ class VarselTest : Testoppsett() {
 
         planlagteVarslerSomSendesFør(dager = 20).size `should be equal to` 1
 
-        val antallVarsel = varselUtsendelse.sendVarsler(OffsetDateTime.now().plusDays(20), dryrun = false)
+        val antallVarsel = varselUtsendelse.sendVarsler(OffsetDateTime.now().plusDays(20))
         antallVarsel `should be equal to` 1
         val notifikasjon = doknotifikasjonKafkaConsumer.ventPåRecords(antall = 1).first().value()
 
@@ -262,7 +262,7 @@ class VarselTest : Testoppsett() {
 
         planlagteVarslerSomSendesFør(dager = 3).size `should be equal to` 1
 
-        val antallVarsel = varselUtsendelse.sendVarsler(OffsetDateTime.now().plusDays(20), dryrun = false)
+        val antallVarsel = varselUtsendelse.sendVarsler(OffsetDateTime.now().plusDays(20))
         antallVarsel `should be equal to` 1
         val notifikasjon = doknotifikasjonKafkaConsumer.ventPåRecords(antall = 1).first().value()
 
