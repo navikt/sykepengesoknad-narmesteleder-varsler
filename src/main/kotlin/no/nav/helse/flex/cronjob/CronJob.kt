@@ -12,7 +12,7 @@ class CronJob(
 ) {
     val log = logger()
 
-    @Scheduled(cron = "0 0/5 * * * ?")
+    @Scheduled(cron = "0 0/2 * * * ?")
     fun run() {
         if (leaderElection.isLeader()) {
             log.info("Kjører varsel utsendelse job")
