@@ -59,7 +59,8 @@ class VarselPlanlegger(
             .any { it.varselType == MANGLENDE_SYKEPENGESOKNAD }
 
         if (harAlleredePlanlagt) {
-            log.warn("Har allerede planlagt varsel for status NY for soknad $id")
+            // Dette skjer ved gjenåpning av avbrutt søknad
+            log.info("Har allerede planlagt varsel for status NY for soknad $id")
             return
         }
 
