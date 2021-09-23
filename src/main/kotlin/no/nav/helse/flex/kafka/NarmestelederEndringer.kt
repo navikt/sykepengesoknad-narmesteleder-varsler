@@ -22,13 +22,14 @@ class NarmestelederEndringer() {
     fun listen(cr: ConsumerRecord<String, String>, acknowledgment: Acknowledgment) {
         try {
             val narmesteLederLeesah = cr.value().tilNarmesteLederLeesah()
-            if (narmesteLederLeesah.narmesteLederId.toString() == "e9cfe117-f882-422f-809c-d362ed20435e") {
+            if (narmesteLederLeesah.narmesteLederId.toString() == "53097925-6cd7-4370-9606-ee60c41c6057") {
                 val timestamp = narmesteLederLeesah.timestamp
                 val fom = narmesteLederLeesah.aktivFom
                 val tom = narmesteLederLeesah.aktivTom
                 val forskutterer = narmesteLederLeesah.arbeidsgiverForskutterer
                 log.info("NL ENDRING: $timestamp # $fom # $tom # $forskutterer")
             }
+            acknowledgment.acknowledge()
         } catch (e: Exception) {
             log.error(
                 "Feil ved mottak av record med key: ${cr.key()} offset: ${cr.offset()} partition: ${cr.partition()}",
