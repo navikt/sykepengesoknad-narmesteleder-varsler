@@ -74,27 +74,6 @@ class KafkaConfig(
     }
 
     @Bean
-    fun brukDenneContainerFactory(
-        kafkaErrorHandler: KafkaErrorHandler
-    ): ConcurrentKafkaListenerContainerFactory<String, String> {
-        val config = mapOf(
-            ConsumerConfig.GROUP_ID_CONFIG to "finn-endringer-i-skjema",
-            ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest",
-            ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG to false,
-            ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java,
-            ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java,
-            ConsumerConfig.MAX_POLL_RECORDS_CONFIG to "100"
-        ) + commonConfig()
-        val consumerFactory = DefaultKafkaConsumerFactory<String, String>(config)
-
-        val factory = ConcurrentKafkaListenerContainerFactory<String, String>()
-        factory.consumerFactory = consumerFactory
-        factory.setErrorHandler(kafkaErrorHandler)
-        factory.containerProperties.ackMode = ContainerProperties.AckMode.MANUAL_IMMEDIATE
-        return factory
-    }
-
-    @Bean
     @Profile("default")
     fun doknotifikasjonProducer(): KafkaProducer<String, NotifikasjonMedkontaktInfo> {
 
