@@ -22,7 +22,8 @@ class BrukeroppgaveOpprettelse(
 
         if ((
             SoknadstypeDTO.ARBEIDSTAKERE == soknad.type ||
-                (SoknadstypeDTO.BEHANDLINGSDAGER == soknad.type && soknad.arbeidssituasjon == ArbeidssituasjonDTO.ARBEIDSTAKER)
+                (SoknadstypeDTO.BEHANDLINGSDAGER == soknad.type && soknad.arbeidssituasjon == ArbeidssituasjonDTO.ARBEIDSTAKER) ||
+                (SoknadstypeDTO.GRADERT_REISETILSKUDD == soknad.type && soknad.arbeidssituasjon == ArbeidssituasjonDTO.ARBEIDSTAKER)
             ) &&
             SoknadsstatusDTO.SENDT == soknad.status &&
             soknad.sendtArbeidsgiver != null
