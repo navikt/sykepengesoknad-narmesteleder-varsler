@@ -24,17 +24,13 @@ class SykepengesoknadListener(
         containerFactory = "aivenKafkaListenerContainerFactory"
     )
     fun listen(cr: ConsumerRecord<String, String>, acknowledgment: Acknowledgment) {
-        try {
-            val soknad = cr.value().tilSykepengesoknadDTO()
-            brukeroppgaveOpprettelse.opprettBrukeroppgave(soknad)
-            varselPlanlegger.planleggVarsler(soknad)
-            acknowledgment.acknowledge()
-        } catch (e: Exception) {
-            log.error("Feil ved mottak av record med key: ${cr.key()} offset: ${cr.offset()} partition: ${cr.partition()}", e)
-            throw e
-        }
+        val soknad = cr.value().tilSykepengesoknadDTO()
+        brukeroppgaveOpprettelse.opprettBrukeroppgave(soknad)
+        varselPlanlegger.planleggVarsler(soknad)
+        acknowledgment.acknowledge()
     }
 
     fun String.tilSykepengesoknadDTO(): SykepengesoknadDTO = objectMapper.readValue(this)
 }
+
 const val FLEX_SYKEPENGESOKNAD_TOPIC = "flex.sykepengesoknad"

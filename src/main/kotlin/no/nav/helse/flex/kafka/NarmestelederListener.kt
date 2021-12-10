@@ -19,16 +19,8 @@ class NarmestelederListener(
         containerFactory = "aivenKafkaListenerContainerFactory",
     )
     fun listen(cr: ConsumerRecord<String, String>, acknowledgment: Acknowledgment) {
-        try {
-            oppdateringAvNarmesteLeder.behandleMeldingFraKafka(cr.value())
-            acknowledgment.acknowledge()
-        } catch (e: Exception) {
-            log.error(
-                "Feil ved mottak av record med key: ${cr.key()} offset: ${cr.offset()} partition: ${cr.partition()}",
-                e
-            )
-            throw e
-        }
+        oppdateringAvNarmesteLeder.behandleMeldingFraKafka(cr.value())
+        acknowledgment.acknowledge()
     }
 }
 
