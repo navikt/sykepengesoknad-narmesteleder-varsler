@@ -22,14 +22,16 @@ class KafkaErrorHandler : SeekToCurrentErrorHandler(
         consumer: Consumer<*, *>,
         container: MessageListenerContainer
     ) {
-        log.error("Feil i listener:", thrownException)
 
         records?.forEach { record ->
             log.error(
-                "Feil i prossesseringen av record med offset: ${record.offset()}, key: ${record.key()}",
+                "Feil i prossessering av record med offset: ${record.offset()}, key: ${record.key()} på topic ${record.topic()}",
+                thrownException
             )
         }
-
+        if (records == null || records.isEmpty()) {
+            log.error("Feil i listener uten noen records", thrownException)
+        }
         super.handle(thrownException, records, consumer, container)
     }
 }
