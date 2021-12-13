@@ -115,7 +115,7 @@ class VarselTest : Testoppsett() {
         sendSykepengesoknad(soknaden)
 
         await().atMost(5, SECONDS).until {
-            planlagtVarselRepository.findBySykepengesoknadId(soknad.id).size == 2
+            planlagtVarselRepository.findBySykepengesoknadIdAndStatus(soknad.id, AVBRUTT).isNotEmpty()
         }
 
         val planlagteVarsler = planlagtVarselRepository.findBySykepengesoknadId(soknad.id)

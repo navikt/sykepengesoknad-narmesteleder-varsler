@@ -10,4 +10,5 @@ import java.time.OffsetDateTime
 interface PlanlagtVarselRepository : CrudRepository<PlanlagtVarsel, String> {
     fun findBySykepengesoknadId(sykepengesoknadId: String): List<PlanlagtVarsel>
     fun findFirst300ByStatusAndSendesIsBefore(status: PlanlagtVarselStatus, sendes: OffsetDateTime): List<PlanlagtVarsel>
+    fun findBySykepengesoknadIdAndStatus(sykepengesoknadId: String, status: PlanlagtVarselStatus): List<PlanlagtVarsel>
 }
