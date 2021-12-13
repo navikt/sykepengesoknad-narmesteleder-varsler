@@ -57,7 +57,7 @@ class TestKafkaBeans(
         return mapOf(
             ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to KafkaAvroSerializer::class.java,
             ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG to KafkaAvroSerializer::class.java,
-            KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG to "http://whatever.nav",
+            KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG to "http://ikke.i.bruk.nav",
             SaslConfigs.SASL_MECHANISM to "PLAIN"
         ) + producerConfig() + kafkaConfig.commonConfig()
     }
@@ -66,25 +66,30 @@ class TestKafkaBeans(
     fun mockSchemaRegistryClient(): MockSchemaRegistryClient {
         val mockSchemaRegistryClient = MockSchemaRegistryClient()
 
-        mockSchemaRegistryClient.register("$doknotifikasjonTopic-value", AvroSchema(NotifikasjonMedkontaktInfo.`SCHEMA$`))
+        mockSchemaRegistryClient.register(
+            "$doknotifikasjonTopic-value",
+            AvroSchema(NotifikasjonMedkontaktInfo.`SCHEMA$`)
+        )
 
         return mockSchemaRegistryClient
+    }
+
+    fun kafkaAvroDeserializer(): KafkaAvroDeserializer {
+        val config = HashMap<String, Any>()
+        config[AbstractKafkaSchemaSerDeConfig.AUTO_REGISTER_SCHEMAS] = false
+        config[KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG] = "http://ikke.i.bruk.nav"
+        config[KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG] = true
+        return KafkaAvroDeserializer(mockSchemaRegistryClient(), config)
     }
 
     fun testConsumerProps(groupId: String) = mapOf(
         ConsumerConfig.GROUP_ID_CONFIG to groupId,
         ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest",
         ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG to false,
-        ConsumerConfig.MAX_POLL_RECORDS_CONFIG to "1"
+        ConsumerConfig.MAX_POLL_RECORDS_CONFIG to "1",
+        KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG to "http://ikke.i.bruk.nav",
+        KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG to true,
     ) + kafkaConfig.commonConfig()
-
-    fun kafkaAvroDeserializer(): KafkaAvroDeserializer {
-        val config = HashMap<String, Any>()
-        config[AbstractKafkaSchemaSerDeConfig.AUTO_REGISTER_SCHEMAS] = false
-        config[KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG] = true
-        config[KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG] = "http://ikke.i.bruk.nav"
-        return KafkaAvroDeserializer(mockSchemaRegistryClient(), config)
-    }
 
     @Bean
     fun oppgaveKafkaConsumer(): Consumer<String, NotifikasjonMedkontaktInfo> {
