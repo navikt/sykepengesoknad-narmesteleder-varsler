@@ -4,10 +4,11 @@ import no.nav.helse.flex.varsler.domain.PlanlagtVarsel
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselStatus
 import org.springframework.data.repository.CrudRepository
 import org.springframework.stereotype.Repository
-import java.time.OffsetDateTime
+import java.time.Instant
 
 @Repository
 interface PlanlagtVarselRepository : CrudRepository<PlanlagtVarsel, String> {
     fun findBySykepengesoknadId(sykepengesoknadId: String): List<PlanlagtVarsel>
-    fun findFirst300ByStatusAndSendesIsBefore(status: PlanlagtVarselStatus, sendes: OffsetDateTime): List<PlanlagtVarsel>
+    fun findFirst300ByStatusAndSendesIsBefore(status: PlanlagtVarselStatus, sendes: Instant): List<PlanlagtVarsel>
+    fun findBySykepengesoknadIdAndStatus(sykepengesoknadId: String, status: PlanlagtVarselStatus): List<PlanlagtVarsel>
 }

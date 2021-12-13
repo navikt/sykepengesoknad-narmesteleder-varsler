@@ -2,15 +2,29 @@ package no.nav.helse.flex
 
 import no.nav.doknotifikasjon.schemas.PrefererteKanal
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
-import no.nav.helse.flex.varsler.*
+import no.nav.helse.flex.varsler.MANGLENDE_VARSEL_EPOST_TEKST
+import no.nav.helse.flex.varsler.MANGLENDE_VARSEL_TITTEL
+import no.nav.helse.flex.varsler.SENDT_SYKEPENGESOKNAD_EPOST_TEKST
+import no.nav.helse.flex.varsler.SENDT_SYKEPENGESOKNAD_TITTEL
+import no.nav.helse.flex.varsler.VarselUtsendelse
 import no.nav.helse.flex.varsler.domain.PlanlagtVarsel
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselStatus
-import no.nav.helse.flex.varsler.domain.PlanlagtVarselStatus.*
+import no.nav.helse.flex.varsler.domain.PlanlagtVarselStatus.AVBRUTT
+import no.nav.helse.flex.varsler.domain.PlanlagtVarselStatus.INGEN_LEDER
+import no.nav.helse.flex.varsler.domain.PlanlagtVarselStatus.PLANLAGT
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselType.MANGLENDE_SYKEPENGESOKNAD
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselType.SENDT_SYKEPENGESOKNAD
-import no.nav.syfo.kafka.felles.*
+import no.nav.syfo.kafka.felles.ArbeidsgiverDTO
+import no.nav.syfo.kafka.felles.ArbeidssituasjonDTO
+import no.nav.syfo.kafka.felles.SoknadsstatusDTO
 import no.nav.syfo.kafka.felles.SoknadsstatusDTO.SENDT
-import org.amshove.kluent.*
+import no.nav.syfo.kafka.felles.SoknadstypeDTO
+import no.nav.syfo.kafka.felles.SykepengesoknadDTO
+import org.amshove.kluent.`should be equal to`
+import org.amshove.kluent.shouldBeAfter
+import org.amshove.kluent.shouldBeBefore
+import org.amshove.kluent.shouldBeEmpty
+import org.amshove.kluent.shouldBeNull
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
@@ -18,10 +32,12 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.time.temporal.ChronoUnit
 import java.util.*
 import java.util.concurrent.TimeUnit.SECONDS
 
@@ -31,7 +47,7 @@ class VarselTest : Testoppsett() {
     @Autowired
     lateinit var varselUtsendelse: VarselUtsendelse
 
-    val orgnummer = "999111555"
+    final val orgnummer = "999111555"
     val soknad = SykepengesoknadDTO(
         fnr = fnr,
         id = UUID.randomUUID().toString(),
@@ -40,13 +56,6 @@ class VarselTest : Testoppsett() {
         arbeidssituasjon = ArbeidssituasjonDTO.ARBEIDSTAKER,
         arbeidsgiver = ArbeidsgiverDTO(navn = "Bedriften AS", orgnummer = orgnummer)
     )
-
-    fun planlagteVarslerSomSendesFør(dager: Int): List<PlanlagtVarsel> {
-        return planlagtVarselRepository.findFirst300ByStatusAndSendesIsBefore(
-            PLANLAGT,
-            OffsetDateTime.now().plusDays(dager.toLong())
-        )
-    }
 
     @Test
     @Order(0)
@@ -97,8 +106,8 @@ class VarselTest : Testoppsett() {
         planlagtVarsel.orgnummer `should be equal to` soknad.arbeidsgiver!!.orgnummer
         planlagtVarsel.varselType `should be equal to` MANGLENDE_SYKEPENGESOKNAD
         planlagtVarsel.status `should be equal to` PLANLAGT
-        planlagtVarsel.sendes.shouldBeBefore(OffsetDateTime.now().plusDays(17).toInstant())
-        planlagtVarsel.sendes.shouldBeAfter(OffsetDateTime.now().plusDays(13).toInstant())
+        planlagtVarsel.sendes.shouldBeBefore(Instant.now().plus(17L, ChronoUnit.DAYS))
+        planlagtVarsel.sendes.shouldBeAfter(Instant.now().plus(13L, ChronoUnit.DAYS))
 
         planlagteVarslerSomSendesFør(dager = 20).size `should be equal to` 1
     }
@@ -115,7 +124,7 @@ class VarselTest : Testoppsett() {
         sendSykepengesoknad(soknaden)
 
         await().atMost(5, SECONDS).until {
-            planlagtVarselRepository.findBySykepengesoknadId(soknad.id).size == 2
+            planlagtVarselRepository.findBySykepengesoknadIdAndStatus(soknad.id, AVBRUTT).isNotEmpty()
         }
 
         val planlagteVarsler = planlagtVarselRepository.findBySykepengesoknadId(soknad.id)
@@ -127,8 +136,8 @@ class VarselTest : Testoppsett() {
         planlagtVarsel.orgnummer `should be equal to` soknad.arbeidsgiver!!.orgnummer
         planlagtVarsel.varselType `should be equal to` SENDT_SYKEPENGESOKNAD
         planlagtVarsel.status `should be equal to` PLANLAGT
-        planlagtVarsel.sendes.shouldBeBefore(OffsetDateTime.now().plusDays(3).toInstant())
-        planlagtVarsel.sendes.shouldBeAfter(OffsetDateTime.now().minusMinutes(1).toInstant())
+        planlagtVarsel.sendes.shouldBeBefore(Instant.now().plus(3L, ChronoUnit.DAYS))
+        planlagtVarsel.sendes.shouldBeAfter(Instant.now().minus(1L, ChronoUnit.MINUTES))
 
         val avbruttVarsel = planlagteVarsler.first { it.status == AVBRUTT }
         avbruttVarsel.brukerFnr `should be equal to` soknad.fnr
@@ -148,7 +157,7 @@ class VarselTest : Testoppsett() {
         val planlagtVarsel = planlagteVarslerSomSendesFør(dager = 3).first()
         planlagtVarsel.status `should be equal to` PLANLAGT
 
-        val antallVarsel = varselUtsendelse.sendVarsler(OffsetDateTime.now().plusDays(3))
+        val antallVarsel = varselUtsendelse.sendVarsler(Instant.now().plus(3L, ChronoUnit.DAYS))
         antallVarsel `should be equal to` 0
         doknotifikasjonKafkaConsumer.ventPåRecords(antall = 0)
 
@@ -215,7 +224,7 @@ class VarselTest : Testoppsett() {
 
         planlagteVarslerSomSendesFør(dager = 20).size `should be equal to` 1
 
-        val antallVarsel = varselUtsendelse.sendVarsler(OffsetDateTime.now().plusDays(20))
+        val antallVarsel = varselUtsendelse.sendVarsler(Instant.now().plus(20L, ChronoUnit.DAYS))
         antallVarsel `should be equal to` 1
         val notifikasjon = doknotifikasjonKafkaConsumer.ventPåRecords(antall = 1).first().value()
 
@@ -262,7 +271,7 @@ class VarselTest : Testoppsett() {
 
         planlagteVarslerSomSendesFør(dager = 3).size `should be equal to` 1
 
-        val antallVarsel = varselUtsendelse.sendVarsler(OffsetDateTime.now().plusDays(20))
+        val antallVarsel = varselUtsendelse.sendVarsler(Instant.now().plus(20L, ChronoUnit.DAYS))
         antallVarsel `should be equal to` 1
         val notifikasjon = doknotifikasjonKafkaConsumer.ventPåRecords(antall = 1).first().value()
 
@@ -282,5 +291,12 @@ class VarselTest : Testoppsett() {
         notifikasjon.getTittel() `should be equal to` SENDT_SYKEPENGESOKNAD_TITTEL
         pdlMockServer?.reset()
         syfoServiceStanglerMockServer?.reset()
+    }
+
+    private fun planlagteVarslerSomSendesFør(dager: Int): List<PlanlagtVarsel> {
+        return planlagtVarselRepository.findFirst300ByStatusAndSendesIsBefore(
+            PLANLAGT,
+            Instant.now().plus(dager.toLong(), ChronoUnit.DAYS)
+        )
     }
 }

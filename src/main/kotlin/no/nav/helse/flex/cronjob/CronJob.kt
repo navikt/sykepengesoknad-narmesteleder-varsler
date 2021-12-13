@@ -2,9 +2,11 @@ package no.nav.helse.flex.cronjob
 
 import no.nav.helse.flex.logger
 import no.nav.helse.flex.varsler.VarselUtsendelse
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
+@Profile("default")
 @Component
 class CronJob(
     val leaderElection: LeaderElection,
