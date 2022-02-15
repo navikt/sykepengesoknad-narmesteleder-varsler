@@ -6,9 +6,9 @@ import no.nav.helse.flex.kafka.NARMESTELEDER_LEESAH_TOPIC
 import no.nav.helse.flex.kafka.doknotifikasjonTopic
 import no.nav.helse.flex.narmesteleder.NarmesteLederRepository
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
+import no.nav.helse.flex.sykepengesoknad.kafka.SykepengesoknadDTO
 import no.nav.helse.flex.varsler.PlanlagtVarselRepository
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
-import no.nav.syfo.kafka.felles.SykepengesoknadDTO
 import org.amshove.kluent.shouldBeEmpty
 import org.apache.kafka.clients.consumer.Consumer
 import org.apache.kafka.clients.producer.Producer
