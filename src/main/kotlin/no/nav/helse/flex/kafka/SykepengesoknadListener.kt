@@ -4,8 +4,8 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.helse.flex.brukeroppgave.BrukeroppgaveOpprettelse
 import no.nav.helse.flex.logger
 import no.nav.helse.flex.objectMapper
+import no.nav.helse.flex.sykepengesoknad.kafka.*
 import no.nav.helse.flex.varsler.VarselPlanlegger
-import no.nav.syfo.kafka.felles.SykepengesoknadDTO
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.kafka.support.Acknowledgment

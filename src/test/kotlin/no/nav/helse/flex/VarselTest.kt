@@ -2,6 +2,8 @@ package no.nav.helse.flex
 
 import no.nav.doknotifikasjon.schemas.PrefererteKanal
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
+import no.nav.helse.flex.sykepengesoknad.kafka.*
+import no.nav.helse.flex.sykepengesoknad.kafka.SoknadsstatusDTO.SENDT
 import no.nav.helse.flex.varsler.MANGLENDE_VARSEL_EPOST_TEKST
 import no.nav.helse.flex.varsler.MANGLENDE_VARSEL_TITTEL
 import no.nav.helse.flex.varsler.SENDT_SYKEPENGESOKNAD_EPOST_TEKST
@@ -14,12 +16,6 @@ import no.nav.helse.flex.varsler.domain.PlanlagtVarselStatus.INGEN_LEDER
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselStatus.PLANLAGT
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselType.MANGLENDE_SYKEPENGESOKNAD
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselType.SENDT_SYKEPENGESOKNAD
-import no.nav.syfo.kafka.felles.ArbeidsgiverDTO
-import no.nav.syfo.kafka.felles.ArbeidssituasjonDTO
-import no.nav.syfo.kafka.felles.SoknadsstatusDTO
-import no.nav.syfo.kafka.felles.SoknadsstatusDTO.SENDT
-import no.nav.syfo.kafka.felles.SoknadstypeDTO
-import no.nav.syfo.kafka.felles.SykepengesoknadDTO
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.shouldBeAfter
 import org.amshove.kluent.shouldBeBefore

@@ -1,15 +1,13 @@
 package no.nav.helse.flex.varsler
 
 import no.nav.helse.flex.logger
+import no.nav.helse.flex.sykepengesoknad.kafka.*
+import no.nav.helse.flex.sykepengesoknad.kafka.SoknadsstatusDTO.*
 import no.nav.helse.flex.varsler.domain.PlanlagtVarsel
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselStatus
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselStatus.PLANLAGT
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselType.MANGLENDE_SYKEPENGESOKNAD
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselType.SENDT_SYKEPENGESOKNAD
-import no.nav.syfo.kafka.felles.ArbeidssituasjonDTO.ARBEIDSTAKER
-import no.nav.syfo.kafka.felles.SoknadsstatusDTO.*
-import no.nav.syfo.kafka.felles.SoknadstypeDTO.REISETILSKUDD
-import no.nav.syfo.kafka.felles.SykepengesoknadDTO
 import org.springframework.stereotype.Component
 import java.time.*
 
@@ -125,7 +123,7 @@ fun omToUkerFornuftigDagtid(now: ZonedDateTime = ZonedDateTime.now(osloZone)): Z
 }
 
 fun SykepengesoknadDTO.skalSendeVarselTilArbeidsgiver() =
-    ARBEIDSTAKER == arbeidssituasjon && type != REISETILSKUDD
+    ArbeidssituasjonDTO.ARBEIDSTAKER == arbeidssituasjon && type != SoknadstypeDTO.REISETILSKUDD
 
 fun SykepengesoknadDTO.bleSendtTilArbeidsgiver() =
     status == SENDT && sendtArbeidsgiver != null && (sendtNav == null || !sendtArbeidsgiver!!.isBefore(sendtNav))
