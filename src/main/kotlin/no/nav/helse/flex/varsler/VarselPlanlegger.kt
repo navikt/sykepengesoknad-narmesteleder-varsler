@@ -30,7 +30,7 @@ class VarselPlanlegger(
         if (soknad.bleSendtTilArbeidsgiver()) {
             soknad.planleggVarselForStatusSendt()
         }
-        if (listOf(SENDT, AVBRUTT, SLETTET, KORRIGERT).contains(soknad.status)) {
+        if (listOf(SENDT, AVBRUTT, SLETTET, KORRIGERT, UTGAATT).contains(soknad.status)) {
             soknad.avbrytManglendeSoknadVarsler()
         }
     }
