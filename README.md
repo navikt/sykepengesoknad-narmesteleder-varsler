@@ -1,11 +1,10 @@
 # sykepengesoknad-narmesteleder-varsler
 
 
-
 ## Opprettelse av brukeroppgave (rød prikk) i Dine Sykmeldte
 Dette gjøres når det kommer sendte sykepengesøknader som er sendt arbeidsgiver.
 Opprettelsen skjer med et API kall via flex-fss-proxy til syfoservice strangler som oppdaterer syfoservicedatabasen.
-Dette vil på sikt skje på en annen måte
+Dette vil på sikt skje på en annen måte når nye dinesykmeldte er klar.
 
 ## Utsendelse av varsler til nærmeste leder
 Det sendes typer varsler til nærmeste leder. 
@@ -40,3 +39,29 @@ Da vil varselet sendes ved neste hele femte minutt.
 Rollen `cloudsqliamuser` har UPDATE tilgang i databasen i dev-gcp. Så dersom du bruker fremgangsmåten fra `flex-cloud-sql-tools` vil du ha tilgang til å oppdatere utsendelsetidspunktet med personlig bruker.
 
 Hvis epost varselet ikke kommer ut så kan det være at team-dokumentløsninger har skrudd av testing mot altinn, da må man sjekke med dem om det er åpent eller ikke.
+
+## Data
+Applikasjonen har en database i GCP.
+
+Tabellen `planlagt varsel` holder oversikt over alle planlagte, avbrutte og sendte varsler.
+Tabellen inkluderer fødselsnummer, orgnummer og sykpengesøknad_id og er derfor personidentifiserbar. Det slettes ikke data fra tabellen.
+
+Tabellen `narmeste leder` holder oversikt over alle **aktive** nærmesteleder relasjoner og forskutteringsstatus fr anærmeste leder skjemaet.
+Dataene er personidentifiserbare.
+Det slettes ikke fra tabellen.
+
+
+# Komme i gang
+
+Bygges med gradle. Standard spring boot oppsett.
+
+---
+
+# Henvendelser
+
+
+Spørsmål knyttet til koden eller prosjektet kan stilles til flex@nav.no
+
+## For NAV-ansatte
+
+Interne henvendelser kan sendes via Slack i kanalen #flex.
