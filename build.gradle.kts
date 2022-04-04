@@ -20,7 +20,7 @@ buildscript {
 }
 
 // For at tester som bruker MockWebServer skal kjøre.
-ext["okhttp3.version"] = "4.9.0"
+ext["okhttp3.version"] = "4.9.3"
 
 val githubUser: String by project
 val githubPassword: String by project
@@ -47,34 +47,31 @@ val confluentVersion = "7.0.2"
 val doknotifikasjonAvroVersion = "1.2021.06.22-11.27-265ce1fe1ab4"
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
+    implementation(kotlin("stdlib-jdk8"))
+    implementation(kotlin("reflect"))
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.springframework.kafka:spring-kafka")
-    implementation("no.nav.security:token-client-spring:$tokenSupportVersion")
-    implementation("no.nav.security:token-validation-spring:$tokenSupportVersion")
+    implementation("org.hibernate.validator:hibernate-validator")
+    implementation("io.micrometer:micrometer-registry-prometheus")
     implementation("org.slf4j:slf4j-api")
     implementation("org.flywaydb:flyway-core")
-    implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
     implementation("org.postgresql:postgresql")
-    implementation("org.springframework.boot:spring-boot-starter-logging")
     implementation("net.logstash.logback:logstash-logback-encoder:$logstashLogbackEncoderVersion")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("no.nav.helse.flex:sykepengesoknad-kafka:$sykepengesoknadKafkaVersion")
-    implementation("org.aspectj:aspectjrt")
-    implementation("org.aspectj:aspectjweaver")
-    implementation("org.hibernate.validator:hibernate-validator")
-    implementation("org.springframework.boot:spring-boot-starter-actuator")
-    implementation("io.micrometer:micrometer-registry-prometheus")
-    implementation("com.github.navikt:doknotifikasjon-schemas:$doknotifikasjonAvroVersion")
     implementation("io.confluent:kafka-avro-serializer:$confluentVersion")
+    implementation("com.github.navikt:doknotifikasjon-schemas:$doknotifikasjonAvroVersion")
+    implementation("no.nav.security:token-client-spring:$tokenSupportVersion")
+    implementation("no.nav.security:token-validation-spring:$tokenSupportVersion")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.awaitility:awaitility")
     testImplementation("org.testcontainers:kafka:$testContainersVersion")
     testImplementation("org.testcontainers:postgresql:$testContainersVersion")
     testImplementation("no.nav.security:token-validation-spring-test:$tokenSupportVersion")
-    testImplementation("org.awaitility:awaitility")
     testImplementation("org.amshove.kluent:kluent:$kluentVersion")
 }
 

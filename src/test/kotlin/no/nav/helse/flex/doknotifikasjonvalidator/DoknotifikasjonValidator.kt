@@ -36,7 +36,7 @@ class DoknotifikasjonValidator {
         }
     }
 
-    fun validateString(notifikasjon: NotifikasjonMedkontaktInfo, string: String?, maxLength: Int, fieldName: String) {
+    private fun validateString(notifikasjon: NotifikasjonMedkontaktInfo, string: String?, maxLength: Int, fieldName: String) {
         if (string == null || string.trim { it <= ' ' }.isEmpty() || string.length > maxLength) {
             val addedString = if (string == null || string.trim { it <= ' ' }
                 .isEmpty()
@@ -45,8 +45,9 @@ class DoknotifikasjonValidator {
         }
     }
 
-    /* Denne funksjonen vil forhindre at feltet antallRenotifikasjoner og renotifikasjonIntervall vil aldri bli støre enn 30*/
-    fun validateNumberForSnot001(
+    // Denne funksjonen vil forhindre at feltet antallRenotifikasjoner og renotifikasjonIntervall vil aldri
+    // bli større enn 30
+    private fun validateNumberForSnot001(
         notifikasjon: NotifikasjonMedkontaktInfo,
         numberToValidate: Int?,
         fieldName: String?

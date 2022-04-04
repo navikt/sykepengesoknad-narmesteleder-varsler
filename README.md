@@ -2,7 +2,7 @@
 
 Denne applikasjonen lytter på sykepengesoknad Kafka-topicet, og har to oppgaver:
 
-## Opprettelse av  brukeroppgave i Dine Sykmeldte
+## Opprettelse av brukeroppgave i Dine Sykmeldte
 
 En brukeroppgave vises som en rød prikk i Dine Sykmeldte. Dette skjer når det kommer sykepengesøknader som er sendt til
 arbeidsgiver. Opprettelsen skjer ved at det gjøres et REST-kall `syfoservicestrangler` som oppdaterer `syfoservice`
@@ -29,7 +29,7 @@ nærmeste leder er angitt oppdateres status til `INGEN_LEDER`.
 Applikasjonen konsumerer Kafka-topicet `teamsykmelding.syfo-narmesteleder-leesah` og lagrer mottatt informasjon om nærmeste leder
 i databasen. Det gjøres ingen synkrone kall for å oppdatere egne data.
 
-## Hvordan tester?
+## Hvordan teste?
 
 1. Lag en testperson i Dolly. Vedkommende må ha et `arbeidsforhold`.
 2. Registrer en nærmeste leder for vedkommende i `syfomock`. Personen kan være sin egen nærmeste leder.
