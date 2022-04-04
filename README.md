@@ -1,67 +1,69 @@
 # sykepengesoknad-narmesteleder-varsler
 
+Denne applikasjonen lytter på sykepengesoknad Kafka-topicet, og har to oppgaver:
 
-## Opprettelse av brukeroppgave (rød prikk) i Dine Sykmeldte
-Dette gjøres når det kommer sendte sykepengesøknader som er sendt arbeidsgiver.
-Opprettelsen skjer med et API kall via flex-fss-proxy til syfoservice strangler som oppdaterer syfoservicedatabasen.
-Dette vil på sikt skje på en annen måte når nye dinesykmeldte er klar.
+## Opprettelse av  brukeroppgave i Dine Sykmeldte
 
-## Utsendelse av varsler til nærmeste leder
-Det sendes typer varsler til nærmeste leder. 
-Varsel om en sendt sykepengesøknad planlegges sendt med en gang når det kommer inn en sendt sykepengesøknad.
-Varsel om manglende sykepengesøknad planlegges sendt to uker at søknaden har blitt tilgjengelig for innsendelse.
-Dersom søknaden blir sendt eller avbrutt innen utsendelses tidspunktet avbryter vi varselet om 
+En brukeroppgave vises som en rød prikk i Dine Sykmeldte. Dette skjer når det kommer sykepengesøknader som er sendt til
+arbeidsgiver. Opprettelsen skjer ved at det gjøres et REST-kall `syfoservicestrangler` som oppdaterer `syfoservice`
+-databasen.
 
-Alle utsendelsestidspunkt flyttes fremover til mellom 9 og 15 mandag til fredag.
+## Varsling av nærmeste leder
 
-Alle varsler sendes kun som epost. Det er ingen revarsler.
+Det sendes to typer varsler til nærmeste leder:
 
-Det går en cronjob hvert femte minutt som finner planlagte varsler som skal sendes. 
-Hvis vi finner nærmeste leder i databasen sendes varselet med en kafkamelding på `teamdokumenthandtering.privat-dok-notifikasjon-med-kontakt-info` .
-Statusen endres da til SENDT. 
+1. Varsel om at noen har sendt inn en sykepengesøknad. Planlegges umiddelbart.
+2. Varsel om manglende innsending av sykepengesøknad. Planlegges sendt to uker etter søknaden er tilgjengelig for
+   innsending. Dersom søknaden blir sendt eller avbrutt før det har gått to uker avbrytes varselet.
 
-Hvis vi ikke finner en nærmeste leder oppdateres status i databasen til INGEN_LEDER
+- Meldinger sendes kun mellom 09:00 og 15:00, mandag - fredag.
+- Varsler sendes kun på e-post, og det gjøres ingen re-varsling.
 
+Det kjøres en cronjob hvert 2. minutt som leser planlagte varsler. Hvis nærmeste leder (mottaker av
+varselet) finnes i databasen sendes varslende på
+Kafka-topic `teamdokumenthandtering.privat-dok-notifikasjon-med-kontakt-info` og status settes til `SENDT`. Hvis ingen
+nærmeste leder er angitt oppdateres status til `INGEN_LEDER`.
 
 ## Oppdatering av nærmeste leder
-Applikasjonen har en kopi i databasen av alle aktive nærmeste ledere. Appen konsumerer `teamsykmelding.syfo-narmesteleder-leesah` og oppdaterer den lokale kopien slik at vi slipper å gjøre synkrone kall til nærmeste leder appen.
-Logikken er lik som team sykmelding sin app for nærmeste leder varsler
 
+Applikasjonen konsumerer Kafka-topicet `teamsykmelding.syfo-narmesteleder-leesah` og lagrer mottatt informasjon om nærmeste leder
+i databasen. Det gjøres ingen synkrone kall for å oppdatere egne data.
 
-## Hvordan tester jeg dette?
-Lag en testperson i dolly med et arbeidsforhold. Deretter registerer du en nærmesteleder i syfomock på den personen med din egen epost addresse. Personen kan være sin egen nærmeste leder.
-Send deretter inn en sykmelding, du vil se i innsendelsen om du har klart å registerer nærmeste leder korrekt. 
-Du kan så sende inn en søknad, varselet vil da gå ut iløpet av 5 minutter hvis klokka er mellom 9 og 15 på en hverdag. 
+## Hvordan tester?
 
-Skal du teste utenfor kl 9 eller teste manglende sykepengesøknad varselet er det praktisk å oppdatere `sendes` i tabellen `narmeste_leder` til å være tilbake i tid. 
-Da vil varselet sendes ved neste hele femte minutt.
+1. Lag en testperson i Dolly. Vedkommende må ha et `arbeidsforhold`.
+2. Registrer en nærmeste leder for vedkommende i `syfomock`. Personen kan være sin egen nærmeste leder.
+3. Send inn en sykemelding. Man vil se i innsendingen om nærmeste leder er registrert korrekt.
+4. Send inn en sykepengesøknad.
+5. Verifiser at det sendes et varsel, gitt at testingen foregår i tidsrommet det sendes varsler.
+6. Ved testing utenfor tidsrommet for sending av varslet eller teste varsel om **manglende sykepengesøknad** er det
+   praktisk å oppdatere `sendes` i tabellen `narmeste_leder` til et tidspunkt tilbake i tid. Da vil varselet sendes ved
+   neste hele femte minutt.
 
-Rollen `cloudsqliamuser` har UPDATE tilgang i databasen i dev-gcp. Så dersom du bruker fremgangsmåten fra `flex-cloud-sql-tools` vil du ha tilgang til å oppdatere utsendelsetidspunktet med personlig bruker.
+Rollen `cloudsqliamuser` har `UPDATE` tilgang i databasen i dev-gcp. Så dersom du bruker fremgangsmåten
+fra `flex-cloud-sql-tools` vil du ha tilgang til å oppdatere tidspunkt for utsending med din personlig bruker.
 
-Hvis epost varselet ikke kommer ut så kan det være at team-dokumentløsninger har skrudd av testing mot altinn, da må man sjekke med dem om det er åpent eller ikke.
+Hvis e-post varselet ikke kommer ut så kan det være at `team-dokumentløsninger` har skrudd av testing mot Altinn, da må
+man sjekke med dem om det er åpent eller ikke.
 
 ## Data
-Applikasjonen har en database i GCP.
 
-Tabellen `planlagt varsel` holder oversikt over alle planlagte, avbrutte og sendte varsler.
-Tabellen inkluderer fødselsnummer, orgnummer og sykpengesøknad_id og er derfor personidentifiserbar. Det slettes ikke data fra tabellen.
+Applikasjonen har en database i GCP. Tabellen `planlagt varsel` holder oversikt over alle planlagte, avbrutte og sendte
+varsler. Tabellen inkluderer fødselsnummer, orgnummer og sykpengesøknad_id og er derfor personidentifiserbar. Det
+slettes ikke data fra tabellen.
 
-Tabellen `narmeste leder` holder oversikt over alle **aktive** nærmesteleder relasjoner og forskutteringsstatus fr anærmeste leder skjemaet.
-Dataene er personidentifiserbare.
-Det slettes ikke fra tabellen.
+Tabellen `narmeste leder` holder oversikt over alle **aktive** nærmesteleder-relasjoner og forskutteringsstatus for
+nærmesteleder-skjemaet. Dataene er personidentifiserbare. Det slettes ikke fra tabellen.
 
+# Utvikling
 
-# Komme i gang
+Applikasjonen er en Spring Boot Kotlin applikasjon som bygges med Gradle:
 
-Bygges med gradle. Standard spring boot oppsett.
-
----
+```sh
+$ ./gradlew clean build
+```
 
 # Henvendelser
 
-
-Spørsmål knyttet til koden eller prosjektet kan stilles til flex@nav.no
-
-## For NAV-ansatte
-
-Interne henvendelser kan sendes via Slack i kanalen #flex.
+Spørsmål knyttet til koden eller prosjektet kan sendes på e-post til `flex@nav.no`. Interne henvendelser i NAV kan
+sendes via Slack i kanalen `#flex`.
