@@ -1,7 +1,6 @@
 package no.nav.helse.flex.kafka
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import no.nav.helse.flex.brukeroppgave.BrukeroppgaveOpprettelse
 import no.nav.helse.flex.objectMapper
 import no.nav.helse.flex.sykepengesoknad.kafka.SykepengesoknadDTO
 import no.nav.helse.flex.varsler.VarselPlanlegger
@@ -12,7 +11,6 @@ import org.springframework.stereotype.Component
 
 @Component
 class SykepengesoknadListener(
-    private val brukeroppgaveOpprettelse: BrukeroppgaveOpprettelse,
     private val varselPlanlegger: VarselPlanlegger
 ) {
 
@@ -22,7 +20,6 @@ class SykepengesoknadListener(
     )
     fun listen(cr: ConsumerRecord<String, String>, acknowledgment: Acknowledgment) {
         val soknad = cr.value().tilSykepengesoknadDTO()
-        brukeroppgaveOpprettelse.opprettBrukeroppgave(soknad)
         varselPlanlegger.planleggVarsler(soknad)
         acknowledgment.acknowledge()
     }

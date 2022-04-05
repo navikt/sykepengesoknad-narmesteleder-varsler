@@ -1,7 +1,6 @@
 package no.nav.helse.flex
 
 import no.nav.helse.flex.client.pdl.*
-import no.nav.helse.flex.client.syfoservicestrangler.OpprettHendelseResponse
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
@@ -34,25 +33,6 @@ fun Testoppsett.mockPdlResponse(
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(
                     identResponse.serialisertTilString()
-                )
-        )
-}
-
-fun Testoppsett.mockSyfoserviceStranglerBrukeroppgavePost(
-    response: OpprettHendelseResponse = OpprettHendelseResponse(melding = "Mocket kall"),
-    expectedCount: ExpectedCount = ExpectedCount.once()
-) {
-    syfoServiceStanglerMockServer!!.expect(
-        expectedCount,
-        requestTo(URI("http://flex-fss-proxy/api/syfoservicestrangler/brukeroppgave/soknad"))
-    )
-        .andExpect(method(HttpMethod.POST))
-        .andExpect(harBearerToken())
-        .andRespond(
-            MockRestResponseCreators.withStatus(HttpStatus.OK)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(
-                    response.serialisertTilString()
                 )
         )
 }

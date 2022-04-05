@@ -19,19 +19,6 @@ import org.springframework.web.client.RestTemplate
 class AadRestTemplateConfiguration {
 
     @Bean
-    fun flexFssProxyRestTemplate(
-        restTemplateBuilder: RestTemplateBuilder,
-        clientConfigurationProperties: ClientConfigurationProperties,
-        oAuth2AccessTokenService: OAuth2AccessTokenService
-    ): RestTemplate =
-        downstreamRestTemplate(
-            registrationName = "flex-fss-proxy-client-credentials",
-            restTemplateBuilder = restTemplateBuilder,
-            clientConfigurationProperties = clientConfigurationProperties,
-            oAuth2AccessTokenService = oAuth2AccessTokenService,
-        )
-
-    @Bean
     fun pdlRestTemplate(
         restTemplateBuilder: RestTemplateBuilder,
         clientConfigurationProperties: ClientConfigurationProperties,

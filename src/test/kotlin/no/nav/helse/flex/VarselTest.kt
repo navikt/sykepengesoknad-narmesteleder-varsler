@@ -112,7 +112,6 @@ class VarselTest : Testoppsett() {
     @Order(2)
     fun `Vi mottar en søknad med status SENDT og avbryter manglende søknad varsel og planlegger SENDT søknad varsel `() {
         mockPdlResponse()
-        mockSyfoserviceStranglerBrukeroppgavePost()
         planlagtVarselRepository.findBySykepengesoknadId(soknad.id).size `should be equal to` 1
         planlagteVarslerSomSendesFør(dager = 20).size `should be equal to` 1
         planlagteVarslerSomSendesFør(dager = 3).size `should be equal to` 0
@@ -144,7 +143,6 @@ class VarselTest : Testoppsett() {
 
         planlagteVarslerSomSendesFør(dager = 3).size `should be equal to` 1
         pdlMockServer?.reset()
-        syfoServiceStanglerMockServer?.reset()
     }
 
     @Test
@@ -244,7 +242,6 @@ class VarselTest : Testoppsett() {
     @Order(6)
     fun `Vi mottar en søknad med status SENDT og planlegger en NY søknad varsel som vi sender ut`() {
         mockPdlResponse()
-        mockSyfoserviceStranglerBrukeroppgavePost()
         planlagteVarslerSomSendesFør(dager = 20).size `should be equal to` 0
         val id = UUID.randomUUID().toString()
         val soknaden = soknad.copy(
@@ -286,7 +283,6 @@ class VarselTest : Testoppsett() {
         notifikasjon.getEpostTekst() `should be equal to` SENDT_SYKEPENGESOKNAD_EPOST_TEKST
         notifikasjon.getTittel() `should be equal to` SENDT_SYKEPENGESOKNAD_TITTEL
         pdlMockServer?.reset()
-        syfoServiceStanglerMockServer?.reset()
     }
 
     private fun planlagteVarslerSomSendesFør(dager: Int): List<PlanlagtVarsel> {

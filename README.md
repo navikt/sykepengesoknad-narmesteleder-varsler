@@ -1,12 +1,7 @@
 # sykepengesoknad-narmesteleder-varsler
 
-Denne applikasjonen lytter på sykepengesoknad Kafka-topicet, og har to oppgaver:
+Denne applikasjonen lytter på sykepengesoknad Kafka-topicet.
 
-## Opprettelse av brukeroppgave i Dine Sykmeldte
-
-En brukeroppgave vises som en rød prikk i Dine Sykmeldte. Dette skjer når det kommer sykepengesøknader som er sendt til
-arbeidsgiver. Opprettelsen skjer ved at det gjøres et REST-kall `syfoservicestrangler` som oppdaterer `syfoservice`
--databasen.
 
 ## Varsling av nærmeste leder
 
