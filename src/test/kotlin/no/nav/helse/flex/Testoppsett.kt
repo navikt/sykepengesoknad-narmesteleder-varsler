@@ -39,13 +39,9 @@ abstract class Testoppsett {
     lateinit var doknotifikasjonKafkaConsumer: Consumer<String, NotifikasjonMedkontaktInfo>
 
     var pdlMockServer: MockRestServiceServer? = null
-    var syfoServiceStanglerMockServer: MockRestServiceServer? = null
 
     @Autowired
     lateinit var pdlRestTemplate: RestTemplate
-
-    @Autowired
-    lateinit var flexFssProxyRestTemplate: RestTemplate
 
     @Autowired
     lateinit var narmesteLederRepository: NarmesteLederRepository
@@ -76,9 +72,6 @@ abstract class Testoppsett {
     fun setupRestServiceServers() {
         if (pdlMockServer == null) {
             pdlMockServer = MockRestServiceServer.createServer(pdlRestTemplate)
-        }
-        if (syfoServiceStanglerMockServer == null) {
-            syfoServiceStanglerMockServer = MockRestServiceServer.createServer(flexFssProxyRestTemplate)
         }
     }
 
