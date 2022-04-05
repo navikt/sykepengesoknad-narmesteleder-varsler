@@ -1,6 +1,5 @@
 package no.nav.helse.flex.kafka
 
-import no.nav.helse.flex.logger
 import no.nav.helse.flex.narmesteleder.OppdateringAvNarmesteLeder
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.springframework.kafka.annotation.KafkaListener
@@ -11,8 +10,6 @@ import org.springframework.stereotype.Component
 class NarmestelederListener(
     private val oppdateringAvNarmesteLeder: OppdateringAvNarmesteLeder
 ) {
-
-    private val log = logger()
 
     @KafkaListener(
         topics = [NARMESTELEDER_LEESAH_TOPIC],
