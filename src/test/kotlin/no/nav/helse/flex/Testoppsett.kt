@@ -3,6 +3,7 @@ package no.nav.helse.flex
 import no.nav.doknotifikasjon.schemas.NotifikasjonMedkontaktInfo
 import no.nav.helse.flex.kafka.FLEX_SYKEPENGESOKNAD_TOPIC
 import no.nav.helse.flex.kafka.NARMESTELEDER_LEESAH_TOPIC
+import no.nav.helse.flex.kafka.dineSykmeldteHendelserTopic
 import no.nav.helse.flex.kafka.doknotifikasjonTopic
 import no.nav.helse.flex.narmesteleder.NarmesteLederRepository
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
@@ -37,6 +38,9 @@ abstract class Testoppsett {
 
     @Autowired
     lateinit var doknotifikasjonKafkaConsumer: Consumer<String, NotifikasjonMedkontaktInfo>
+
+    @Autowired
+    lateinit var hendelseKafkaConsumer: Consumer<String, String>
 
     var pdlMockServer: MockRestServiceServer? = null
 
@@ -81,15 +85,26 @@ abstract class Testoppsett {
         planlagtVarselRepository.deleteAll()
     }
 
+    @BeforeAll
+    fun `Vi leser sykepengesoknad kafka topicet og feiler om noe eksisterer`() {
+        doknotifikasjonKafkaConsumer.subscribeHvisIkkeSubscribed(doknotifikasjonTopic)
+        doknotifikasjonKafkaConsumer.hentProduserteRecords().shouldBeEmpty()
+    }
+
+    @BeforeAll
+    fun `Vi leser hendelse kafka topicet og feiler om noe eksisterer`() {
+        hendelseKafkaConsumer.subscribeHvisIkkeSubscribed(dineSykmeldteHendelserTopic)
+        hendelseKafkaConsumer.hentProduserteRecords().shouldBeEmpty()
+    }
+
     @AfterAll
     fun `Vi leser sykepengesoknad topicet og feiler hvis noe finnes og slik at subklassetestene leser alt`() {
         doknotifikasjonKafkaConsumer.hentProduserteRecords().shouldBeEmpty()
     }
 
-    @BeforeAll
-    fun `Vi leser sykepengesoknad kafka topicet og feiler om noe eksisterer`() {
-        doknotifikasjonKafkaConsumer.subscribeHvisIkkeSubscribed(doknotifikasjonTopic)
-        doknotifikasjonKafkaConsumer.hentProduserteRecords().shouldBeEmpty()
+    @AfterAll
+    fun `Vi leser hendeklse topicet og feiler hvis noe finnes og slik at subklassetestene leser alt`() {
+        hendelseKafkaConsumer.hentProduserteRecords().shouldBeEmpty()
     }
 
     fun sendNarmesteLederLeesah(nl: NarmesteLederLeesah) {

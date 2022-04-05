@@ -1,9 +1,15 @@
 package no.nav.helse.flex
 
 import no.nav.doknotifikasjon.schemas.PrefererteKanal
+import no.nav.helse.flex.dinesykmeldte.OPPGAVETYPE_IKKE_SENDT_SOKNAD
+import no.nav.helse.flex.dinesykmeldte.tilDineSykmeldteHendelse
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
-import no.nav.helse.flex.sykepengesoknad.kafka.*
+import no.nav.helse.flex.sykepengesoknad.kafka.ArbeidsgiverDTO
+import no.nav.helse.flex.sykepengesoknad.kafka.ArbeidssituasjonDTO
+import no.nav.helse.flex.sykepengesoknad.kafka.SoknadsstatusDTO
 import no.nav.helse.flex.sykepengesoknad.kafka.SoknadsstatusDTO.SENDT
+import no.nav.helse.flex.sykepengesoknad.kafka.SoknadstypeDTO
+import no.nav.helse.flex.sykepengesoknad.kafka.SykepengesoknadDTO
 import no.nav.helse.flex.varsler.MANGLENDE_VARSEL_EPOST_TEKST
 import no.nav.helse.flex.varsler.MANGLENDE_VARSEL_TITTEL
 import no.nav.helse.flex.varsler.SENDT_SYKEPENGESOKNAD_EPOST_TEKST
@@ -17,10 +23,12 @@ import no.nav.helse.flex.varsler.domain.PlanlagtVarselStatus.PLANLAGT
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselType.MANGLENDE_SYKEPENGESOKNAD
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselType.SENDT_SYKEPENGESOKNAD
 import org.amshove.kluent.`should be equal to`
+import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeAfter
 import org.amshove.kluent.shouldBeBefore
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeNull
+import org.amshove.kluent.shouldNotBe
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
@@ -220,9 +228,11 @@ class VarselTest : Testoppsett() {
 
         val antallVarsel = varselUtsendelse.sendVarsler(Instant.now().plus(20L, ChronoUnit.DAYS))
         antallVarsel `should be equal to` 1
-        val notifikasjon = doknotifikasjonKafkaConsumer.ventPåRecords(antall = 1).first().value()
 
-        await().atMost(1, SECONDS).until {
+        val notifikasjon = doknotifikasjonKafkaConsumer.ventPåRecords(antall = 1).first().value()
+        val dineSykmeldteHendelse = hendelseKafkaConsumer.ventPåRecords(1).first().value().tilDineSykmeldteHendelse()
+
+        await().atMost(2, SECONDS).until {
             planlagteVarslerSomSendesFør(dager = 20).isEmpty()
         }
 
@@ -236,6 +246,18 @@ class VarselTest : Testoppsett() {
         notifikasjon.getFodselsnummer() `should be equal to` "01987654321"
         notifikasjon.getEpostTekst() `should be equal to` MANGLENDE_VARSEL_EPOST_TEKST
         notifikasjon.getTittel() `should be equal to` MANGLENDE_VARSEL_TITTEL
+
+        val varselMedHendelse = planlagtVarselRepository.findBySendtDineSykmeldte(id, MANGLENDE_SYKEPENGESOKNAD.toString()).first()
+        varselMedHendelse.dineSykmeldteHendelseOpprettet shouldNotBe null
+        varselMedHendelse.dineSykmeldteHendelseFerdigstilt shouldBe null
+
+        dineSykmeldteHendelse.id `should be equal to` varselMedHendelse.sykepengesoknadId
+
+        val opprettHendelse = dineSykmeldteHendelse.opprettHendelse!!
+        opprettHendelse.ansattFnr `should be equal to` "12345678901"
+        opprettHendelse.orgnummer `should be equal to` "999111555"
+        opprettHendelse.timestamp shouldNotBe null
+        opprettHendelse.oppgavetype `should be equal to` OPPGAVETYPE_IKKE_SENDT_SOKNAD
     }
 
     @Test
