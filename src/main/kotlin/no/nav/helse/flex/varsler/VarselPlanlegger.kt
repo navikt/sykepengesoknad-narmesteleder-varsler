@@ -14,6 +14,7 @@ import java.time.*
 @Component
 class VarselPlanlegger(
     private val planlagtVarselRepository: PlanlagtVarselRepository,
+    private val varselUtsendelse: VarselUtsendelse,
 ) {
 
     val log = logger()
@@ -32,6 +33,7 @@ class VarselPlanlegger(
         }
         if (listOf(SENDT, AVBRUTT, SLETTET, KORRIGERT, UTGAATT).contains(soknad.status)) {
             soknad.avbrytManglendeSoknadVarsler()
+            soknad.ferdigstillDineSykmeldteHendelse()
         }
     }
 
@@ -40,7 +42,7 @@ class VarselPlanlegger(
             .filter { it.varselType == MANGLENDE_SYKEPENGESOKNAD }
             .forEach {
                 if (it.status == PLANLAGT) {
-                    log.info("Avbryter planlagt varsler med type $type for id $id")
+                    log.info("Avbryter planlagt varsel med id $id og type $type.")
                     planlagtVarselRepository.save(
                         it.copy(
                             status = PlanlagtVarselStatus.AVBRUTT,
@@ -51,6 +53,14 @@ class VarselPlanlegger(
             }
     }
 
+    fun SykepengesoknadDTO.ferdigstillDineSykmeldteHendelse() {
+        planlagtVarselRepository.findBySendtDineSykmeldte(id, MANGLENDE_SYKEPENGESOKNAD.toString())
+            .filter { it.dineSykmeldteHendelseOpprettet != null }
+            .forEach {
+                varselUtsendelse.sendFerdigstillHendelseTilDineSykmeldte(it)
+            }
+    }
+
     private fun SykepengesoknadDTO.planleggVarselForStatusNy() {
 
         val harAlleredePlanlagt = planlagtVarselRepository.findBySykepengesoknadId(id)
@@ -58,7 +68,7 @@ class VarselPlanlegger(
 
         if (harAlleredePlanlagt) {
             // Dette skjer ved gjenåpning av avbrutt søknad
-            log.info("Har allerede planlagt varsel for status NY for soknad $id")
+            log.info("Har allerede planlagt varsel for status NY for soknad $id.")
             return
         }
 
@@ -74,7 +84,7 @@ class VarselPlanlegger(
             narmesteLederId = null,
         )
         planlagtVarselRepository.save(planlagtVarsel)
-        log.info("Planlegger varsel ${planlagtVarsel.varselType} for soknad $id som sendes ${planlagtVarsel.sendes}")
+        log.info("Planlegger varsel ${planlagtVarsel.varselType} for soknad $id som sendes ${planlagtVarsel.sendes}.")
     }
 
     private fun SykepengesoknadDTO.planleggVarselForStatusSendt() {
@@ -82,7 +92,7 @@ class VarselPlanlegger(
             .any { it.varselType == SENDT_SYKEPENGESOKNAD }
 
         if (harAlleredePlanlagt) {
-            log.warn("Har allerede planlagt varsel for status SENDT for soknad ${this.id}")
+            log.info("Har allerede planlagt varsel for status SENDT for soknad ${this.id}.")
             return
         }
 
@@ -92,17 +102,17 @@ class VarselPlanlegger(
             brukerFnr = this.fnr,
             oppdatert = Instant.now(),
             orgnummer = this.arbeidsgiver!!.orgnummer!!,
-            sendes = nærmesteFornuftigDagtid().toInstant(),
+            sendes = narmesteFornuftigDagtid().toInstant(),
             status = PLANLAGT,
             varselType = SENDT_SYKEPENGESOKNAD,
             narmesteLederId = null,
         )
         planlagtVarselRepository.save(planlagtVarsel)
-        log.info("Planlegger varsel ${planlagtVarsel.varselType} for soknad $id som sendes ${planlagtVarsel.sendes}")
+        log.info("Planlegger varsel ${planlagtVarsel.varselType} for soknad $id som sendes ${planlagtVarsel.sendes}.")
     }
 }
 
-fun nærmesteFornuftigDagtid(now: ZonedDateTime = ZonedDateTime.now(osloZone)): ZonedDateTime {
+fun narmesteFornuftigDagtid(now: ZonedDateTime = ZonedDateTime.now(osloZone)): ZonedDateTime {
 
     val dagtid = if (now.hour < 15) {
         now.withHour(now.hour.coerceAtLeast(9))
@@ -119,7 +129,7 @@ fun nærmesteFornuftigDagtid(now: ZonedDateTime = ZonedDateTime.now(osloZone)): 
 }
 
 fun omToUkerFornuftigDagtid(now: ZonedDateTime = ZonedDateTime.now(osloZone)): ZonedDateTime {
-    return nærmesteFornuftigDagtid(now.plusWeeks(2))
+    return narmesteFornuftigDagtid(now.plusWeeks(2))
 }
 
 fun SykepengesoknadDTO.skalSendeVarselTilArbeidsgiver() =
@@ -128,4 +138,4 @@ fun SykepengesoknadDTO.skalSendeVarselTilArbeidsgiver() =
 fun SykepengesoknadDTO.bleSendtTilArbeidsgiver() =
     status == SENDT && sendtArbeidsgiver != null && (sendtNav == null || !sendtArbeidsgiver!!.isBefore(sendtNav))
 
-val osloZone = ZoneId.of("Europe/Oslo")
+val osloZone: ZoneId = ZoneId.of("Europe/Oslo")

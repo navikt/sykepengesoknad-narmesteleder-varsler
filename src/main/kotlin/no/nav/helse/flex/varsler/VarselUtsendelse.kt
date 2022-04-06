@@ -4,6 +4,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tags
 import no.nav.doknotifikasjon.schemas.NotifikasjonMedkontaktInfo
 import no.nav.helse.flex.dinesykmeldte.DineSykmeldteHendelse
+import no.nav.helse.flex.dinesykmeldte.FerdigstillHendelse
 import no.nav.helse.flex.dinesykmeldte.OPPGAVETYPE_IKKE_SENDT_SOKNAD
 import no.nav.helse.flex.dinesykmeldte.OpprettHendelse
 import no.nav.helse.flex.kafka.dineSykmeldteHendelserTopic
@@ -76,13 +77,38 @@ class VarselUtsendelse(
 
             // Oppretter oppgave i Dine Sykmeldte som gjør at ikke sendte søknader kan identifiseres.
             if (lestVarsel.varselType == PlanlagtVarselType.MANGLENDE_SYKEPENGESOKNAD) {
-                sendOppgaveTilDineSykmeldte(lestVarsel, narmesteLeder)
+                sendOpprettHendelseTilDineSykmeldte(lestVarsel, narmesteLeder)
             }
 
             lagreMetrikk(SENDT, lestVarsel.varselType)
             varslerSendt++
         }
         return varslerSendt
+    }
+
+    fun sendFerdigstillHendelseTilDineSykmeldte(planlagtVarsel: PlanlagtVarsel) {
+        val now = OffsetDateTime.now()
+        val ferdigstillHendelse = lagFerdigstillHendelse(planlagtVarsel.sykepengesoknadId, now)
+
+        dineSykmeldteHendelserProducer.send(
+            ProducerRecord(
+                dineSykmeldteHendelserTopic,
+                planlagtVarsel.sykepengesoknadId,
+                ferdigstillHendelse.serialisertTilString()
+            )
+        )
+
+        log.info(
+            "Sendt ferdigstill hendelse for planlagt varsel ${planlagtVarsel.id} og " +
+                "søknad ${planlagtVarsel.sykepengesoknadId} til Dine sykmeldte."
+        )
+
+        planlagtVarselRepository.save(
+            planlagtVarsel.copy(
+                oppdatert = now.toInstant(),
+                dineSykmeldteHendelseFerdigstilt = now.toInstant()
+            )
+        )
     }
 
     private fun sendNotifikasjonTilNarmesteLeder(
@@ -127,10 +153,11 @@ class VarselUtsendelse(
         return notifikasjon
     }
 
-    private fun sendOppgaveTilDineSykmeldte(planlagtVarsel: PlanlagtVarsel, narmesteLeder: NarmesteLeder) {
+    private fun sendOpprettHendelseTilDineSykmeldte(planlagtVarsel: PlanlagtVarsel, narmesteLeder: NarmesteLeder) {
         val now = OffsetDateTime.now()
 
-        val opprettHendelse = lagOpprettHendelseForIkkeSendtSoknad(planlagtVarsel.sykepengesoknadId, planlagtVarsel, now)
+        val opprettHendelse =
+            lagOpprettHendelseForIkkeSendtSoknad(planlagtVarsel.sykepengesoknadId, planlagtVarsel, now)
 
         dineSykmeldteHendelserProducer.send(
             ProducerRecord(
@@ -142,7 +169,7 @@ class VarselUtsendelse(
 
         log.info(
             "Sendt opprett hendelse med type ${opprettHendelse.opprettHendelse?.oppgavetype} for planlagt " +
-                "varsel ${planlagtVarsel.id} og søknad ${planlagtVarsel.sykepengesoknadId} til Dine sykemeldte."
+                "varsel ${planlagtVarsel.id} og søknad ${planlagtVarsel.sykepengesoknadId} til Dine sykmeldte."
         )
 
         planlagtVarselRepository.save(
@@ -169,6 +196,10 @@ class VarselUtsendelse(
                 timestamp = timestamp
             )
         )
+    }
+
+    private fun lagFerdigstillHendelse(id: String, timestamp: OffsetDateTime): DineSykmeldteHendelse {
+        return DineSykmeldteHendelse(id, null, FerdigstillHendelse(timestamp))
     }
 
     private fun lagreMetrikk(status: PlanlagtVarselStatus, type: PlanlagtVarselType) {
