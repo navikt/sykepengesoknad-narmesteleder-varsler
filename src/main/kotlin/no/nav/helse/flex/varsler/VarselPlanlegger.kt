@@ -54,7 +54,7 @@ class VarselPlanlegger(
     }
 
     fun SykepengesoknadDTO.ferdigstillDineSykmeldteHendelse() {
-        planlagtVarselRepository.findBySendtDineSykmeldte(id, MANGLENDE_SYKEPENGESOKNAD.toString())
+        planlagtVarselRepository.findMedSendtDineSykmeldteHendelse(id, MANGLENDE_SYKEPENGESOKNAD.toString())
             .filter { it.dineSykmeldteHendelseOpprettet != null }
             .forEach {
                 varselUtsendelse.sendFerdigstillHendelseTilDineSykmeldte(it)

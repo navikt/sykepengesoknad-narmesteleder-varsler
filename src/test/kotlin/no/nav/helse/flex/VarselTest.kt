@@ -248,7 +248,7 @@ class VarselTest : Testoppsett() {
         notifikasjon.getTittel() `should be equal to` MANGLENDE_VARSEL_TITTEL
 
         val varselMedHendelse =
-            planlagtVarselRepository.findBySendtDineSykmeldte(id, MANGLENDE_SYKEPENGESOKNAD.toString()).first()
+            planlagtVarselRepository.findMedSendtDineSykmeldteHendelse(id, MANGLENDE_SYKEPENGESOKNAD.toString()).first()
         varselMedHendelse.dineSykmeldteHendelseOpprettet shouldNotBe null
         varselMedHendelse.dineSykmeldteHendelseFerdigstilt shouldBe null
 
@@ -324,10 +324,10 @@ class VarselTest : Testoppsett() {
         val dineSykmeldteHendelse = hendelseKafkaConsumer.ventPåRecords(1).first().value().tilDineSykmeldteHendelse()
 
         await().atMost(2, SECONDS).until {
-            planlagtVarselRepository.findBySendtDineSykmeldte(id, MANGLENDE_SYKEPENGESOKNAD.toString()).size == 1
+            planlagtVarselRepository.findMedSendtDineSykmeldteHendelse(id, MANGLENDE_SYKEPENGESOKNAD.toString()).size == 1
         }
         val varselMedHendelse =
-            planlagtVarselRepository.findBySendtDineSykmeldte(id, MANGLENDE_SYKEPENGESOKNAD.toString()).first()
+            planlagtVarselRepository.findMedSendtDineSykmeldteHendelse(id, MANGLENDE_SYKEPENGESOKNAD.toString()).first()
 
         varselMedHendelse.dineSykmeldteHendelseOpprettet shouldNotBe null
         varselMedHendelse.dineSykmeldteHendelseFerdigstilt shouldNotBe null

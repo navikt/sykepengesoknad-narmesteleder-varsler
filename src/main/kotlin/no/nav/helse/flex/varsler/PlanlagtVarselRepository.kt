@@ -22,5 +22,5 @@ interface PlanlagtVarselRepository : CrudRepository<PlanlagtVarsel, String> {
           AND dine_sykmeldte_hendelse_opprettet IS NOT NULL
         """
     )
-    fun findBySendtDineSykmeldte(id: String, type: String): List<PlanlagtVarsel>
+    fun findMedSendtDineSykmeldteHendelse(id: String, type: String): List<PlanlagtVarsel>
 }
