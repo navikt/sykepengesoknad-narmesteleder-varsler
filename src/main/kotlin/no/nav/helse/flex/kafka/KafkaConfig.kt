@@ -84,6 +84,12 @@ class KafkaConfig(
         )
     }
 
+    @Bean
+    @Profile("default")
+    fun dineSykmeldteHendelserProducer(): KafkaProducer<String, String> {
+        return KafkaProducer<String, String>(producerConfig(StringSerializer::class.java))
+    }
+
     fun producerConfig(valueSerializer: Class<*>) = mapOf(
         ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG to StringSerializer::class.java,
         ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to valueSerializer,
@@ -94,3 +100,4 @@ class KafkaConfig(
 }
 
 const val doknotifikasjonTopic = "teamdokumenthandtering.privat-dok-notifikasjon-med-kontakt-info"
+const val dineSykmeldteHendelserTopic = "teamsykmelding.dinesykmeldte-hendelser-v2"

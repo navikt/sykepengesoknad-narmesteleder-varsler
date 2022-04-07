@@ -14,7 +14,9 @@ data class PlanlagtVarsel(
     val status: PlanlagtVarselStatus,
     val varselType: PlanlagtVarselType,
     val sendes: Instant,
-    val narmesteLederId: UUID?
+    val narmesteLederId: UUID?,
+    val dineSykmeldteHendelseOpprettet: Instant? = null,
+    val dineSykmeldteHendelseFerdigstilt: Instant? = null,
 )
 
 enum class PlanlagtVarselStatus {

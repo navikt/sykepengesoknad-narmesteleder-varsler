@@ -1,9 +1,15 @@
 package no.nav.helse.flex
 
 import no.nav.doknotifikasjon.schemas.PrefererteKanal
+import no.nav.helse.flex.dinesykmeldte.OPPGAVETYPE_IKKE_SENDT_SOKNAD
+import no.nav.helse.flex.dinesykmeldte.tilDineSykmeldteHendelse
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
-import no.nav.helse.flex.sykepengesoknad.kafka.*
+import no.nav.helse.flex.sykepengesoknad.kafka.ArbeidsgiverDTO
+import no.nav.helse.flex.sykepengesoknad.kafka.ArbeidssituasjonDTO
+import no.nav.helse.flex.sykepengesoknad.kafka.SoknadsstatusDTO
 import no.nav.helse.flex.sykepengesoknad.kafka.SoknadsstatusDTO.SENDT
+import no.nav.helse.flex.sykepengesoknad.kafka.SoknadstypeDTO
+import no.nav.helse.flex.sykepengesoknad.kafka.SykepengesoknadDTO
 import no.nav.helse.flex.varsler.MANGLENDE_VARSEL_EPOST_TEKST
 import no.nav.helse.flex.varsler.MANGLENDE_VARSEL_TITTEL
 import no.nav.helse.flex.varsler.SENDT_SYKEPENGESOKNAD_EPOST_TEKST
@@ -17,10 +23,12 @@ import no.nav.helse.flex.varsler.domain.PlanlagtVarselStatus.PLANLAGT
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselType.MANGLENDE_SYKEPENGESOKNAD
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselType.SENDT_SYKEPENGESOKNAD
 import org.amshove.kluent.`should be equal to`
+import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeAfter
 import org.amshove.kluent.shouldBeBefore
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeNull
+import org.amshove.kluent.shouldNotBe
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
@@ -88,7 +96,7 @@ class VarselTest : Testoppsett() {
     @Order(1)
     fun `Vi mottar en søknad med status NY og planlegger et manglende søknad varsel`() {
 
-        planlagteVarslerSomSendesFør(dager = 20).size `should be equal to` 0
+        planlagteVarslerSomSendesFor(dager = 20).size `should be equal to` 0
 
         sendSykepengesoknad(soknad)
 
@@ -105,7 +113,7 @@ class VarselTest : Testoppsett() {
         planlagtVarsel.sendes.shouldBeBefore(Instant.now().plus(17L, ChronoUnit.DAYS))
         planlagtVarsel.sendes.shouldBeAfter(Instant.now().plus(13L, ChronoUnit.DAYS))
 
-        planlagteVarslerSomSendesFør(dager = 20).size `should be equal to` 1
+        planlagteVarslerSomSendesFor(dager = 20).size `should be equal to` 1
     }
 
     @Test
@@ -113,8 +121,8 @@ class VarselTest : Testoppsett() {
     fun `Vi mottar en søknad med status SENDT og avbryter manglende søknad varsel og planlegger SENDT søknad varsel `() {
         mockPdlResponse()
         planlagtVarselRepository.findBySykepengesoknadId(soknad.id).size `should be equal to` 1
-        planlagteVarslerSomSendesFør(dager = 20).size `should be equal to` 1
-        planlagteVarslerSomSendesFør(dager = 3).size `should be equal to` 0
+        planlagteVarslerSomSendesFor(dager = 20).size `should be equal to` 1
+        planlagteVarslerSomSendesFor(dager = 3).size `should be equal to` 0
         val soknaden = soknad.copy(status = SENDT, sendtArbeidsgiver = LocalDateTime.now())
         sendSykepengesoknad(soknaden)
 
@@ -141,14 +149,14 @@ class VarselTest : Testoppsett() {
         avbruttVarsel.varselType `should be equal to` MANGLENDE_SYKEPENGESOKNAD
         avbruttVarsel.status `should be equal to` AVBRUTT
 
-        planlagteVarslerSomSendesFør(dager = 3).size `should be equal to` 1
+        planlagteVarslerSomSendesFor(dager = 3).size `should be equal to` 1
         pdlMockServer?.reset()
     }
 
     @Test
     @Order(3)
     fun `Vi sender ikke ut det ene varselet fordi det ikke finnes en nærmeste leder `() {
-        val planlagtVarsel = planlagteVarslerSomSendesFør(dager = 3).first()
+        val planlagtVarsel = planlagteVarslerSomSendesFor(dager = 3).first()
         planlagtVarsel.status `should be equal to` PLANLAGT
 
         val antallVarsel = varselUtsendelse.sendVarsler(Instant.now().plus(3L, ChronoUnit.DAYS))
@@ -156,7 +164,7 @@ class VarselTest : Testoppsett() {
         doknotifikasjonKafkaConsumer.ventPåRecords(antall = 0)
 
         await().atMost(5, SECONDS).until {
-            planlagteVarslerSomSendesFør(dager = 3).isEmpty()
+            planlagteVarslerSomSendesFor(dager = 3).isEmpty()
         }
 
         val utelattVarsel = planlagtVarselRepository.findByIdOrNull(planlagtVarsel.id!!)!!
@@ -203,8 +211,8 @@ class VarselTest : Testoppsett() {
     @Order(5)
     fun `Vi mottar en søknad med status NY og planlegger et manglende søknad varsel som vi sender ut`() {
 
-        planlagteVarslerSomSendesFør(dager = 20).size `should be equal to` 0
-        val id = UUID.randomUUID().toString()
+        planlagteVarslerSomSendesFor(dager = 20).size `should be equal to` 0
+        val id = "fbf80f07-e4dc-34d2-8a91-e504f80f3eb5"
         repeat(2) { // Takler duplikater
             sendSykepengesoknad(soknad.copy(id = id))
         }
@@ -216,19 +224,21 @@ class VarselTest : Testoppsett() {
         planlagtVarsel.varselType `should be equal to` MANGLENDE_SYKEPENGESOKNAD
         planlagtVarsel.status `should be equal to` PLANLAGT
 
-        planlagteVarslerSomSendesFør(dager = 20).size `should be equal to` 1
+        planlagteVarslerSomSendesFor(dager = 20).size `should be equal to` 1
 
         val antallVarsel = varselUtsendelse.sendVarsler(Instant.now().plus(20L, ChronoUnit.DAYS))
         antallVarsel `should be equal to` 1
-        val notifikasjon = doknotifikasjonKafkaConsumer.ventPåRecords(antall = 1).first().value()
 
-        await().atMost(1, SECONDS).until {
-            planlagteVarslerSomSendesFør(dager = 20).isEmpty()
+        val notifikasjon = doknotifikasjonKafkaConsumer.ventPåRecords(antall = 1).first().value()
+        val dineSykmeldteHendelse = hendelseKafkaConsumer.ventPåRecords(1).first().value().tilDineSykmeldteHendelse()
+
+        await().atMost(2, SECONDS).until {
+            planlagteVarslerSomSendesFor(dager = 20).isEmpty()
         }
 
         val sendtVarsel = planlagtVarselRepository.findByIdOrNull(planlagtVarsel.id!!)!!
         sendtVarsel.status `should be equal to` PlanlagtVarselStatus.SENDT
-        planlagteVarslerSomSendesFør(dager = 20).size `should be equal to` 0
+        planlagteVarslerSomSendesFor(dager = 20).size `should be equal to` 0
 
         notifikasjon.getEpostadresse() `should be equal to` "sjefen@bedriften.nav"
         notifikasjon.getBestillingsId() `should be equal to` sendtVarsel.id!!
@@ -236,13 +246,26 @@ class VarselTest : Testoppsett() {
         notifikasjon.getFodselsnummer() `should be equal to` "01987654321"
         notifikasjon.getEpostTekst() `should be equal to` MANGLENDE_VARSEL_EPOST_TEKST
         notifikasjon.getTittel() `should be equal to` MANGLENDE_VARSEL_TITTEL
+
+        val varselMedHendelse =
+            planlagtVarselRepository.findMedSendtDineSykmeldteHendelse(id, MANGLENDE_SYKEPENGESOKNAD.toString()).first()
+        varselMedHendelse.dineSykmeldteHendelseOpprettet shouldNotBe null
+        varselMedHendelse.dineSykmeldteHendelseFerdigstilt shouldBe null
+
+        dineSykmeldteHendelse.id `should be equal to` varselMedHendelse.sykepengesoknadId
+
+        val opprettHendelse = dineSykmeldteHendelse.opprettHendelse!!
+        opprettHendelse.ansattFnr `should be equal to` "12345678901"
+        opprettHendelse.orgnummer `should be equal to` "999111555"
+        opprettHendelse.timestamp shouldNotBe null
+        opprettHendelse.oppgavetype `should be equal to` OPPGAVETYPE_IKKE_SENDT_SOKNAD
     }
 
     @Test
     @Order(6)
     fun `Vi mottar en søknad med status SENDT og planlegger en NY søknad varsel som vi sender ut`() {
         mockPdlResponse()
-        planlagteVarslerSomSendesFør(dager = 20).size `should be equal to` 0
+        planlagteVarslerSomSendesFor(dager = 20).size `should be equal to` 0
         val id = UUID.randomUUID().toString()
         val soknaden = soknad.copy(
             id = id,
@@ -262,19 +285,19 @@ class VarselTest : Testoppsett() {
         planlagtVarsel.varselType `should be equal to` SENDT_SYKEPENGESOKNAD
         planlagtVarsel.status `should be equal to` PLANLAGT
 
-        planlagteVarslerSomSendesFør(dager = 3).size `should be equal to` 1
+        planlagteVarslerSomSendesFor(dager = 3).size `should be equal to` 1
 
         val antallVarsel = varselUtsendelse.sendVarsler(Instant.now().plus(20L, ChronoUnit.DAYS))
         antallVarsel `should be equal to` 1
         val notifikasjon = doknotifikasjonKafkaConsumer.ventPåRecords(antall = 1).first().value()
 
         await().atMost(1, SECONDS).until {
-            planlagteVarslerSomSendesFør(dager = 3).isEmpty()
+            planlagteVarslerSomSendesFor(dager = 3).isEmpty()
         }
 
         val sendtVarsel = planlagtVarselRepository.findByIdOrNull(planlagtVarsel.id!!)!!
         sendtVarsel.status `should be equal to` PlanlagtVarselStatus.SENDT
-        planlagteVarslerSomSendesFør(dager = 20).size `should be equal to` 0
+        planlagteVarslerSomSendesFor(dager = 20).size `should be equal to` 0
 
         notifikasjon.getEpostadresse() `should be equal to` "annen@epost.no"
         notifikasjon.getBestillingsId() `should be equal to` sendtVarsel.id!!
@@ -285,7 +308,36 @@ class VarselTest : Testoppsett() {
         pdlMockServer?.reset()
     }
 
-    private fun planlagteVarslerSomSendesFør(dager: Int): List<PlanlagtVarsel> {
+    @Test
+    @Order(7)
+    fun `Vi mottar en søknad med status SENDT og avbryter opprettet hendelse i Dine sykmeldte`() {
+        val id = "fbf80f07-e4dc-34d2-8a91-e504f80f3eb5"
+        val soknaden = soknad.copy(
+            id = id,
+            status = SENDT,
+            sendtArbeidsgiver = LocalDateTime.now(),
+            arbeidsgiver = ArbeidsgiverDTO("Arbeidsgiver", "Orgnummer")
+        )
+
+        sendSykepengesoknad(soknaden)
+
+        val dineSykmeldteHendelse = hendelseKafkaConsumer.ventPåRecords(1).first().value().tilDineSykmeldteHendelse()
+
+        await().atMost(2, SECONDS).until {
+            planlagtVarselRepository.findMedSendtDineSykmeldteHendelse(id, MANGLENDE_SYKEPENGESOKNAD.toString()).size == 1
+        }
+        val varselMedHendelse =
+            planlagtVarselRepository.findMedSendtDineSykmeldteHendelse(id, MANGLENDE_SYKEPENGESOKNAD.toString()).first()
+
+        varselMedHendelse.dineSykmeldteHendelseOpprettet shouldNotBe null
+        varselMedHendelse.dineSykmeldteHendelseFerdigstilt shouldNotBe null
+
+        dineSykmeldteHendelse.id `should be equal to` id
+        dineSykmeldteHendelse.ferdigstillHendelse shouldNotBe null
+        dineSykmeldteHendelse.ferdigstillHendelse!!.timestamp shouldNotBe null
+    }
+
+    private fun planlagteVarslerSomSendesFor(dager: Int): List<PlanlagtVarsel> {
         return planlagtVarselRepository.findFirst300ByStatusAndSendesIsBefore(
             PLANLAGT,
             Instant.now().plus(dager.toLong(), ChronoUnit.DAYS)
