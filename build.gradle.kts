@@ -3,9 +3,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     id("org.springframework.boot") version "2.6.6"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
-    id("org.jlleitschuh.gradle.ktlint") version "10.2.1"
+    id("org.jlleitschuh.gradle.ktlint") version "10.3.0"
     kotlin("jvm") version "1.6.21"
-    kotlin("plugin.spring") version "1.6.20"
+    kotlin("plugin.spring") version "1.6.21"
 }
 
 group = "no.nav.helse.flex"
@@ -38,12 +38,12 @@ repositories {
     }
 }
 
-val testContainersVersion = "1.16.3"
+val testContainersVersion = "1.17.1"
 val tokenSupportVersion = "2.0.14"
 val logstashLogbackEncoderVersion = "7.0.1"
 val kluentVersion = "1.68"
 val sykepengesoknadKafkaVersion = "2022.02.10-16.07-0892e94a"
-val confluentVersion = "7.0.2"
+val confluentVersion = "7.1.1"
 val doknotifikasjonAvroVersion = "1.2021.06.22-11.27-265ce1fe1ab4"
 
 dependencies {
