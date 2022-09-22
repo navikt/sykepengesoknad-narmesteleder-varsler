@@ -38,9 +38,9 @@ repositories {
     }
 }
 
-val testContainersVersion = "1.17.2"
+val testContainersVersion = "1.17.3"
 val tokenSupportVersion = "2.0.16"
-val logstashLogbackEncoderVersion = "7.1.1"
+val logstashLogbackEncoderVersion = "7.2"
 val kluentVersion = "1.68"
 val sykepengesoknadKafkaVersion = "2022.02.10-16.07-0892e94a"
 val confluentVersion = "7.1.1"
