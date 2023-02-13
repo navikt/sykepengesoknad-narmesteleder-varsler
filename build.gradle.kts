@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.springframework.boot") version "2.7.5"
+    id("org.springframework.boot") version "3.0.2"
     id("io.spring.dependency-management") version "1.1.0"
     id("org.jlleitschuh.gradle.ktlint") version "11.1.0"
     kotlin("jvm") version "1.8.10"
@@ -39,16 +39,16 @@ repositories {
 }
 
 val testContainersVersion = "1.17.6"
-val tokenSupportVersion = "2.1.9"
+val tokenSupportVersion = "3.0.3"
 val logstashLogbackEncoderVersion = "7.2"
 val kluentVersion = "1.72"
-val sykepengesoknadKafkaVersion = "2022.10.28-10.24-aa0eced7"
+val sykepengesoknadKafkaVersion = "2022.12.21-07.53-20bd43a2"
 val confluentVersion = "7.3.1"
 val doknotifikasjonAvroVersion = "1.2022.06.07-10.21-210529ac5c88"
 
 dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
-    implementation(kotlin("stdlib-jdk8"))
+    implementation(kotlin("stdlib"))
     implementation(kotlin("reflect"))
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
@@ -67,10 +67,11 @@ dependencies {
     implementation("no.nav.security:token-client-spring:$tokenSupportVersion")
     implementation("no.nav.security:token-validation-spring:$tokenSupportVersion")
 
+    testImplementation(platform("org.testcontainers:testcontainers-bom:$testContainersVersion"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.testcontainers:postgresql")
+    testImplementation("org.testcontainers:kafka")
     testImplementation("org.awaitility:awaitility")
-    testImplementation("org.testcontainers:kafka:$testContainersVersion")
-    testImplementation("org.testcontainers:postgresql:$testContainersVersion")
     testImplementation("no.nav.security:token-validation-spring-test:$tokenSupportVersion")
     testImplementation("org.amshove.kluent:kluent:$kluentVersion")
 }
