@@ -1,5 +1,6 @@
 package no.nav.helse.flex
 
+import jakarta.annotation.PostConstruct
 import no.nav.doknotifikasjon.schemas.NotifikasjonMedkontaktInfo
 import no.nav.helse.flex.kafka.FLEX_SYKEPENGESOKNAD_TOPIC
 import no.nav.helse.flex.kafka.NARMESTELEDER_LEESAH_TOPIC
@@ -24,7 +25,6 @@ import org.springframework.web.client.RestTemplate
 import org.testcontainers.containers.KafkaContainer
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
-import javax.annotation.PostConstruct
 
 private class PostgreSQLContainer12 : PostgreSQLContainer<PostgreSQLContainer12>("postgres:12-alpine")
 
