@@ -14,13 +14,12 @@ import java.time.*
 @Component
 class VarselPlanlegger(
     private val planlagtVarselRepository: PlanlagtVarselRepository,
-    private val varselUtsendelse: VarselUtsendelse,
+    private val varselUtsendelse: VarselUtsendelse
 ) {
 
     val log = logger()
 
     fun planleggVarsler(soknad: SykepengesoknadDTO) {
-
         if (!soknad.skalSendeVarselTilArbeidsgiver()) {
             return
         }
@@ -46,7 +45,7 @@ class VarselPlanlegger(
                     planlagtVarselRepository.save(
                         it.copy(
                             status = PlanlagtVarselStatus.AVBRUTT,
-                            oppdatert = Instant.now(),
+                            oppdatert = Instant.now()
                         )
                     )
                 }
@@ -62,7 +61,6 @@ class VarselPlanlegger(
     }
 
     private fun SykepengesoknadDTO.planleggVarselForStatusNy() {
-
         val harAlleredePlanlagt = planlagtVarselRepository.findBySykepengesoknadId(id)
             .any { it.varselType == MANGLENDE_SYKEPENGESOKNAD }
 
@@ -81,7 +79,7 @@ class VarselPlanlegger(
             sendes = omToUkerFornuftigDagtid().toInstant(),
             status = PLANLAGT,
             varselType = MANGLENDE_SYKEPENGESOKNAD,
-            narmesteLederId = null,
+            narmesteLederId = null
         )
         planlagtVarselRepository.save(planlagtVarsel)
         log.info("Planlegger varsel ${planlagtVarsel.varselType} for soknad $id som sendes ${planlagtVarsel.sendes}.")
@@ -105,7 +103,7 @@ class VarselPlanlegger(
             sendes = narmesteFornuftigDagtid().toInstant(),
             status = PLANLAGT,
             varselType = SENDT_SYKEPENGESOKNAD,
-            narmesteLederId = null,
+            narmesteLederId = null
         )
         planlagtVarselRepository.save(planlagtVarsel)
         log.info("Planlegger varsel ${planlagtVarsel.varselType} for soknad $id som sendes ${planlagtVarsel.sendes}.")
@@ -113,7 +111,6 @@ class VarselPlanlegger(
 }
 
 fun narmesteFornuftigDagtid(now: ZonedDateTime = ZonedDateTime.now(osloZone)): ZonedDateTime {
-
     val dagtid = if (now.hour < 15) {
         now.withHour(now.hour.coerceAtLeast(9))
     } else {

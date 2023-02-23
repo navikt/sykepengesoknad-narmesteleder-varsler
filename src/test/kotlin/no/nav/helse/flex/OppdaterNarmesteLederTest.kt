@@ -16,7 +16,6 @@ class OppdaterNarmesteLederTest : Testoppsett() {
 
     @Test
     fun `Oppretter ny nærmeste leder hvis den ikke finnes fra før og er aktiv`() {
-
         val narmesteLederId = UUID.randomUUID()
         narmesteLederRepository.findByNarmesteLederId(narmesteLederId).shouldBeNull()
 
@@ -92,7 +91,7 @@ class OppdaterNarmesteLederTest : Testoppsett() {
         sendNarmesteLederLeesah(
             getNarmesteLederLeesah(
                 narmesteLederId,
-                aktivTom = LocalDate.now(),
+                aktivTom = LocalDate.now()
             )
         )
 

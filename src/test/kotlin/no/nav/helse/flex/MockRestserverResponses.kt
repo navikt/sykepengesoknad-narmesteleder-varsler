@@ -16,7 +16,7 @@ fun Testoppsett.mockPdlResponse(
     identResponse: HentIdenterResponse = getIdentResponse(
         listOf(
             PdlIdent(gruppe = AKTORID, ident = aktorId),
-            PdlIdent(gruppe = FOLKEREGISTERIDENT, ident = fnr),
+            PdlIdent(gruppe = FOLKEREGISTERIDENT, ident = fnr)
         )
     ),
     expectedCount: ExpectedCount = ExpectedCount.once()

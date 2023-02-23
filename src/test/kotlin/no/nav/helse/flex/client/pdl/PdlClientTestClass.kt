@@ -18,7 +18,7 @@ class PdlClientTestClass : Testoppsett() {
         val identResponse = getIdentResponse(
             listOf(
                 PdlIdent(gruppe = AKTORID, ident = aktorId),
-                PdlIdent(gruppe = FOLKEREGISTERIDENT, ident = fnr),
+                PdlIdent(gruppe = FOLKEREGISTERIDENT, ident = fnr)
             )
         )
 

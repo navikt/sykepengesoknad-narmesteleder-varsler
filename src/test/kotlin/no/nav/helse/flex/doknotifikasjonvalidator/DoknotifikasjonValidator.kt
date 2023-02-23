@@ -19,7 +19,8 @@ class DoknotifikasjonValidator {
             throw RuntimeException(
                 String.format(
                     "Feilet med å validere DoknotifikasjonMedKontaktInfo AVRO skjema med bestillingsId=%s. Feilmelding: %s. ",
-                    notifikasjon.getBestillingsId(), "FEILET_MUST_HAVE_EITHER_MOBILTELEFONNUMMER_OR_EPOSTADESSE_AS_SETT"
+                    notifikasjon.getBestillingsId(),
+                    "FEILET_MUST_HAVE_EITHER_MOBILTELEFONNUMMER_OR_EPOSTADESSE_AS_SETT"
                 )
             )
         }
@@ -40,7 +41,11 @@ class DoknotifikasjonValidator {
         if (string == null || string.trim { it <= ' ' }.isEmpty() || string.length > maxLength) {
             val addedString = if (string == null || string.trim { it <= ' ' }
                 .isEmpty()
-            ) " ikke satt" else " har for lang string lengde"
+            ) {
+                " ikke satt"
+            } else {
+                " har for lang string lengde"
+            }
             throw RuntimeException("AVRO skjema Doknotifikasjon er ikke gylding for bestilling med bestillingsId: " + notifikasjon.getBestillingsId() + " " + fieldName + " " + addedString)
         }
     }

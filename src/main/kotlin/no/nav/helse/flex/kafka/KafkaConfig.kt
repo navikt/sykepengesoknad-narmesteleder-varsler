@@ -28,7 +28,7 @@ class KafkaConfig(
     @Value("\${KAFKA_KEYSTORE_PATH}") private val kafkaKeystorePath: String,
     @Value("\${KAFKA_SCHEMA_REGISTRY}") private val schemaRegistryUrl: String,
     @Value("\${KAFKA_SCHEMA_REGISTRY_USER}") private val kafkaSchemaRegistryUsername: String,
-    @Value("\${KAFKA_SCHEMA_REGISTRY_PASSWORD}") private val kafkaSchemaRegistryPassword: String,
+    @Value("\${KAFKA_SCHEMA_REGISTRY_PASSWORD}") private val kafkaSchemaRegistryPassword: String
 ) {
 
     private val JAVA_KEYSTORE = "JKS"
@@ -47,7 +47,7 @@ class KafkaConfig(
         SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG to kafkaCredstorePassword,
         SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG to kafkaKeystorePath,
         SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG to kafkaCredstorePassword,
-        SslConfigs.SSL_KEY_PASSWORD_CONFIG to kafkaCredstorePassword,
+        SslConfigs.SSL_KEY_PASSWORD_CONFIG to kafkaCredstorePassword
     )
 
     @Bean
@@ -74,7 +74,6 @@ class KafkaConfig(
     @Bean
     @Profile("default")
     fun doknotifikasjonProducer(): KafkaProducer<String, NotifikasjonMedkontaktInfo> {
-
         return KafkaProducer<String, NotifikasjonMedkontaktInfo>(
             producerConfig(KafkaAvroSerializer::class.java) + mapOf(
                 KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG to schemaRegistryUrl,

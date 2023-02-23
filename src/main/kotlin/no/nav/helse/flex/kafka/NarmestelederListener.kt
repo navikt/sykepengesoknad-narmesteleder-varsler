@@ -13,7 +13,7 @@ class NarmestelederListener(
 
     @KafkaListener(
         topics = [NARMESTELEDER_LEESAH_TOPIC],
-        containerFactory = "aivenKafkaListenerContainerFactory",
+        containerFactory = "aivenKafkaListenerContainerFactory"
     )
     fun listen(cr: ConsumerRecord<String, String>, acknowledgment: Acknowledgment) {
         oppdateringAvNarmesteLeder.behandleMeldingFraKafka(cr.value())

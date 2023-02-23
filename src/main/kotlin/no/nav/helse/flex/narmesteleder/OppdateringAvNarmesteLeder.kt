@@ -10,7 +10,7 @@ import java.time.Instant
 
 @Component
 class OppdateringAvNarmesteLeder(
-    val narmesteLederRepository: NarmesteLederRepository,
+    val narmesteLederRepository: NarmesteLederRepository
 ) {
 
     val log = logger()

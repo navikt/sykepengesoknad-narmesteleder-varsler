@@ -113,7 +113,7 @@ class VarselUtsendelse(
 
     private fun sendNotifikasjonTilNarmesteLeder(
         planlagtVarsel: PlanlagtVarsel,
-        narmesteLeder: NarmesteLeder,
+        narmesteLeder: NarmesteLeder
     ) {
         val notifikasjon = lagNotifikasjonMedkontaktInfo(planlagtVarsel, narmesteLeder)
         doknotifikasjonKafkaProducer.send(
@@ -206,8 +206,10 @@ class VarselUtsendelse(
         registry.counter(
             "planlagt_varsel_behandlet",
             Tags.of(
-                "status", status.name,
-                "type", type.name,
+                "status",
+                status.name,
+                "type",
+                type.name
             )
         ).increment()
     }
