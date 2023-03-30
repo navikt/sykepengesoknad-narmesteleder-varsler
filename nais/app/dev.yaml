@@ -3,7 +3,7 @@ namespace: flex
 team: flex
 kafkaPool: nav-dev
 db_tier: db-f1-micro
-externalHosts:
+external-host:
   - pdl-api.dev-fss-pub.nais.io
 azureTenant: trygdeetaten.no
 env:
