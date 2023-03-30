@@ -3,7 +3,7 @@ namespace: flex
 team: flex
 kafkaPool: nav-prod
 db_tier: db-custom-1-3840
-externalHosts:
+external-host:
   - pdl-api.prod-fss-pub.nais.io
 azureTenant: nav.no
 env:

@@ -43,9 +43,9 @@ spec:
   accessPolicy:
     outbound:
       external:
-      {{#each externalHosts as |url|}}
-          - host: {{url}}
-      {{/each}}
+  {{#each external-host}}
+      - host: {{this}}
+  {{/each}}
   kafka:
     pool: {{kafkaPool}}
   azure:
