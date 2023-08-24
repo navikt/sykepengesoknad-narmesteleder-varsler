@@ -43,7 +43,7 @@ val tokenSupportVersion = "3.1.3"
 val logstashLogbackEncoderVersion = "7.4"
 val kluentVersion = "1.73"
 val sykepengesoknadKafkaVersion = "2022.12.21-07.53-20bd43a2"
-val confluentVersion = "7.4.1"
+val confluentVersion = "7.5.0"
 val doknotifikasjonAvroVersion = "1.2022.06.07-10.21-210529ac5c88"
 
 dependencies {
