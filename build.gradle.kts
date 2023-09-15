@@ -22,19 +22,12 @@ buildscript {
 // For at tester som bruker MockWebServer skal kjøre.
 ext["okhttp3.version"] = "4.9.3"
 
-val githubUser: String by project
-val githubPassword: String by project
-
 repositories {
     mavenCentral()
     maven(url = "https://jitpack.io")
     maven(url = "https://packages.confluent.io/maven/")
     maven {
-        url = uri("https://maven.pkg.github.com/navikt/maven-release")
-        credentials {
-            username = githubUser
-            password = githubPassword
-        }
+        url = uri("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
     }
 }
 
