@@ -10,6 +10,8 @@ import no.nav.helse.flex.narmesteleder.NarmesteLederRepository
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
 import no.nav.helse.flex.sykepengesoknad.kafka.SykepengesoknadDTO
 import no.nav.helse.flex.varsler.PlanlagtVarselRepository
+import no.nav.helse.flex.varsler.domain.PlanlagtVarsel
+import no.nav.helse.flex.varsler.domain.PlanlagtVarselStatus
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import org.amshove.kluent.shouldBeEmpty
 import org.apache.kafka.clients.consumer.Consumer
@@ -25,6 +27,8 @@ import org.springframework.web.client.RestTemplate
 import org.testcontainers.containers.KafkaContainer
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 private class PostgreSQLContainer12 : PostgreSQLContainer<PostgreSQLContainer12>("postgres:12-alpine")
 
@@ -127,5 +131,12 @@ abstract class Testoppsett {
                 soknad.serialisertTilString()
             )
         ).get()
+    }
+
+    fun planlagteVarslerSomSendesFor(dager: Int): List<PlanlagtVarsel> {
+        return planlagtVarselRepository.findFirst300ByStatusAndSendesIsBefore(
+            PlanlagtVarselStatus.PLANLAGT,
+            Instant.now().plus(dager.toLong(), ChronoUnit.DAYS)
+        )
     }
 }

@@ -15,7 +15,6 @@ import no.nav.helse.flex.varsler.MANGLENDE_VARSEL_TITTEL
 import no.nav.helse.flex.varsler.SENDT_SYKEPENGESOKNAD_EPOST_TEKST
 import no.nav.helse.flex.varsler.SENDT_SYKEPENGESOKNAD_TITTEL
 import no.nav.helse.flex.varsler.VarselUtsendelse
-import no.nav.helse.flex.varsler.domain.PlanlagtVarsel
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselStatus
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselStatus.AVBRUTT
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselStatus.INGEN_LEDER
@@ -331,12 +330,5 @@ class VarselTest : Testoppsett() {
         dineSykmeldteHendelse.id `should be equal to` id
         dineSykmeldteHendelse.ferdigstillHendelse shouldNotBe null
         dineSykmeldteHendelse.ferdigstillHendelse!!.timestamp shouldNotBe null
-    }
-
-    private fun planlagteVarslerSomSendesFor(dager: Int): List<PlanlagtVarsel> {
-        return planlagtVarselRepository.findFirst300ByStatusAndSendesIsBefore(
-            PLANLAGT,
-            Instant.now().plus(dager.toLong(), ChronoUnit.DAYS)
-        )
     }
 }

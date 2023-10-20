@@ -70,13 +70,16 @@ class VarselPlanlegger(
             return
         }
 
+        val nå = ZonedDateTime.now(osloZone)
+        val sendes = omToUkerFornuftigDagtid(maxOf(nå, this.tom?.plusDays(1)?.atStartOfDay(osloZone) ?: nå))
+
         val planlagtVarsel = PlanlagtVarsel(
             id = null,
             sykepengesoknadId = id,
             brukerFnr = fnr,
             oppdatert = Instant.now(),
             orgnummer = arbeidsgiver!!.orgnummer!!,
-            sendes = omToUkerFornuftigDagtid().toInstant(),
+            sendes = sendes.toInstant(),
             status = PLANLAGT,
             varselType = MANGLENDE_SYKEPENGESOKNAD,
             narmesteLederId = null
