@@ -24,7 +24,6 @@ ext["okhttp3.version"] = "4.9.3"
 
 repositories {
     mavenCentral()
-    maven(url = "https://jitpack.io")
     maven(url = "https://packages.confluent.io/maven/")
     maven {
         url = uri("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
@@ -37,7 +36,7 @@ val logstashLogbackEncoderVersion = "7.4"
 val kluentVersion = "1.73"
 val sykepengesoknadKafkaVersion = "2023.10.11-08.06-e5f57584"
 val confluentVersion = "7.5.1"
-val doknotifikasjonAvroVersion = "1.2022.06.07-10.21-210529ac5c88"
+val doknotifikasjonAvroVersion = "08c0b2d2"
 
 dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
@@ -56,7 +55,7 @@ dependencies {
     implementation("net.logstash.logback:logstash-logback-encoder:$logstashLogbackEncoderVersion")
     implementation("no.nav.helse.flex:sykepengesoknad-kafka:$sykepengesoknadKafkaVersion")
     implementation("io.confluent:kafka-avro-serializer:$confluentVersion")
-    implementation("com.github.navikt:doknotifikasjon-schemas:$doknotifikasjonAvroVersion")
+    implementation("no.nav.teamdokumenthandtering:teamdokumenthandtering-avro-schemas:$doknotifikasjonAvroVersion")
     implementation("no.nav.security:token-client-spring:$tokenSupportVersion")
     implementation("no.nav.security:token-validation-spring:$tokenSupportVersion")
 
