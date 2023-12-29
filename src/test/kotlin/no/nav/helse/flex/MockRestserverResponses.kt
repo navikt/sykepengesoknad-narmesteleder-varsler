@@ -13,17 +13,18 @@ import org.springframework.test.web.client.response.MockRestResponseCreators
 import java.net.URI
 
 fun Testoppsett.mockPdlResponse(
-    identResponse: HentIdenterResponse = getIdentResponse(
-        listOf(
-            PdlIdent(gruppe = AKTORID, ident = aktorId),
-            PdlIdent(gruppe = FOLKEREGISTERIDENT, ident = fnr)
-        )
-    ),
-    expectedCount: ExpectedCount = ExpectedCount.once()
+    identResponse: HentIdenterResponse =
+        getIdentResponse(
+            listOf(
+                PdlIdent(gruppe = AKTORID, ident = aktorId),
+                PdlIdent(gruppe = FOLKEREGISTERIDENT, ident = fnr),
+            ),
+        ),
+    expectedCount: ExpectedCount = ExpectedCount.once(),
 ) {
     pdlMockServer!!.expect(
         expectedCount,
-        requestTo(URI("https://pdl-api.dev-fss-pub.nais.io/graphql"))
+        requestTo(URI("https://pdl-api.dev-fss-pub.nais.io/graphql")),
     )
         .andExpect(method(HttpMethod.POST))
         .andExpect(header("TEMA", "SYK"))
@@ -32,16 +33,17 @@ fun Testoppsett.mockPdlResponse(
             MockRestResponseCreators.withStatus(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(
-                    identResponse.serialisertTilString()
-                )
+                    identResponse.serialisertTilString(),
+                ),
         )
 }
 
 fun harBearerToken(): RequestMatcher {
     return RequestMatcher { request: ClientHttpRequest ->
 
-        val authHeader = request.headers.getFirst(HttpHeaders.AUTHORIZATION)
-            ?: throw AssertionError("Mangler ${HttpHeaders.AUTHORIZATION} header")
+        val authHeader =
+            request.headers.getFirst(HttpHeaders.AUTHORIZATION)
+                ?: throw AssertionError("Mangler ${HttpHeaders.AUTHORIZATION} header")
 
         if (!authHeader.startsWith("Bearer ey")) {
             throw AssertionError("${HttpHeaders.AUTHORIZATION} ser ikke ut til å være bearertoken")

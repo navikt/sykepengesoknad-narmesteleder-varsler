@@ -8,19 +8,19 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.client.ExpectedCount
 
 class PdlClientTestClass : Testoppsett() {
-
     @Autowired
     private lateinit var pdlClient: PdlClient
 
     @Test
     fun `Vi tester happycase`() {
         pdlMockServer!!.reset()
-        val identResponse = getIdentResponse(
-            listOf(
-                PdlIdent(gruppe = AKTORID, ident = aktorId),
-                PdlIdent(gruppe = FOLKEREGISTERIDENT, ident = fnr)
+        val identResponse =
+            getIdentResponse(
+                listOf(
+                    PdlIdent(gruppe = AKTORID, ident = aktorId),
+                    PdlIdent(gruppe = FOLKEREGISTERIDENT, ident = fnr),
+                ),
             )
-        )
 
         mockPdlResponse(identResponse, ExpectedCount.once())
 
@@ -36,10 +36,12 @@ class PdlClientTestClass : Testoppsett() {
 fun getIdentResponse(identer: List<PdlIdent>): HentIdenterResponse {
     return HentIdenterResponse(
         errors = emptyList(),
-        data = HentIdenterResponseData(
-            hentIdenter = HentIdenter(
-                identer
-            )
-        )
+        data =
+            HentIdenterResponseData(
+                hentIdenter =
+                    HentIdenter(
+                        identer,
+                    ),
+            ),
     )
 }

@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
 
 class NarmesteFornuftigeDagtidTest {
-
     @Test
     fun `Tirsdag kl 11 sendes med en gang`() {
         val tirsdagKl11 = ZonedDateTime.of(2021, 9, 1, 11, 12, 0, 0, osloZone)

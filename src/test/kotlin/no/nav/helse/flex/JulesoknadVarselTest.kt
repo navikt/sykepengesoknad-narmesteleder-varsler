@@ -22,23 +22,24 @@ import java.util.concurrent.TimeUnit.SECONDS
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class JulesoknadVarselTest : Testoppsett() {
-
     final val orgnummer = "999111555"
-    val soknad = SykepengesoknadDTO(
-        fnr = fnr,
-        id = UUID.randomUUID().toString(),
-        type = SoknadstypeDTO.ARBEIDSTAKERE,
-        status = SoknadsstatusDTO.NY,
-        arbeidssituasjon = ArbeidssituasjonDTO.ARBEIDSTAKER,
-        arbeidsgiver = ArbeidsgiverDTO(navn = "Bedriften AS", orgnummer = orgnummer)
-    )
+    val soknad =
+        SykepengesoknadDTO(
+            fnr = fnr,
+            id = UUID.randomUUID().toString(),
+            type = SoknadstypeDTO.ARBEIDSTAKERE,
+            status = SoknadsstatusDTO.NY,
+            arbeidssituasjon = ArbeidssituasjonDTO.ARBEIDSTAKER,
+            arbeidsgiver = ArbeidsgiverDTO(navn = "Bedriften AS", orgnummer = orgnummer),
+        )
 
     @Test
     @Order(1)
-    fun `Vi mottar en søknad med status NY og tom fremtiden fordi det er en julesøknad og planlegger et manglende søknad varsel med riktig sendestidspunkt`() {
+    fun `Mottar en NY julesøknad og planlegger et manglende søknad varsel med riktig sendestidspunkt`() {
         planlagteVarslerSomSendesFor(dager = 999999).size `should be equal to` 0
 
-        sendSykepengesoknad(soknad.copy(tom = LocalDate.of(2043, 12, 24))) // Denne testen knekker hvis koden fortsatt lever om 20 år.
+        // Denne testen knekker hvis koden fortsatt lever om 20 år.
+        sendSykepengesoknad(soknad.copy(tom = LocalDate.of(2043, 12, 24)))
 
         await().atMost(5, SECONDS).until {
             planlagtVarselRepository.findBySykepengesoknadId(soknad.id).size == 1

@@ -26,7 +26,11 @@ const val SENDT_SYKEPENGESOKNAD_EPOST_TEKST = """
 """
 
 const val SENDT_SYKEPENGESOKNAD_TITTEL = "Ny søknad om sykepenger"
-fun skapSendtSøknadVarsel(bestillingsId: String, narmesteLeder: NarmesteLeder): NotifikasjonMedkontaktInfo {
+
+fun skapSendtSøknadVarsel(
+    bestillingsId: String,
+    narmesteLeder: NarmesteLeder,
+): NotifikasjonMedkontaktInfo {
     return NotifikasjonMedkontaktInfo.newBuilder()
         .setBestillingsId(bestillingsId)
         .setBestillerId("sykepengesoknad-narmesteleder-varsel")

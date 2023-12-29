@@ -13,7 +13,6 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 class OppdaterNarmesteLederTest : Testoppsett() {
-
     @Test
     fun `Oppretter ny nærmeste leder hvis den ikke finnes fra før og er aktiv`() {
         val narmesteLederId = UUID.randomUUID()
@@ -63,8 +62,8 @@ class OppdaterNarmesteLederTest : Testoppsett() {
             getNarmesteLederLeesah(
                 narmesteLederId,
                 telefonnummer = "98989898",
-                epost = "mail@banken.no"
-            )
+                epost = "mail@banken.no",
+            ),
         )
 
         await().atMost(10, TimeUnit.SECONDS).until {
@@ -91,8 +90,8 @@ class OppdaterNarmesteLederTest : Testoppsett() {
         sendNarmesteLederLeesah(
             getNarmesteLederLeesah(
                 narmesteLederId,
-                aktivTom = LocalDate.now()
-            )
+                aktivTom = LocalDate.now(),
+            ),
         )
 
         await().atMost(10, TimeUnit.SECONDS).until {
@@ -106,7 +105,7 @@ fun getNarmesteLederLeesah(
     narmesteLederId: UUID,
     telefonnummer: String = "90909090",
     epost: String = "test@nav.no",
-    aktivTom: LocalDate? = null
+    aktivTom: LocalDate? = null,
 ): NarmesteLederLeesah =
     NarmesteLederLeesah(
         narmesteLederId = narmesteLederId,
@@ -118,5 +117,5 @@ fun getNarmesteLederLeesah(
         aktivFom = LocalDate.now(),
         aktivTom = aktivTom,
         arbeidsgiverForskutterer = true,
-        timestamp = OffsetDateTime.now(ZoneOffset.UTC)
+        timestamp = OffsetDateTime.now(ZoneOffset.UTC),
     )

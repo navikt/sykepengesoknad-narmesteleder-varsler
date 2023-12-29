@@ -27,7 +27,11 @@ const val MANGLENDE_VARSEL_EPOST_TEKST = """
 """
 
 const val MANGLENDE_VARSEL_TITTEL = "Vi mangler en søknad fra din ansatt"
-fun skapManglendeSøknadVarsel(bestillingsId: String, narmesteLeder: NarmesteLeder): NotifikasjonMedkontaktInfo {
+
+fun skapManglendeSøknadVarsel(
+    bestillingsId: String,
+    narmesteLeder: NarmesteLeder,
+): NotifikasjonMedkontaktInfo {
     return NotifikasjonMedkontaktInfo.newBuilder()
         .setBestillingsId(bestillingsId)
         .setBestillerId("sykepengesoknad-narmesteleder-varsel")

@@ -7,8 +7,8 @@ import no.nav.helse.flex.dinesykmeldte.DineSykmeldteHendelse
 import no.nav.helse.flex.dinesykmeldte.FerdigstillHendelse
 import no.nav.helse.flex.dinesykmeldte.OPPGAVETYPE_IKKE_SENDT_SOKNAD
 import no.nav.helse.flex.dinesykmeldte.OpprettHendelse
-import no.nav.helse.flex.kafka.dineSykmeldteHendelserTopic
-import no.nav.helse.flex.kafka.doknotifikasjonTopic
+import no.nav.helse.flex.kafka.DINE_SYKMELDTE_HENDELSER_TOPIC
+import no.nav.helse.flex.kafka.DOKNOTIFIKASJON_TOPIC
 import no.nav.helse.flex.logger
 import no.nav.helse.flex.narmesteleder.NarmesteLederRepository
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLeder
@@ -32,9 +32,8 @@ class VarselUtsendelse(
     private val narmesteLederRepository: NarmesteLederRepository,
     private val doknotifikasjonKafkaProducer: Producer<String, NotifikasjonMedkontaktInfo>,
     private val dineSykmeldteHendelserProducer: Producer<String, String>,
-    private val registry: MeterRegistry
+    private val registry: MeterRegistry,
 ) {
-
     val log = logger()
 
     fun sendVarsler(now: Instant = Instant.now()): Int {
@@ -48,7 +47,7 @@ class VarselUtsendelse(
             if (lestVarsel.status != PLANLAGT) {
                 log.warn(
                     "Planlagt varsel ${lestVarsel.id} er ikke lengre planlagt. Det kan skje hvis bruker " +
-                        "sender inn søknaden mellom varsel planlegges og faktisk sendes."
+                        "sender inn søknaden mellom varsel planlegges og faktisk sendes.",
                 )
                 return@forEach
             }
@@ -58,7 +57,7 @@ class VarselUtsendelse(
             if (narmesteLedere.isEmpty()) {
                 log.info(
                     "Fant ingen nærmeste leder for planlagt varsel ${lestVarsel.id} for " +
-                        "søknad ${lestVarsel.sykepengesoknadId}."
+                        "søknad ${lestVarsel.sykepengesoknadId}.",
                 )
                 planlagtVarselRepository.save(lestVarsel.copy(oppdatert = Instant.now(), status = INGEN_LEDER))
                 lagreMetrikk(INGEN_LEDER, lestVarsel.varselType)
@@ -67,7 +66,7 @@ class VarselUtsendelse(
             if (narmesteLedere.size != 1) {
                 throw RuntimeException(
                     "Fant flere nærmeste ledere for planlagt varsel ${lestVarsel.id}:" +
-                        "${narmesteLedere.map { it.narmesteLederId }}."
+                        "${narmesteLedere.map { it.narmesteLederId }}.",
                 )
             }
 
@@ -92,68 +91,73 @@ class VarselUtsendelse(
 
         dineSykmeldteHendelserProducer.send(
             ProducerRecord(
-                dineSykmeldteHendelserTopic,
+                DINE_SYKMELDTE_HENDELSER_TOPIC,
                 planlagtVarsel.sykepengesoknadId,
-                ferdigstillHendelse.serialisertTilString()
-            )
+                ferdigstillHendelse.serialisertTilString(),
+            ),
         )
 
         log.info(
             "Sendt ferdigstill hendelse for planlagt varsel ${planlagtVarsel.id} og " +
-                "søknad ${planlagtVarsel.sykepengesoknadId} til Dine sykmeldte."
+                "søknad ${planlagtVarsel.sykepengesoknadId} til Dine sykmeldte.",
         )
 
         planlagtVarselRepository.save(
             planlagtVarsel.copy(
                 oppdatert = now.toInstant(),
-                dineSykmeldteHendelseFerdigstilt = now.toInstant()
-            )
+                dineSykmeldteHendelseFerdigstilt = now.toInstant(),
+            ),
         )
     }
 
     private fun sendNotifikasjonTilNarmesteLeder(
         planlagtVarsel: PlanlagtVarsel,
-        narmesteLeder: NarmesteLeder
+        narmesteLeder: NarmesteLeder,
     ) {
         val notifikasjon = lagNotifikasjonMedkontaktInfo(planlagtVarsel, narmesteLeder)
         doknotifikasjonKafkaProducer.send(
             ProducerRecord(
-                doknotifikasjonTopic,
+                DOKNOTIFIKASJON_TOPIC,
                 null,
                 notifikasjon.getBestillingsId(),
-                notifikasjon
-            )
+                notifikasjon,
+            ),
         )
 
         log.info(
             "Sendt planlagt varsel ${planlagtVarsel.id} med type ${planlagtVarsel.varselType} for " +
-                "søknad ${planlagtVarsel.sykepengesoknadId} til nærmeste leder ${narmesteLeder.narmesteLederId}."
+                "søknad ${planlagtVarsel.sykepengesoknadId} til nærmeste leder ${narmesteLeder.narmesteLederId}.",
         )
 
         planlagtVarselRepository.save(
             planlagtVarsel.copy(
                 oppdatert = Instant.now(),
                 status = SENDT,
-                narmesteLederId = narmesteLeder.narmesteLederId
-            )
+                narmesteLederId = narmesteLeder.narmesteLederId,
+            ),
         )
     }
 
     private fun lagNotifikasjonMedkontaktInfo(
         planlagtVarsel: PlanlagtVarsel,
-        narmesteLeder: NarmesteLeder
+        narmesteLeder: NarmesteLeder,
     ): NotifikasjonMedkontaktInfo {
-        val notifikasjon = when (planlagtVarsel.varselType) {
-            PlanlagtVarselType.SENDT_SYKEPENGESOKNAD -> skapSendtSøknadVarsel(planlagtVarsel.id!!, narmesteLeder)
-            PlanlagtVarselType.MANGLENDE_SYKEPENGESOKNAD -> skapManglendeSøknadVarsel(
-                planlagtVarsel.id!!,
-                narmesteLeder
-            )
-        }
+        val notifikasjon =
+            when (planlagtVarsel.varselType) {
+                PlanlagtVarselType.SENDT_SYKEPENGESOKNAD -> skapSendtSøknadVarsel(planlagtVarsel.id!!, narmesteLeder)
+                PlanlagtVarselType.MANGLENDE_SYKEPENGESOKNAD ->
+                    skapManglendeSøknadVarsel(
+                        planlagtVarsel.id!!,
+                        narmesteLeder,
+                    )
+            }
         return notifikasjon
     }
 
-    private fun sendOpprettHendelseTilDineSykmeldte(planlagtVarsel: PlanlagtVarsel, narmesteLeder: NarmesteLeder) {
+    private fun sendOpprettHendelseTilDineSykmeldte(
+        planlagtVarsel: PlanlagtVarsel,
+        narmesteLeder: NarmesteLeder,
+    ) {
         val now = OffsetDateTime.now()
 
         val opprettHendelse =
@@ -161,15 +165,15 @@ class VarselUtsendelse(
 
         dineSykmeldteHendelserProducer.send(
             ProducerRecord(
-                dineSykmeldteHendelserTopic,
+                DINE_SYKMELDTE_HENDELSER_TOPIC,
                 planlagtVarsel.sykepengesoknadId,
-                opprettHendelse.serialisertTilString()
-            )
+                opprettHendelse.serialisertTilString(),
+            ),
         )
 
         log.info(
             "Sendt opprett hendelse med type ${opprettHendelse.opprettHendelse?.oppgavetype} for planlagt " +
-                "varsel ${planlagtVarsel.id} og søknad ${planlagtVarsel.sykepengesoknadId} til Dine sykmeldte."
+                "varsel ${planlagtVarsel.id} og søknad ${planlagtVarsel.sykepengesoknadId} til Dine sykmeldte.",
         )
 
         planlagtVarselRepository.save(
@@ -177,15 +181,15 @@ class VarselUtsendelse(
                 oppdatert = now.toInstant(),
                 status = SENDT,
                 narmesteLederId = narmesteLeder.narmesteLederId,
-                dineSykmeldteHendelseOpprettet = now.toInstant()
-            )
+                dineSykmeldteHendelseOpprettet = now.toInstant(),
+            ),
         )
     }
 
     private fun lagOpprettHendelseForIkkeSendtSoknad(
         id: String,
         planlagtVarsel: PlanlagtVarsel,
-        timestamp: OffsetDateTime
+        timestamp: OffsetDateTime,
     ): DineSykmeldteHendelse {
         return DineSykmeldteHendelse(
             id,
@@ -193,24 +197,30 @@ class VarselUtsendelse(
                 ansattFnr = planlagtVarsel.brukerFnr,
                 orgnummer = planlagtVarsel.orgnummer,
                 oppgavetype = OPPGAVETYPE_IKKE_SENDT_SOKNAD,
-                timestamp = timestamp
-            )
+                timestamp = timestamp,
+            ),
         )
     }
 
-    private fun lagFerdigstillHendelse(id: String, timestamp: OffsetDateTime): DineSykmeldteHendelse {
+    private fun lagFerdigstillHendelse(
+        id: String,
+        timestamp: OffsetDateTime,
+    ): DineSykmeldteHendelse {
         return DineSykmeldteHendelse(id, null, FerdigstillHendelse(timestamp))
     }
 
-    private fun lagreMetrikk(status: PlanlagtVarselStatus, type: PlanlagtVarselType) {
+    private fun lagreMetrikk(
+        status: PlanlagtVarselStatus,
+        type: PlanlagtVarselType,
+    ) {
         registry.counter(
             "planlagt_varsel_behandlet",
             Tags.of(
                 "status",
                 status.name,
                 "type",
-                type.name
-            )
+                type.name,
+            ),
         ).increment()
     }
 }
