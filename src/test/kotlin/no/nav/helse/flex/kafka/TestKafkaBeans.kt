@@ -24,9 +24,8 @@ import java.util.HashMap
 
 @Configuration
 class TestKafkaBeans(
-    private val kafkaConfig: KafkaConfig
+    private val kafkaConfig: KafkaConfig,
 ) {
-
     @Bean
     fun stringStringProducer(): KafkaProducer<String, String> =
         KafkaProducer<String, String>(kafkaConfig.producerConfig(StringSerializer::class.java))
@@ -34,14 +33,14 @@ class TestKafkaBeans(
     @Bean
     fun kafkaConsumer() = KafkaConsumer<String, String>(consumerConfig())
 
-    private fun consumerConfig() = mapOf(
-        ConsumerConfig.GROUP_ID_CONFIG to "testing-group-id",
-        ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG to false,
-        ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java,
-        ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java,
-        ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest"
-
-    ) + kafkaConfig.commonConfig()
+    private fun consumerConfig() =
+        mapOf(
+            ConsumerConfig.GROUP_ID_CONFIG to "testing-group-id",
+            ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG to false,
+            ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java,
+            ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java,
+            ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest",
+        ) + kafkaConfig.commonConfig()
 
     private fun producerConfig(): Map<String, Serializable> {
         return mapOf(
@@ -49,7 +48,7 @@ class TestKafkaBeans(
             ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG to "true",
             ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION to "1",
             ProducerConfig.MAX_BLOCK_MS_CONFIG to "15000",
-            ProducerConfig.RETRIES_CONFIG to "100000"
+            ProducerConfig.RETRIES_CONFIG to "100000",
         )
     }
 
@@ -58,7 +57,7 @@ class TestKafkaBeans(
             ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to KafkaAvroSerializer::class.java,
             ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG to KafkaAvroSerializer::class.java,
             KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG to "http://ikke.i.bruk.nav",
-            SaslConfigs.SASL_MECHANISM to "PLAIN"
+            SaslConfigs.SASL_MECHANISM to "PLAIN",
         ) + producerConfig() + kafkaConfig.commonConfig()
     }
 
@@ -67,8 +66,8 @@ class TestKafkaBeans(
         val mockSchemaRegistryClient = MockSchemaRegistryClient()
 
         mockSchemaRegistryClient.register(
-            "$doknotifikasjonTopic-value",
-            AvroSchema(NotifikasjonMedkontaktInfo.`SCHEMA$`)
+            "$DOKNOTIFIKASJON_TOPIC-value",
+            AvroSchema(NotifikasjonMedkontaktInfo.`SCHEMA$`),
         )
 
         return mockSchemaRegistryClient
@@ -82,14 +81,15 @@ class TestKafkaBeans(
         return KafkaAvroDeserializer(mockSchemaRegistryClient(), config)
     }
 
-    fun testConsumerProps(groupId: String) = mapOf(
-        ConsumerConfig.GROUP_ID_CONFIG to groupId,
-        ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest",
-        ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG to false,
-        ConsumerConfig.MAX_POLL_RECORDS_CONFIG to "1",
-        KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG to "http://ikke.i.bruk.nav",
-        KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG to true
-    ) + kafkaConfig.commonConfig()
+    fun testConsumerProps(groupId: String) =
+        mapOf(
+            ConsumerConfig.GROUP_ID_CONFIG to groupId,
+            ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest",
+            ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG to false,
+            ConsumerConfig.MAX_POLL_RECORDS_CONFIG to "1",
+            KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG to "http://ikke.i.bruk.nav",
+            KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG to true,
+        ) + kafkaConfig.commonConfig()
 
     @Bean
     fun oppgaveKafkaConsumer(): Consumer<String, NotifikasjonMedkontaktInfo> {
@@ -97,7 +97,7 @@ class TestKafkaBeans(
         return DefaultKafkaConsumerFactory(
             testConsumerProps("oppgave-consumer"),
             StringDeserializer(),
-            kafkaAvroDeserializer() as Deserializer<NotifikasjonMedkontaktInfo>
+            kafkaAvroDeserializer() as Deserializer<NotifikasjonMedkontaktInfo>,
         ).createConsumer()
     }
 
@@ -108,7 +108,7 @@ class TestKafkaBeans(
         return DefaultKafkaProducerFactory(
             avroProducerConfig(),
             StringSerializer(),
-            kafkaAvroSerializer as Serializer<NotifikasjonMedkontaktInfo>
+            kafkaAvroSerializer as Serializer<NotifikasjonMedkontaktInfo>,
         ).createProducer()
     }
 }

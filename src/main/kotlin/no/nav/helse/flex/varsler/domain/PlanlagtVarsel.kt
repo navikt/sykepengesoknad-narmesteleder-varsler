@@ -16,13 +16,17 @@ data class PlanlagtVarsel(
     val sendes: Instant,
     val narmesteLederId: UUID?,
     val dineSykmeldteHendelseOpprettet: Instant? = null,
-    val dineSykmeldteHendelseFerdigstilt: Instant? = null
+    val dineSykmeldteHendelseFerdigstilt: Instant? = null,
 )
 
 enum class PlanlagtVarselStatus {
-    PLANLAGT, SENDT, AVBRUTT, INGEN_LEDER
+    PLANLAGT,
+    SENDT,
+    AVBRUTT,
+    INGEN_LEDER,
 }
 
 enum class PlanlagtVarselType {
-    SENDT_SYKEPENGESOKNAD, MANGLENDE_SYKEPENGESOKNAD
+    SENDT_SYKEPENGESOKNAD,
+    MANGLENDE_SYKEPENGESOKNAD,
 }

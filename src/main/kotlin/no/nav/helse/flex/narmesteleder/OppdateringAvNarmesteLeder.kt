@@ -10,9 +10,8 @@ import java.time.Instant
 
 @Component
 class OppdateringAvNarmesteLeder(
-    val narmesteLederRepository: NarmesteLederRepository
+    val narmesteLederRepository: NarmesteLederRepository,
 ) {
-
     val log = logger()
 
     fun behandleMeldingFraKafka(meldingString: String) {
@@ -40,16 +39,17 @@ class OppdateringAvNarmesteLeder(
     fun String.tilNarmesteLederLeesah(): NarmesteLederLeesah = objectMapper.readValue(this)
 }
 
-private fun NarmesteLederLeesah.tilNarmesteLeder(id: String?): NarmesteLeder = NarmesteLeder(
-    id = id,
-    narmesteLederId = narmesteLederId,
-    brukerFnr = fnr,
-    orgnummer = orgnummer,
-    narmesteLederFnr = narmesteLederFnr,
-    narmesteLederTelefonnummer = narmesteLederTelefonnummer,
-    narmesteLederEpost = narmesteLederEpost,
-    aktivFom = aktivFom,
-    arbeidsgiverForskutterer = arbeidsgiverForskutterer,
-    timestamp = timestamp.toInstant(),
-    oppdatert = Instant.now()
-)
+private fun NarmesteLederLeesah.tilNarmesteLeder(id: String?): NarmesteLeder =
+    NarmesteLeder(
+        id = id,
+        narmesteLederId = narmesteLederId,
+        brukerFnr = fnr,
+        orgnummer = orgnummer,
+        narmesteLederFnr = narmesteLederFnr,
+        narmesteLederTelefonnummer = narmesteLederTelefonnummer,
+        narmesteLederEpost = narmesteLederEpost,
+        aktivFom = aktivFom,
+        arbeidsgiverForskutterer = arbeidsgiverForskutterer,
+        timestamp = timestamp.toInstant(),
+        oppdatert = Instant.now(),
+    )

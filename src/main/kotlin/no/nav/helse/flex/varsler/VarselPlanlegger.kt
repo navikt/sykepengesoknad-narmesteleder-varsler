@@ -14,9 +14,8 @@ import java.time.*
 @Component
 class VarselPlanlegger(
     private val planlagtVarselRepository: PlanlagtVarselRepository,
-    private val varselUtsendelse: VarselUtsendelse
+    private val varselUtsendelse: VarselUtsendelse,
 ) {
-
     val log = logger()
 
     fun planleggVarsler(soknad: SykepengesoknadDTO) {
@@ -45,8 +44,8 @@ class VarselPlanlegger(
                     planlagtVarselRepository.save(
                         it.copy(
                             status = PlanlagtVarselStatus.AVBRUTT,
-                            oppdatert = Instant.now()
-                        )
+                            oppdatert = Instant.now(),
+                        ),
                     )
                 }
             }
@@ -61,8 +60,9 @@ class VarselPlanlegger(
     }
 
     private fun SykepengesoknadDTO.planleggVarselForStatusNy() {
-        val harAlleredePlanlagt = planlagtVarselRepository.findBySykepengesoknadId(id)
-            .any { it.varselType == MANGLENDE_SYKEPENGESOKNAD }
+        val harAlleredePlanlagt =
+            planlagtVarselRepository.findBySykepengesoknadId(id)
+                .any { it.varselType == MANGLENDE_SYKEPENGESOKNAD }
 
         if (harAlleredePlanlagt) {
             // Dette skjer ved gjenåpning av avbrutt søknad
@@ -73,52 +73,56 @@ class VarselPlanlegger(
         val nå = ZonedDateTime.now(osloZone)
         val sendes = omToUkerFornuftigDagtid(maxOf(nå, this.tom?.plusDays(1)?.atStartOfDay(osloZone) ?: nå))
 
-        val planlagtVarsel = PlanlagtVarsel(
-            id = null,
-            sykepengesoknadId = id,
-            brukerFnr = fnr,
-            oppdatert = Instant.now(),
-            orgnummer = arbeidsgiver!!.orgnummer!!,
-            sendes = sendes.toInstant(),
-            status = PLANLAGT,
-            varselType = MANGLENDE_SYKEPENGESOKNAD,
-            narmesteLederId = null
-        )
+        val planlagtVarsel =
+            PlanlagtVarsel(
+                id = null,
+                sykepengesoknadId = id,
+                brukerFnr = fnr,
+                oppdatert = Instant.now(),
+                orgnummer = arbeidsgiver!!.orgnummer!!,
+                sendes = sendes.toInstant(),
+                status = PLANLAGT,
+                varselType = MANGLENDE_SYKEPENGESOKNAD,
+                narmesteLederId = null,
+            )
         planlagtVarselRepository.save(planlagtVarsel)
         log.info("Planlegger varsel ${planlagtVarsel.varselType} for soknad $id som sendes ${planlagtVarsel.sendes}.")
     }
 
     private fun SykepengesoknadDTO.planleggVarselForStatusSendt() {
-        val harAlleredePlanlagt = planlagtVarselRepository.findBySykepengesoknadId(this.id)
-            .any { it.varselType == SENDT_SYKEPENGESOKNAD }
+        val harAlleredePlanlagt =
+            planlagtVarselRepository.findBySykepengesoknadId(this.id)
+                .any { it.varselType == SENDT_SYKEPENGESOKNAD }
 
         if (harAlleredePlanlagt) {
             log.info("Har allerede planlagt varsel for status SENDT for soknad ${this.id}.")
             return
         }
 
-        val planlagtVarsel = PlanlagtVarsel(
-            id = null,
-            sykepengesoknadId = this.id,
-            brukerFnr = this.fnr,
-            oppdatert = Instant.now(),
-            orgnummer = this.arbeidsgiver!!.orgnummer!!,
-            sendes = narmesteFornuftigDagtid().toInstant(),
-            status = PLANLAGT,
-            varselType = SENDT_SYKEPENGESOKNAD,
-            narmesteLederId = null
-        )
+        val planlagtVarsel =
+            PlanlagtVarsel(
+                id = null,
+                sykepengesoknadId = this.id,
+                brukerFnr = this.fnr,
+                oppdatert = Instant.now(),
+                orgnummer = this.arbeidsgiver!!.orgnummer!!,
+                sendes = narmesteFornuftigDagtid().toInstant(),
+                status = PLANLAGT,
+                varselType = SENDT_SYKEPENGESOKNAD,
+                narmesteLederId = null,
+            )
         planlagtVarselRepository.save(planlagtVarsel)
         log.info("Planlegger varsel ${planlagtVarsel.varselType} for soknad $id som sendes ${planlagtVarsel.sendes}.")
     }
 }
 
 fun narmesteFornuftigDagtid(now: ZonedDateTime = ZonedDateTime.now(osloZone)): ZonedDateTime {
-    val dagtid = if (now.hour < 15) {
-        now.withHour(now.hour.coerceAtLeast(9))
-    } else {
-        now.plusDays(1).withHour(9)
-    }
+    val dagtid =
+        if (now.hour < 15) {
+            now.withHour(now.hour.coerceAtLeast(9))
+        } else {
+            now.plusDays(1).withHour(9)
+        }
     if (dagtid.dayOfWeek == DayOfWeek.SATURDAY) {
         return dagtid.withHour(9).plusDays(2)
     }

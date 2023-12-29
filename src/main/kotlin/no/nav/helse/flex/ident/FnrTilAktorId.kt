@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component
 
 @Component
 class FnrTilAktorId(private val pdlClient: PdlClient) {
-
     fun hentAktorIdForFnr(fnr: String): String {
         val hentPerson = pdlClient.hentIdenter(fnr)
         val ident = hentPerson.hentIdenter?.identer?.find { it.gruppe == AKTORID }?.ident

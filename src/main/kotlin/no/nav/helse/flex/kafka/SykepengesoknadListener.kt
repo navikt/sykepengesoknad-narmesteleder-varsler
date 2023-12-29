@@ -11,14 +11,16 @@ import org.springframework.stereotype.Component
 
 @Component
 class SykepengesoknadListener(
-    private val varselPlanlegger: VarselPlanlegger
+    private val varselPlanlegger: VarselPlanlegger,
 ) {
-
     @KafkaListener(
         topics = [FLEX_SYKEPENGESOKNAD_TOPIC],
-        containerFactory = "aivenKafkaListenerContainerFactory"
+        containerFactory = "aivenKafkaListenerContainerFactory",
     )
-    fun listen(cr: ConsumerRecord<String, String>, acknowledgment: Acknowledgment) {
+    fun listen(
+        cr: ConsumerRecord<String, String>,
+        acknowledgment: Acknowledgment,
+    ) {
         val soknad = cr.value().tilSykepengesoknadDTO()
         varselPlanlegger.planleggVarsler(soknad)
         acknowledgment.acknowledge()

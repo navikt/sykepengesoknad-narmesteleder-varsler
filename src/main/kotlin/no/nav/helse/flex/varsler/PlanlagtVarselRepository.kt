@@ -10,8 +10,16 @@ import java.time.Instant
 @Repository
 interface PlanlagtVarselRepository : CrudRepository<PlanlagtVarsel, String> {
     fun findBySykepengesoknadId(sykepengesoknadId: String): List<PlanlagtVarsel>
-    fun findFirst300ByStatusAndSendesIsBefore(status: PlanlagtVarselStatus, sendes: Instant): List<PlanlagtVarsel>
-    fun findBySykepengesoknadIdAndStatus(sykepengesoknadId: String, status: PlanlagtVarselStatus): List<PlanlagtVarsel>
+
+    fun findFirst300ByStatusAndSendesIsBefore(
+        status: PlanlagtVarselStatus,
+        sendes: Instant,
+    ): List<PlanlagtVarsel>
+
+    fun findBySykepengesoknadIdAndStatus(
+        sykepengesoknadId: String,
+        status: PlanlagtVarselStatus,
+    ): List<PlanlagtVarsel>
 
     @Query(
         """
@@ -20,7 +28,10 @@ interface PlanlagtVarselRepository : CrudRepository<PlanlagtVarsel, String> {
         WHERE sykepengesoknad_id = :id 
           AND varsel_type = :type
           AND dine_sykmeldte_hendelse_opprettet IS NOT NULL
-        """
+        """,
     )
-    fun findMedSendtDineSykmeldteHendelse(id: String, type: String): List<PlanlagtVarsel>
+    fun findMedSendtDineSykmeldteHendelse(
+        id: String,
+        type: String,
+    ): List<PlanlagtVarsel>
 }

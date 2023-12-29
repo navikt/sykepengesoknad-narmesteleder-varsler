@@ -20,8 +20,8 @@ class DoknotifikasjonValidator {
                 String.format(
                     "Feilet med å validere DoknotifikasjonMedKontaktInfo AVRO skjema med bestillingsId=%s. Feilmelding: %s. ",
                     notifikasjon.getBestillingsId(),
-                    "FEILET_MUST_HAVE_EITHER_MOBILTELEFONNUMMER_OR_EPOSTADESSE_AS_SETT"
-                )
+                    "FEILET_MUST_HAVE_EITHER_MOBILTELEFONNUMMER_OR_EPOSTADESSE_AS_SETT",
+                ),
             )
         }
         if (notifikasjon.getAntallRenotifikasjoner() != null && notifikasjon.getAntallRenotifikasjoner() > 0 &&
@@ -31,22 +31,32 @@ class DoknotifikasjonValidator {
                 String.format(
                     "Feilet med å validere Doknotifikasjon AVRO skjema med bestillingsId=%s. Feilmelding: %s. ",
                     notifikasjon.getBestillingsId(),
-                    "FEILET_FIELD_RENOTIFIKASJON_INTERVALL_REQUIRES_ANTALL_RENOTIFIKASJONER"
-                )
+                    "FEILET_FIELD_RENOTIFIKASJON_INTERVALL_REQUIRES_ANTALL_RENOTIFIKASJONER",
+                ),
             )
         }
     }
 
-    private fun validateString(notifikasjon: NotifikasjonMedkontaktInfo, string: String?, maxLength: Int, fieldName: String) {
+    private fun validateString(
+        notifikasjon: NotifikasjonMedkontaktInfo,
+        string: String?,
+        maxLength: Int,
+        fieldName: String,
+    ) {
         if (string == null || string.trim { it <= ' ' }.isEmpty() || string.length > maxLength) {
-            val addedString = if (string == null || string.trim { it <= ' ' }
-                .isEmpty()
-            ) {
-                " ikke satt"
-            } else {
-                " har for lang string lengde"
-            }
-            throw RuntimeException("AVRO skjema Doknotifikasjon er ikke gylding for bestilling med bestillingsId: " + notifikasjon.getBestillingsId() + " " + fieldName + " " + addedString)
+            val addedString =
+                if (string == null ||
+                    string.trim { it <= ' ' }
+                        .isEmpty()
+                ) {
+                    " ikke satt"
+                } else {
+                    " har for lang string lengde"
+                }
+            throw RuntimeException(
+                "AVRO skjema Doknotifikasjon er ikke gylding for bestilling med " +
+                    "bestillingsId: ${notifikasjon.bestillingsId} $fieldName $addedString",
+            )
         }
     }
 
@@ -55,10 +65,12 @@ class DoknotifikasjonValidator {
     private fun validateNumberForSnot001(
         notifikasjon: NotifikasjonMedkontaktInfo,
         numberToValidate: Int?,
-        fieldName: String?
+        fieldName: String?,
     ) {
         if (numberToValidate != null && numberToValidate > 30) {
-            throw RuntimeException("AVRO skjema Doknotifikasjon er ikke gylding for bestilling med bestillingsId=" + notifikasjon.getBestillingsId() + "" + fieldName)
+            throw RuntimeException(
+                "AVRO skjema Doknotifikasjon er ikke gylding for bestilling med bestillingsId=${notifikasjon.bestillingsId}$fieldName",
+            )
         }
     }
 

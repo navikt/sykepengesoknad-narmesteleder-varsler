@@ -2,10 +2,10 @@ package no.nav.helse.flex
 
 import jakarta.annotation.PostConstruct
 import no.nav.doknotifikasjon.schemas.NotifikasjonMedkontaktInfo
+import no.nav.helse.flex.kafka.DINE_SYKMELDTE_HENDELSER_TOPIC
+import no.nav.helse.flex.kafka.DOKNOTIFIKASJON_TOPIC
 import no.nav.helse.flex.kafka.FLEX_SYKEPENGESOKNAD_TOPIC
 import no.nav.helse.flex.kafka.NARMESTELEDER_LEESAH_TOPIC
-import no.nav.helse.flex.kafka.dineSykmeldteHendelserTopic
-import no.nav.helse.flex.kafka.doknotifikasjonTopic
 import no.nav.helse.flex.narmesteleder.NarmesteLederRepository
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
 import no.nav.helse.flex.sykepengesoknad.kafka.SykepengesoknadDTO
@@ -36,7 +36,6 @@ private class PostgreSQLContainer12 : PostgreSQLContainer<PostgreSQLContainer12>
 @SpringBootTest
 @EnableMockOAuth2Server
 abstract class Testoppsett {
-
     @Autowired
     lateinit var kafkaProducer: Producer<String, String>
 
@@ -91,13 +90,13 @@ abstract class Testoppsett {
 
     @BeforeAll
     fun `Vi leser sykepengesoknad kafka topicet og feiler om noe eksisterer`() {
-        doknotifikasjonKafkaConsumer.subscribeHvisIkkeSubscribed(doknotifikasjonTopic)
+        doknotifikasjonKafkaConsumer.subscribeHvisIkkeSubscribed(DOKNOTIFIKASJON_TOPIC)
         doknotifikasjonKafkaConsumer.hentProduserteRecords().shouldBeEmpty()
     }
 
     @BeforeAll
     fun `Vi leser hendelse kafka topicet og feiler om noe eksisterer`() {
-        hendelseKafkaConsumer.subscribeHvisIkkeSubscribed(dineSykmeldteHendelserTopic)
+        hendelseKafkaConsumer.subscribeHvisIkkeSubscribed(DINE_SYKMELDTE_HENDELSER_TOPIC)
         hendelseKafkaConsumer.hentProduserteRecords().shouldBeEmpty()
     }
 
@@ -117,8 +116,8 @@ abstract class Testoppsett {
                 NARMESTELEDER_LEESAH_TOPIC,
                 null,
                 nl.narmesteLederId.toString(),
-                nl.serialisertTilString()
-            )
+                nl.serialisertTilString(),
+            ),
         ).get()
     }
 
@@ -128,15 +127,15 @@ abstract class Testoppsett {
                 FLEX_SYKEPENGESOKNAD_TOPIC,
                 null,
                 soknad.id,
-                soknad.serialisertTilString()
-            )
+                soknad.serialisertTilString(),
+            ),
         ).get()
     }
 
     fun planlagteVarslerSomSendesFor(dager: Int): List<PlanlagtVarsel> {
         return planlagtVarselRepository.findFirst300ByStatusAndSendesIsBefore(
             PlanlagtVarselStatus.PLANLAGT,
-            Instant.now().plus(dager.toLong(), ChronoUnit.DAYS)
+            Instant.now().plus(dager.toLong(), ChronoUnit.DAYS),
         )
     }
 }

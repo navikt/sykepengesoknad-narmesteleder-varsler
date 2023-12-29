@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component
 @Component
 class CronJob(
     val leaderElection: LeaderElection,
-    val varselUtsendelse: VarselUtsendelse
+    val varselUtsendelse: VarselUtsendelse,
 ) {
     val log = logger()
 
