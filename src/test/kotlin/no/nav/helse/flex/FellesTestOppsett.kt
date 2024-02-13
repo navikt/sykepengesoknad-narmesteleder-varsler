@@ -35,7 +35,7 @@ private class PostgreSQLContainer12 : PostgreSQLContainer<PostgreSQLContainer12>
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest
 @EnableMockOAuth2Server
-abstract class Testoppsett {
+abstract class FellesTestOppsett {
     @Autowired
     lateinit var kafkaProducer: Producer<String, String>
 

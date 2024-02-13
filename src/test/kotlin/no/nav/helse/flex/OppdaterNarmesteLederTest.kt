@@ -12,7 +12,7 @@ import java.time.ZoneOffset
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-class OppdaterNarmesteLederTest : Testoppsett() {
+class OppdaterNarmesteLederTest : FellesTestOppsett() {
     @Test
     fun `Oppretter ny nærmeste leder hvis den ikke finnes fra før og er aktiv`() {
         val narmesteLederId = UUID.randomUUID()
