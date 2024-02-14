@@ -12,7 +12,7 @@ import org.springframework.test.web.client.match.MockRestRequestMatchers.*
 import org.springframework.test.web.client.response.MockRestResponseCreators
 import java.net.URI
 
-fun Testoppsett.mockPdlResponse(
+fun FellesTestOppsett.mockPdlResponse(
     identResponse: HentIdenterResponse =
         getIdentResponse(
             listOf(

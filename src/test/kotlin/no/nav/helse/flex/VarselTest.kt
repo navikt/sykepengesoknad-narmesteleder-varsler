@@ -45,7 +45,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit.SECONDS
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
-class VarselTest : Testoppsett() {
+class VarselTest : FellesTestOppsett() {
     @Autowired
     lateinit var varselUtsendelse: VarselUtsendelse
 
