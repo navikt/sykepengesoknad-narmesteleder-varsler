@@ -24,8 +24,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.web.client.MockRestServiceServer
 import org.springframework.web.client.RestTemplate
-import org.testcontainers.containers.KafkaContainer
 import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.kafka.KafkaContainer
 import org.testcontainers.utility.DockerImageName
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -68,7 +68,7 @@ abstract class FellesTestOppsett {
                 System.setProperty("spring.datasource.password", it.password)
             }
 
-            KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.6.1")).also {
+            KafkaContainer(DockerImageName.parse("apache/kafka-native")).also {
                 it.start()
                 System.setProperty("KAFKA_BROKERS", it.bootstrapServers)
             }
