@@ -4,7 +4,7 @@ team: flex
 kafkaPool: nav-prod
 db_tier: db-custom-1-3840
 cpu: 50m
-memory: 512Mi
+memory: 640Mi
 external-host:
   - pdl-api.prod-fss-pub.nais.io
 azureTenant: nav.no
