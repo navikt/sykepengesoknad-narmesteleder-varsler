@@ -103,4 +103,4 @@ class KafkaConfig(
 }
 
 const val DOKNOTIFIKASJON_TOPIC = "teamdokumenthandtering.privat-dok-notifikasjon-med-kontakt-info"
-const val DINE_SYKMELDTE_HENDELSER_TOPIC = "teamsykmelding.dinesykmeldte-hendelser-v2"
+const val DINE_SYKMELDTE_HENDELSER_TOPIC = "team-esyfo.dinesykmeldte-hendelser-v2"
