@@ -33,8 +33,8 @@ class PdlClientTestClass : FellesTestOppsett() {
     }
 }
 
-fun getIdentResponse(identer: List<PdlIdent>): HentIdenterResponse {
-    return HentIdenterResponse(
+fun getIdentResponse(identer: List<PdlIdent>): HentIdenterResponse =
+    HentIdenterResponse(
         errors = emptyList(),
         data =
             HentIdenterResponseData(
@@ -44,4 +44,3 @@ fun getIdentResponse(identer: List<PdlIdent>): HentIdenterResponse {
                     ),
             ),
     )
-}

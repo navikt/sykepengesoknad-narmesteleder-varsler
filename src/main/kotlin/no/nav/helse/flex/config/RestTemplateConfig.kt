@@ -10,9 +10,8 @@ import java.nio.charset.StandardCharsets
 @Configuration
 class RestTemplateConfig {
     @Bean
-    fun plainTextUtf8RestTemplate(): RestTemplate {
-        return RestTemplateBuilder()
+    fun plainTextUtf8RestTemplate(): RestTemplate =
+        RestTemplateBuilder()
             .messageConverters(StringHttpMessageConverter(StandardCharsets.UTF_8))
             .build()
-    }
 }

@@ -30,8 +30,9 @@ const val SENDT_SYKEPENGESOKNAD_TITTEL = "Ny søknad om sykepenger"
 fun skapSendtSøknadVarsel(
     bestillingsId: String,
     narmesteLeder: NarmesteLeder,
-): NotifikasjonMedkontaktInfo {
-    return NotifikasjonMedkontaktInfo.newBuilder()
+): NotifikasjonMedkontaktInfo =
+    NotifikasjonMedkontaktInfo
+        .newBuilder()
         .setBestillingsId(bestillingsId)
         .setBestillerId("sykepengesoknad-narmesteleder-varsel")
         .setFodselsnummer(narmesteLeder.narmesteLederFnr)
@@ -42,5 +43,5 @@ fun skapSendtSøknadVarsel(
         .setTittel(SENDT_SYKEPENGESOKNAD_TITTEL)
         .setEpostTekst(SENDT_SYKEPENGESOKNAD_EPOST_TEKST)
         .setSmsTekst(SMS_TEKST)
-        .setPrefererteKanaler(listOf(PrefererteKanal.EPOST)).build()
-}
+        .setPrefererteKanaler(listOf(PrefererteKanal.EPOST))
+        .build()

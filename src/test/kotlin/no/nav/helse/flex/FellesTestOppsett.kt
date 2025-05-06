@@ -111,31 +111,32 @@ abstract class FellesTestOppsett {
     }
 
     fun sendNarmesteLederLeesah(nl: NarmesteLederLeesah) {
-        kafkaProducer.send(
-            ProducerRecord(
-                NARMESTELEDER_LEESAH_TOPIC,
-                null,
-                nl.narmesteLederId.toString(),
-                nl.serialisertTilString(),
-            ),
-        ).get()
+        kafkaProducer
+            .send(
+                ProducerRecord(
+                    NARMESTELEDER_LEESAH_TOPIC,
+                    null,
+                    nl.narmesteLederId.toString(),
+                    nl.serialisertTilString(),
+                ),
+            ).get()
     }
 
     fun sendSykepengesoknad(soknad: SykepengesoknadDTO) {
-        kafkaProducer.send(
-            ProducerRecord(
-                FLEX_SYKEPENGESOKNAD_TOPIC,
-                null,
-                soknad.id,
-                soknad.serialisertTilString(),
-            ),
-        ).get()
+        kafkaProducer
+            .send(
+                ProducerRecord(
+                    FLEX_SYKEPENGESOKNAD_TOPIC,
+                    null,
+                    soknad.id,
+                    soknad.serialisertTilString(),
+                ),
+            ).get()
     }
 
-    fun planlagteVarslerSomSendesFor(dager: Int): List<PlanlagtVarsel> {
-        return planlagtVarselRepository.findFirst300ByStatusAndSendesIsBefore(
+    fun planlagteVarslerSomSendesFor(dager: Int): List<PlanlagtVarsel> =
+        planlagtVarselRepository.findFirst300ByStatusAndSendesIsBefore(
             PlanlagtVarselStatus.PLANLAGT,
             Instant.now().plus(dager.toLong(), ChronoUnit.DAYS),
         )
-    }
 }

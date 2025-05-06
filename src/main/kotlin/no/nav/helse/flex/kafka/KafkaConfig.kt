@@ -75,8 +75,8 @@ class KafkaConfig(
 
     @Bean
     @Profile("default")
-    fun doknotifikasjonProducer(): KafkaProducer<String, NotifikasjonMedkontaktInfo> {
-        return KafkaProducer<String, NotifikasjonMedkontaktInfo>(
+    fun doknotifikasjonProducer(): KafkaProducer<String, NotifikasjonMedkontaktInfo> =
+        KafkaProducer<String, NotifikasjonMedkontaktInfo>(
             producerConfig(KafkaAvroSerializer::class.java) +
                 mapOf(
                     KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG to schemaRegistryUrl,
@@ -84,13 +84,11 @@ class KafkaConfig(
                     KafkaAvroSerializerConfig.BASIC_AUTH_CREDENTIALS_SOURCE to "USER_INFO",
                 ),
         )
-    }
 
     @Bean
     @Profile("default")
-    fun dineSykmeldteHendelserProducer(): KafkaProducer<String, String> {
-        return KafkaProducer<String, String>(producerConfig(StringSerializer::class.java))
-    }
+    fun dineSykmeldteHendelserProducer(): KafkaProducer<String, String> =
+        KafkaProducer<String, String>(producerConfig(StringSerializer::class.java))
 
     fun producerConfig(valueSerializer: Class<*>) =
         mapOf(

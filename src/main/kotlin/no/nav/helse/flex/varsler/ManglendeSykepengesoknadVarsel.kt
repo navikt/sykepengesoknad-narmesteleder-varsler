@@ -31,8 +31,9 @@ const val MANGLENDE_VARSEL_TITTEL = "Vi mangler en søknad fra din ansatt"
 fun skapManglendeSøknadVarsel(
     bestillingsId: String,
     narmesteLeder: NarmesteLeder,
-): NotifikasjonMedkontaktInfo {
-    return NotifikasjonMedkontaktInfo.newBuilder()
+): NotifikasjonMedkontaktInfo =
+    NotifikasjonMedkontaktInfo
+        .newBuilder()
         .setBestillingsId(bestillingsId)
         .setBestillerId("sykepengesoknad-narmesteleder-varsel")
         .setFodselsnummer(narmesteLeder.narmesteLederFnr)
@@ -43,5 +44,5 @@ fun skapManglendeSøknadVarsel(
         .setTittel(MANGLENDE_VARSEL_TITTEL)
         .setEpostTekst(MANGLENDE_VARSEL_EPOST_TEKST)
         .setSmsTekst(SMS_TEKST)
-        .setPrefererteKanaler(listOf(PrefererteKanal.EPOST)).build()
-}
+        .setPrefererteKanaler(listOf(PrefererteKanal.EPOST))
+        .build()

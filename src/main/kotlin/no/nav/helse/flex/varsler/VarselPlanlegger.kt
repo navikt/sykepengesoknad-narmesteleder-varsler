@@ -36,7 +36,8 @@ class VarselPlanlegger(
     }
 
     private fun SykepengesoknadDTO.avbrytManglendeSoknadVarsler() {
-        planlagtVarselRepository.findBySykepengesoknadId(id)
+        planlagtVarselRepository
+            .findBySykepengesoknadId(id)
             .filter { it.varselType == MANGLENDE_SYKEPENGESOKNAD }
             .forEach {
                 if (it.status == PLANLAGT) {
@@ -52,7 +53,8 @@ class VarselPlanlegger(
     }
 
     fun SykepengesoknadDTO.ferdigstillDineSykmeldteHendelse() {
-        planlagtVarselRepository.findMedSendtDineSykmeldteHendelse(id, MANGLENDE_SYKEPENGESOKNAD.toString())
+        planlagtVarselRepository
+            .findMedSendtDineSykmeldteHendelse(id, MANGLENDE_SYKEPENGESOKNAD.toString())
             .filter { it.dineSykmeldteHendelseOpprettet != null }
             .forEach {
                 varselUtsendelse.sendFerdigstillHendelseTilDineSykmeldte(it)
@@ -61,7 +63,8 @@ class VarselPlanlegger(
 
     private fun SykepengesoknadDTO.planleggVarselForStatusNy() {
         val harAlleredePlanlagt =
-            planlagtVarselRepository.findBySykepengesoknadId(id)
+            planlagtVarselRepository
+                .findBySykepengesoknadId(id)
                 .any { it.varselType == MANGLENDE_SYKEPENGESOKNAD }
 
         if (harAlleredePlanlagt) {
@@ -91,7 +94,8 @@ class VarselPlanlegger(
 
     private fun SykepengesoknadDTO.planleggVarselForStatusSendt() {
         val harAlleredePlanlagt =
-            planlagtVarselRepository.findBySykepengesoknadId(this.id)
+            planlagtVarselRepository
+                .findBySykepengesoknadId(this.id)
                 .any { it.varselType == SENDT_SYKEPENGESOKNAD }
 
         if (harAlleredePlanlagt) {
@@ -132,9 +136,7 @@ fun narmesteFornuftigDagtid(now: ZonedDateTime = ZonedDateTime.now(osloZone)): Z
     return dagtid
 }
 
-fun omToUkerFornuftigDagtid(now: ZonedDateTime = ZonedDateTime.now(osloZone)): ZonedDateTime {
-    return narmesteFornuftigDagtid(now.plusWeeks(2))
-}
+fun omToUkerFornuftigDagtid(now: ZonedDateTime = ZonedDateTime.now(osloZone)): ZonedDateTime = narmesteFornuftigDagtid(now.plusWeeks(2))
 
 fun SykepengesoknadDTO.skalSendeVarselTilArbeidsgiver() =
     ArbeidssituasjonDTO.ARBEIDSTAKER == arbeidssituasjon && type != SoknadstypeDTO.REISETILSKUDD
