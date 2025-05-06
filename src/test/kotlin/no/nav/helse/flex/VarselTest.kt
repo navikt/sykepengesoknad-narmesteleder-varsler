@@ -63,7 +63,12 @@ class VarselTest : FellesTestOppsett() {
     @Test
     @Order(0)
     fun `Arbeidsledig, frilanser og sånt skaper ikke planlagt varsel`() {
-        planlagtVarselRepository.findAll().iterator().asSequence().toList().isEmpty()
+        planlagtVarselRepository
+            .findAll()
+            .iterator()
+            .asSequence()
+            .toList()
+            .isEmpty()
 
         val arbeidsledig =
             SykepengesoknadDTO(
@@ -86,10 +91,20 @@ class VarselTest : FellesTestOppsett() {
         sendSykepengesoknad(frilanser)
 
         await().during(3, SECONDS).until {
-            planlagtVarselRepository.findAll().iterator().asSequence().toList().isEmpty()
+            planlagtVarselRepository
+                .findAll()
+                .iterator()
+                .asSequence()
+                .toList()
+                .isEmpty()
         }
 
-        planlagtVarselRepository.findAll().iterator().asSequence().toList().shouldBeEmpty()
+        planlagtVarselRepository
+            .findAll()
+            .iterator()
+            .asSequence()
+            .toList()
+            .shouldBeEmpty()
     }
 
     @Test
@@ -175,7 +190,12 @@ class VarselTest : FellesTestOppsett() {
     fun `Vi lagrer to nærmeste ledere for brukeren `() {
         val narmesteLederId = UUID.randomUUID()
         narmesteLederRepository.findByNarmesteLederId(narmesteLederId).shouldBeNull()
-        narmesteLederRepository.findAll().iterator().asSequence().toList().size `should be equal to` 0
+        narmesteLederRepository
+            .findAll()
+            .iterator()
+            .asSequence()
+            .toList()
+            .size `should be equal to` 0
 
         val narmesteLederLeesah =
             NarmesteLederLeesah(
@@ -201,7 +221,12 @@ class VarselTest : FellesTestOppsett() {
         )
 
         await().atMost(2, SECONDS).until {
-            narmesteLederRepository.findAll().iterator().asSequence().toList().size == 2
+            narmesteLederRepository
+                .findAll()
+                .iterator()
+                .asSequence()
+                .toList()
+                .size == 2
         }
     }
 
@@ -210,7 +235,8 @@ class VarselTest : FellesTestOppsett() {
     fun `Vi mottar en søknad med status NY og planlegger et manglende søknad varsel som vi sender ut`() {
         planlagteVarslerSomSendesFor(dager = 20).size `should be equal to` 0
         val id = "fbf80f07-e4dc-34d2-8a91-e504f80f3eb5"
-        repeat(2) { // Takler duplikater
+        repeat(2) {
+            // Takler duplikater
             sendSykepengesoknad(soknad.copy(id = id))
         }
         await().atMost(5, SECONDS).until {
@@ -227,7 +253,12 @@ class VarselTest : FellesTestOppsett() {
         antallVarsel `should be equal to` 1
 
         val notifikasjon = doknotifikasjonKafkaConsumer.ventPåRecords(antall = 1).first().value()
-        val dineSykmeldteHendelse = hendelseKafkaConsumer.ventPåRecords(1).first().value().tilDineSykmeldteHendelse()
+        val dineSykmeldteHendelse =
+            hendelseKafkaConsumer
+                .ventPåRecords(1)
+                .first()
+                .value()
+                .tilDineSykmeldteHendelse()
 
         await().atMost(2, SECONDS).until {
             planlagteVarslerSomSendesFor(dager = 20).isEmpty()
@@ -277,7 +308,12 @@ class VarselTest : FellesTestOppsett() {
         await().atMost(2, SECONDS).until {
             planlagtVarselRepository.findBySykepengesoknadId(id).size == 1
         }
-        val allePlanlagte = planlagtVarselRepository.findAll().iterator().asSequence().toList()
+        val allePlanlagte =
+            planlagtVarselRepository
+                .findAll()
+                .iterator()
+                .asSequence()
+                .toList()
         allePlanlagte.toString()
         val planlagtVarsel = planlagtVarselRepository.findBySykepengesoknadId(id).first()
         planlagtVarsel.varselType `should be equal to` SENDT_SYKEPENGESOKNAD
@@ -320,7 +356,12 @@ class VarselTest : FellesTestOppsett() {
 
         sendSykepengesoknad(soknaden)
 
-        val dineSykmeldteHendelse = hendelseKafkaConsumer.ventPåRecords(1).first().value().tilDineSykmeldteHendelse()
+        val dineSykmeldteHendelse =
+            hendelseKafkaConsumer
+                .ventPåRecords(1)
+                .first()
+                .value()
+                .tilDineSykmeldteHendelse()
 
         await().atMost(2, SECONDS).until {
             planlagtVarselRepository.findMedSendtDineSykmeldteHendelse(id, MANGLENDE_SYKEPENGESOKNAD.toString()).size == 1

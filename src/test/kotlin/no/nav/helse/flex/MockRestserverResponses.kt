@@ -22,15 +22,16 @@ fun FellesTestOppsett.mockPdlResponse(
         ),
     expectedCount: ExpectedCount = ExpectedCount.once(),
 ) {
-    pdlMockServer!!.expect(
-        expectedCount,
-        requestTo(URI("https://pdl-api.dev-fss-pub.nais.io/graphql")),
-    )
-        .andExpect(method(HttpMethod.POST))
+    pdlMockServer!!
+        .expect(
+            expectedCount,
+            requestTo(URI("https://pdl-api.dev-fss-pub.nais.io/graphql")),
+        ).andExpect(method(HttpMethod.POST))
         .andExpect(header("TEMA", "SYK"))
         .andExpect(harBearerToken())
         .andRespond(
-            MockRestResponseCreators.withStatus(HttpStatus.OK)
+            MockRestResponseCreators
+                .withStatus(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(
                     identResponse.serialisertTilString(),
@@ -38,8 +39,8 @@ fun FellesTestOppsett.mockPdlResponse(
         )
 }
 
-fun harBearerToken(): RequestMatcher {
-    return RequestMatcher { request: ClientHttpRequest ->
+fun harBearerToken(): RequestMatcher =
+    RequestMatcher { request: ClientHttpRequest ->
 
         val authHeader =
             request.headers.getFirst(HttpHeaders.AUTHORIZATION)
@@ -49,4 +50,3 @@ fun harBearerToken(): RequestMatcher {
             throw AssertionError("${HttpHeaders.AUTHORIZATION} ser ikke ut til å være bearertoken")
         }
     }
-}

@@ -24,7 +24,8 @@ class DoknotifikasjonValidator {
                 ),
             )
         }
-        if (notifikasjon.getAntallRenotifikasjoner() != null && notifikasjon.getAntallRenotifikasjoner() > 0 &&
+        if (notifikasjon.getAntallRenotifikasjoner() != null &&
+            notifikasjon.getAntallRenotifikasjoner() > 0 &&
             !(notifikasjon.getRenotifikasjonIntervall() != null && notifikasjon.getRenotifikasjonIntervall() > 0)
         ) {
             throw RuntimeException(
@@ -46,7 +47,8 @@ class DoknotifikasjonValidator {
         if (string == null || string.trim { it <= ' ' }.isEmpty() || string.length > maxLength) {
             val addedString =
                 if (string == null ||
-                    string.trim { it <= ' ' }
+                    string
+                        .trim { it <= ' ' }
                         .isEmpty()
                 ) {
                     " ikke satt"

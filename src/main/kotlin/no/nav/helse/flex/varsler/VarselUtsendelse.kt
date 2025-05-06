@@ -190,8 +190,8 @@ class VarselUtsendelse(
         id: String,
         planlagtVarsel: PlanlagtVarsel,
         timestamp: OffsetDateTime,
-    ): DineSykmeldteHendelse {
-        return DineSykmeldteHendelse(
+    ): DineSykmeldteHendelse =
+        DineSykmeldteHendelse(
             id,
             OpprettHendelse(
                 ansattFnr = planlagtVarsel.brukerFnr,
@@ -200,27 +200,25 @@ class VarselUtsendelse(
                 timestamp = timestamp,
             ),
         )
-    }
 
     private fun lagFerdigstillHendelse(
         id: String,
         timestamp: OffsetDateTime,
-    ): DineSykmeldteHendelse {
-        return DineSykmeldteHendelse(id, null, FerdigstillHendelse(timestamp))
-    }
+    ): DineSykmeldteHendelse = DineSykmeldteHendelse(id, null, FerdigstillHendelse(timestamp))
 
     private fun lagreMetrikk(
         status: PlanlagtVarselStatus,
         type: PlanlagtVarselType,
     ) {
-        registry.counter(
-            "planlagt_varsel_behandlet",
-            Tags.of(
-                "status",
-                status.name,
-                "type",
-                type.name,
-            ),
-        ).increment()
+        registry
+            .counter(
+                "planlagt_varsel_behandlet",
+                Tags.of(
+                    "status",
+                    status.name,
+                    "type",
+                    type.name,
+                ),
+            ).increment()
     }
 }

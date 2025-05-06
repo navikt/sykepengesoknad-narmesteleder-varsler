@@ -42,24 +42,22 @@ class TestKafkaBeans(
             ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest",
         ) + kafkaConfig.commonConfig()
 
-    private fun producerConfig(): Map<String, Serializable> {
-        return mapOf(
+    private fun producerConfig(): Map<String, Serializable> =
+        mapOf(
             ProducerConfig.ACKS_CONFIG to "all",
             ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG to "true",
             ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION to "1",
             ProducerConfig.MAX_BLOCK_MS_CONFIG to "15000",
             ProducerConfig.RETRIES_CONFIG to "100000",
         )
-    }
 
-    private fun avroProducerConfig(): Map<String, Serializable> {
-        return mapOf(
+    private fun avroProducerConfig(): Map<String, Serializable> =
+        mapOf(
             ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to KafkaAvroSerializer::class.java,
             ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG to KafkaAvroSerializer::class.java,
             KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG to "http://ikke.i.bruk.nav",
             SaslConfigs.SASL_MECHANISM to "PLAIN",
         ) + producerConfig() + kafkaConfig.commonConfig()
-    }
 
     @Bean
     fun mockSchemaRegistryClient(): MockSchemaRegistryClient {
