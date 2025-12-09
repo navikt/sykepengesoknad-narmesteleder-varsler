@@ -23,15 +23,15 @@ private const val PKCS12 = "PKCS12"
 
 @Configuration
 class KafkaConfig(
-    @Value("\${KAFKA_BROKERS}") private val kafkaBrokers: String,
-    @Value("\${aiven-kafka.auto-offset-reset}") private val kafkaAutoOffsetReset: String,
-    @Value("\${aiven-kafka.security-protocol}") private val kafkaSecurityProtocol: String,
-    @Value("\${KAFKA_TRUSTSTORE_PATH}") private val kafkaTruststorePath: String,
-    @Value("\${KAFKA_CREDSTORE_PASSWORD}") private val kafkaCredstorePassword: String,
-    @Value("\${KAFKA_KEYSTORE_PATH}") private val kafkaKeystorePath: String,
-    @Value("\${KAFKA_SCHEMA_REGISTRY}") private val schemaRegistryUrl: String,
-    @Value("\${KAFKA_SCHEMA_REGISTRY_USER}") private val kafkaSchemaRegistryUsername: String,
-    @Value("\${KAFKA_SCHEMA_REGISTRY_PASSWORD}") private val kafkaSchemaRegistryPassword: String,
+    @param:Value("\${KAFKA_BROKERS}") private val kafkaBrokers: String,
+    @param:Value("\${aiven-kafka.auto-offset-reset}") private val kafkaAutoOffsetReset: String,
+    @param:Value("\${aiven-kafka.security-protocol}") private val kafkaSecurityProtocol: String,
+    @param:Value("\${KAFKA_TRUSTSTORE_PATH}") private val kafkaTruststorePath: String,
+    @param:Value("\${KAFKA_CREDSTORE_PASSWORD}") private val kafkaCredstorePassword: String,
+    @param:Value("\${KAFKA_KEYSTORE_PATH}") private val kafkaKeystorePath: String,
+    @param:Value("\${KAFKA_SCHEMA_REGISTRY}") private val schemaRegistryUrl: String,
+    @param:Value("\${KAFKA_SCHEMA_REGISTRY_USER}") private val kafkaSchemaRegistryUsername: String,
+    @param:Value("\${KAFKA_SCHEMA_REGISTRY_PASSWORD}") private val kafkaSchemaRegistryPassword: String,
 ) {
     fun commonConfig() =
         mapOf(
