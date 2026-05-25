@@ -34,7 +34,7 @@ val testContainersVersion = "2.0.5"
 val tokenSupportVersion = "5.0.39"
 val logstashLogbackEncoderVersion = "9.0"
 val kluentVersion = "1.73"
-val sykepengesoknadKafkaVersion = "2025.11.18-06.24-f860ace9"
+val sykepengesoknadKafkaVersion = "2026.05.13-10.24-d6649054"
 val confluentVersion = "8.2.1"
 val doknotifikasjonAvroVersion = "1.1.11"
 
