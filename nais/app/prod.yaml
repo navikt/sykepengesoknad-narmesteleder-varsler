@@ -8,6 +8,10 @@ memory: 768Mi
 external-host:
   - pdl-api.prod-fss-pub.nais.io
 azureTenant: nav.no
+db_flags:
+  cloudsql.enable_pgaudit: "true"
+  pgaudit.log: 'write,ddl,role'
+  pgaudit.log_parameter: "on"
 env:
   PDL_BASE_URL: https://pdl-api.prod-fss-pub.nais.io
   PDL_API_AAD_CLIENT_ID: prod-fss.pdl.pdl-api
