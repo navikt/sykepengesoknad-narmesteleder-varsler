@@ -1,11 +1,11 @@
 package no.nav.helse.flex.narmesteleder
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.helse.flex.logger
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLeder
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
 import no.nav.helse.flex.objectMapper
 import org.springframework.stereotype.Component
+import tools.jackson.module.kotlin.readValue
 import java.time.Instant
 
 @Component
