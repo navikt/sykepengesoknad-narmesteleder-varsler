@@ -51,11 +51,13 @@ spec:
         diskAutoresize: true
         databases:
           - name: sykepengesoknad-nl-varsel-db
+        {{#if db_flags}}
         flags:
         {{#each db_flags}}
           - name: {{@key}}
             value: "{{this}}"
         {{/each}}
+        {{/if}}
   accessPolicy:
     outbound:
       external:
