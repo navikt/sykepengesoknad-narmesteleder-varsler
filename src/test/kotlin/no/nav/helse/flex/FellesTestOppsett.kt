@@ -30,7 +30,7 @@ import org.testcontainers.utility.DockerImageName
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
-private class PostgreSQLContainer14 : PostgreSQLContainer("postgres:14-alpine")
+private class PostgreSQLContainer18 : PostgreSQLContainer("postgres:18-alpine")
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest
@@ -61,7 +61,7 @@ abstract class FellesTestOppsett {
 
     companion object {
         init {
-            PostgreSQLContainer14().also {
+            PostgreSQLContainer18().also {
                 it.start()
                 System.setProperty("spring.datasource.url", it.jdbcUrl)
                 System.setProperty("spring.datasource.username", it.username)
