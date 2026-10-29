@@ -2,7 +2,7 @@ app: sykepengesoknad-narmesteleder-varsler
 namespace: flex
 team: flex
 kafkaPool: nav-dev
-db_type: POSTGRES_14
+db_type: POSTGRES_18
 db_tier: db-f1-micro
 minReplicas: 0
 maxReplicas: 0
