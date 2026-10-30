@@ -4,8 +4,8 @@ team: flex
 kafkaPool: nav-prod
 db_type: POSTGRES_18
 db_tier: db-custom-1-3840
-minReplicas: 0
-maxReplicas: 0
+minReplicas: 1
+maxReplicas: 1
 cpu: 100m
 memory: 768Mi
 external-host:
