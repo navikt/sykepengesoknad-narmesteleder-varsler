@@ -29,7 +29,7 @@ val kluentVersion = "1.73"
 val sykepengesoknadKafkaVersion = "2026.10.29-06.32-9ce6afeb"
 val confluentVersion = "8.2.1"
 val doknotifikasjonAvroVersion = "1.1.11"
-val mockWebServerVersion = "5.5.0"
+val mockWebServerVersion = "5.5.1"
 
 dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
