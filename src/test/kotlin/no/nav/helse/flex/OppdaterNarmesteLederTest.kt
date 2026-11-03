@@ -1,9 +1,9 @@
 package no.nav.helse.flex
 
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
-import org.amshove.kluent.`should be equal to`
-import org.amshove.kluent.shouldBeNull
-import org.amshove.kluent.shouldNotBeNull
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -27,7 +27,7 @@ class OppdaterNarmesteLederTest : FellesTestOppsett() {
 
         val narmesteLeder = narmesteLederRepository.findByNarmesteLederId(narmesteLederId)
         narmesteLeder.shouldNotBeNull()
-        narmesteLeder.narmesteLederEpost `should be equal to` narmesteLederLeesah.narmesteLederEpost
+        narmesteLeder.narmesteLederEpost shouldBe narmesteLederLeesah.narmesteLederEpost
     }
 
     @Test
@@ -55,8 +55,8 @@ class OppdaterNarmesteLederTest : FellesTestOppsett() {
         }
 
         val narmesteLeder = narmesteLederRepository.findByNarmesteLederId(narmesteLederId)!!
-        narmesteLeder.narmesteLederTelefonnummer `should be equal to` "90909090"
-        narmesteLeder.narmesteLederEpost `should be equal to` "test@nav.no"
+        narmesteLeder.narmesteLederTelefonnummer shouldBe "90909090"
+        narmesteLeder.narmesteLederEpost shouldBe "test@nav.no"
 
         sendNarmesteLederLeesah(
             getNarmesteLederLeesah(
@@ -71,8 +71,8 @@ class OppdaterNarmesteLederTest : FellesTestOppsett() {
         }
 
         val oppdaterNl = narmesteLederRepository.findByNarmesteLederId(narmesteLederId)!!
-        oppdaterNl.narmesteLederTelefonnummer `should be equal to` "98989898"
-        oppdaterNl.narmesteLederEpost `should be equal to` "mail@banken.no"
+        oppdaterNl.narmesteLederTelefonnummer shouldBe "98989898"
+        oppdaterNl.narmesteLederEpost shouldBe "mail@banken.no"
     }
 
     @Test

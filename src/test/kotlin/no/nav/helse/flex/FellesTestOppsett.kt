@@ -1,5 +1,6 @@
 package no.nav.helse.flex
 
+import io.kotest.matchers.collections.shouldBeEmpty
 import jakarta.annotation.PostConstruct
 import no.nav.doknotifikasjon.schemas.NotifikasjonMedkontaktInfo
 import no.nav.helse.flex.kafka.DINE_SYKMELDTE_HENDELSER_TOPIC
@@ -13,7 +14,6 @@ import no.nav.helse.flex.varsler.PlanlagtVarselRepository
 import no.nav.helse.flex.varsler.domain.PlanlagtVarsel
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselStatus
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
-import org.amshove.kluent.shouldBeEmpty
 import org.apache.kafka.clients.consumer.Consumer
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerRecord
