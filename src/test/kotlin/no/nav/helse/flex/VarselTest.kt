@@ -1,5 +1,11 @@
 package no.nav.helse.flex
 
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.date.shouldBeAfter
+import io.kotest.matchers.date.shouldBeBefore
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import no.nav.doknotifikasjon.schemas.PrefererteKanal
 import no.nav.helse.flex.dinesykmeldte.OPPGAVETYPE_IKKE_SENDT_SOKNAD
 import no.nav.helse.flex.dinesykmeldte.tilDineSykmeldteHendelse
@@ -21,13 +27,6 @@ import no.nav.helse.flex.varsler.domain.PlanlagtVarselStatus.INGEN_LEDER
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselStatus.PLANLAGT
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselType.MANGLENDE_SYKEPENGESOKNAD
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselType.SENDT_SYKEPENGESOKNAD
-import org.amshove.kluent.`should be equal to`
-import org.amshove.kluent.shouldBe
-import org.amshove.kluent.shouldBeAfter
-import org.amshove.kluent.shouldBeBefore
-import org.amshove.kluent.shouldBeEmpty
-import org.amshove.kluent.shouldBeNull
-import org.amshove.kluent.shouldNotBe
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
@@ -110,7 +109,7 @@ class VarselTest : FellesTestOppsett() {
     @Test
     @Order(1)
     fun `Vi mottar en søknad med status NY og planlegger et manglende søknad varsel`() {
-        planlagteVarslerSomSendesFor(dager = 20).size `should be equal to` 0
+        planlagteVarslerSomSendesFor(dager = 20).size shouldBe 0
 
         sendSykepengesoknad(soknad)
 
@@ -119,24 +118,24 @@ class VarselTest : FellesTestOppsett() {
         }
 
         val planlagtVarsel = planlagtVarselRepository.findBySykepengesoknadId(soknad.id).first()
-        planlagtVarsel.brukerFnr `should be equal to` soknad.fnr
-        planlagtVarsel.sykepengesoknadId `should be equal to` soknad.id
-        planlagtVarsel.orgnummer `should be equal to` soknad.arbeidsgiver!!.orgnummer
-        planlagtVarsel.varselType `should be equal to` MANGLENDE_SYKEPENGESOKNAD
-        planlagtVarsel.status `should be equal to` PLANLAGT
+        planlagtVarsel.brukerFnr shouldBe soknad.fnr
+        planlagtVarsel.sykepengesoknadId shouldBe soknad.id
+        planlagtVarsel.orgnummer shouldBe soknad.arbeidsgiver!!.orgnummer
+        planlagtVarsel.varselType shouldBe MANGLENDE_SYKEPENGESOKNAD
+        planlagtVarsel.status shouldBe PLANLAGT
         planlagtVarsel.sendes.shouldBeBefore(Instant.now().plus(17L, ChronoUnit.DAYS))
         planlagtVarsel.sendes.shouldBeAfter(Instant.now().plus(13L, ChronoUnit.DAYS))
 
-        planlagteVarslerSomSendesFor(dager = 20).size `should be equal to` 1
+        planlagteVarslerSomSendesFor(dager = 20).size shouldBe 1
     }
 
     @Test
     @Order(2)
     fun `Vi mottar en søknad med status SENDT og avbryter manglende søknad varsel og planlegger SENDT søknad varsel `() {
         mockPdlResponse()
-        planlagtVarselRepository.findBySykepengesoknadId(soknad.id).size `should be equal to` 1
-        planlagteVarslerSomSendesFor(dager = 20).size `should be equal to` 1
-        planlagteVarslerSomSendesFor(dager = 3).size `should be equal to` 0
+        planlagtVarselRepository.findBySykepengesoknadId(soknad.id).size shouldBe 1
+        planlagteVarslerSomSendesFor(dager = 20).size shouldBe 1
+        planlagteVarslerSomSendesFor(dager = 3).size shouldBe 0
         val soknaden = soknad.copy(status = SENDT, sendtArbeidsgiver = LocalDateTime.now())
         sendSykepengesoknad(soknaden)
 
@@ -145,25 +144,25 @@ class VarselTest : FellesTestOppsett() {
         }
 
         val planlagteVarsler = planlagtVarselRepository.findBySykepengesoknadId(soknad.id)
-        planlagteVarsler.size `should be equal to` 2
+        planlagteVarsler.size shouldBe 2
 
         val planlagtVarsel = planlagteVarsler.first { it.status == PLANLAGT }
-        planlagtVarsel.brukerFnr `should be equal to` soknad.fnr
-        planlagtVarsel.sykepengesoknadId `should be equal to` soknad.id
-        planlagtVarsel.orgnummer `should be equal to` soknad.arbeidsgiver!!.orgnummer
-        planlagtVarsel.varselType `should be equal to` SENDT_SYKEPENGESOKNAD
-        planlagtVarsel.status `should be equal to` PLANLAGT
+        planlagtVarsel.brukerFnr shouldBe soknad.fnr
+        planlagtVarsel.sykepengesoknadId shouldBe soknad.id
+        planlagtVarsel.orgnummer shouldBe soknad.arbeidsgiver!!.orgnummer
+        planlagtVarsel.varselType shouldBe SENDT_SYKEPENGESOKNAD
+        planlagtVarsel.status shouldBe PLANLAGT
         planlagtVarsel.sendes.shouldBeBefore(Instant.now().plus(3L, ChronoUnit.DAYS))
         planlagtVarsel.sendes.shouldBeAfter(Instant.now().minus(1L, ChronoUnit.MINUTES))
 
         val avbruttVarsel = planlagteVarsler.first { it.status == AVBRUTT }
-        avbruttVarsel.brukerFnr `should be equal to` soknad.fnr
-        avbruttVarsel.sykepengesoknadId `should be equal to` soknad.id
-        avbruttVarsel.orgnummer `should be equal to` soknad.arbeidsgiver!!.orgnummer
-        avbruttVarsel.varselType `should be equal to` MANGLENDE_SYKEPENGESOKNAD
-        avbruttVarsel.status `should be equal to` AVBRUTT
+        avbruttVarsel.brukerFnr shouldBe soknad.fnr
+        avbruttVarsel.sykepengesoknadId shouldBe soknad.id
+        avbruttVarsel.orgnummer shouldBe soknad.arbeidsgiver!!.orgnummer
+        avbruttVarsel.varselType shouldBe MANGLENDE_SYKEPENGESOKNAD
+        avbruttVarsel.status shouldBe AVBRUTT
 
-        planlagteVarslerSomSendesFor(dager = 3).size `should be equal to` 1
+        planlagteVarslerSomSendesFor(dager = 3).size shouldBe 1
         pdlMockServer?.reset()
     }
 
@@ -171,10 +170,10 @@ class VarselTest : FellesTestOppsett() {
     @Order(3)
     fun `Vi sender ikke ut det ene varselet fordi det ikke finnes en nærmeste leder `() {
         val planlagtVarsel = planlagteVarslerSomSendesFor(dager = 3).first()
-        planlagtVarsel.status `should be equal to` PLANLAGT
+        planlagtVarsel.status shouldBe PLANLAGT
 
         val antallVarsel = varselUtsendelse.sendVarsler(Instant.now().plus(3L, ChronoUnit.DAYS))
-        antallVarsel `should be equal to` 0
+        antallVarsel shouldBe 0
         doknotifikasjonKafkaConsumer.ventPåRecords(antall = 0)
 
         await().atMost(5, SECONDS).until {
@@ -182,7 +181,7 @@ class VarselTest : FellesTestOppsett() {
         }
 
         val utelattVarsel = planlagtVarselRepository.findByIdOrNull(planlagtVarsel.id!!)!!
-        utelattVarsel.status `should be equal to` INGEN_LEDER
+        utelattVarsel.status shouldBe INGEN_LEDER
     }
 
     @Test
@@ -195,7 +194,7 @@ class VarselTest : FellesTestOppsett() {
             .iterator()
             .asSequence()
             .toList()
-            .size `should be equal to` 0
+            .size shouldBe 0
 
         val narmesteLederLeesah =
             NarmesteLederLeesah(
@@ -233,7 +232,7 @@ class VarselTest : FellesTestOppsett() {
     @Test
     @Order(5)
     fun `Vi mottar en søknad med status NY og planlegger et manglende søknad varsel som vi sender ut`() {
-        planlagteVarslerSomSendesFor(dager = 20).size `should be equal to` 0
+        planlagteVarslerSomSendesFor(dager = 20).size shouldBe 0
         val id = "fbf80f07-e4dc-34d2-8a91-e504f80f3eb5"
         repeat(2) {
             // Takler duplikater
@@ -244,13 +243,13 @@ class VarselTest : FellesTestOppsett() {
         }
 
         val planlagtVarsel = planlagtVarselRepository.findBySykepengesoknadId(id).first()
-        planlagtVarsel.varselType `should be equal to` MANGLENDE_SYKEPENGESOKNAD
-        planlagtVarsel.status `should be equal to` PLANLAGT
+        planlagtVarsel.varselType shouldBe MANGLENDE_SYKEPENGESOKNAD
+        planlagtVarsel.status shouldBe PLANLAGT
 
-        planlagteVarslerSomSendesFor(dager = 20).size `should be equal to` 1
+        planlagteVarslerSomSendesFor(dager = 20).size shouldBe 1
 
         val antallVarsel = varselUtsendelse.sendVarsler(Instant.now().plus(20L, ChronoUnit.DAYS))
-        antallVarsel `should be equal to` 1
+        antallVarsel shouldBe 1
 
         val notifikasjon = doknotifikasjonKafkaConsumer.ventPåRecords(antall = 1).first().value()
         val dineSykmeldteHendelse =
@@ -265,35 +264,35 @@ class VarselTest : FellesTestOppsett() {
         }
 
         val sendtVarsel = planlagtVarselRepository.findByIdOrNull(planlagtVarsel.id!!)!!
-        sendtVarsel.status `should be equal to` PlanlagtVarselStatus.SENDT
-        planlagteVarslerSomSendesFor(dager = 20).size `should be equal to` 0
+        sendtVarsel.status shouldBe PlanlagtVarselStatus.SENDT
+        planlagteVarslerSomSendesFor(dager = 20).size shouldBe 0
 
-        notifikasjon.getEpostadresse() `should be equal to` "sjefen@bedriften.nav"
-        notifikasjon.getBestillingsId() `should be equal to` sendtVarsel.id!!
-        notifikasjon.getPrefererteKanaler() `should be equal to` listOf(PrefererteKanal.EPOST)
-        notifikasjon.getFodselsnummer() `should be equal to` "01987654321"
-        notifikasjon.getEpostTekst() `should be equal to` MANGLENDE_VARSEL_EPOST_TEKST
-        notifikasjon.getTittel() `should be equal to` MANGLENDE_VARSEL_TITTEL
+        notifikasjon.getEpostadresse() shouldBe "sjefen@bedriften.nav"
+        notifikasjon.getBestillingsId() shouldBe sendtVarsel.id!!
+        notifikasjon.getPrefererteKanaler() shouldBe listOf(PrefererteKanal.EPOST)
+        notifikasjon.getFodselsnummer() shouldBe "01987654321"
+        notifikasjon.getEpostTekst() shouldBe MANGLENDE_VARSEL_EPOST_TEKST
+        notifikasjon.getTittel() shouldBe MANGLENDE_VARSEL_TITTEL
 
         val varselMedHendelse =
             planlagtVarselRepository.findMedSendtDineSykmeldteHendelse(id, MANGLENDE_SYKEPENGESOKNAD.toString()).first()
         varselMedHendelse.dineSykmeldteHendelseOpprettet shouldNotBe null
         varselMedHendelse.dineSykmeldteHendelseFerdigstilt shouldBe null
 
-        dineSykmeldteHendelse.id `should be equal to` varselMedHendelse.sykepengesoknadId
+        dineSykmeldteHendelse.id shouldBe varselMedHendelse.sykepengesoknadId
 
         val opprettHendelse = dineSykmeldteHendelse.opprettHendelse!!
-        opprettHendelse.ansattFnr `should be equal to` "12345678901"
-        opprettHendelse.orgnummer `should be equal to` "999111555"
+        opprettHendelse.ansattFnr shouldBe "12345678901"
+        opprettHendelse.orgnummer shouldBe "999111555"
         opprettHendelse.timestamp shouldNotBe null
-        opprettHendelse.oppgavetype `should be equal to` OPPGAVETYPE_IKKE_SENDT_SOKNAD
+        opprettHendelse.oppgavetype shouldBe OPPGAVETYPE_IKKE_SENDT_SOKNAD
     }
 
     @Test
     @Order(6)
     fun `Vi mottar en søknad med status SENDT og planlegger en NY søknad varsel som vi sender ut`() {
         mockPdlResponse()
-        planlagteVarslerSomSendesFor(dager = 20).size `should be equal to` 0
+        planlagteVarslerSomSendesFor(dager = 20).size shouldBe 0
         val id = UUID.randomUUID().toString()
         val soknaden =
             soknad.copy(
@@ -316,13 +315,13 @@ class VarselTest : FellesTestOppsett() {
                 .toList()
         allePlanlagte.toString()
         val planlagtVarsel = planlagtVarselRepository.findBySykepengesoknadId(id).first()
-        planlagtVarsel.varselType `should be equal to` SENDT_SYKEPENGESOKNAD
-        planlagtVarsel.status `should be equal to` PLANLAGT
+        planlagtVarsel.varselType shouldBe SENDT_SYKEPENGESOKNAD
+        planlagtVarsel.status shouldBe PLANLAGT
 
-        planlagteVarslerSomSendesFor(dager = 3).size `should be equal to` 1
+        planlagteVarslerSomSendesFor(dager = 3).size shouldBe 1
 
         val antallVarsel = varselUtsendelse.sendVarsler(Instant.now().plus(20L, ChronoUnit.DAYS))
-        antallVarsel `should be equal to` 1
+        antallVarsel shouldBe 1
         val notifikasjon = doknotifikasjonKafkaConsumer.ventPåRecords(antall = 1).first().value()
 
         await().atMost(1, SECONDS).until {
@@ -330,15 +329,15 @@ class VarselTest : FellesTestOppsett() {
         }
 
         val sendtVarsel = planlagtVarselRepository.findByIdOrNull(planlagtVarsel.id!!)!!
-        sendtVarsel.status `should be equal to` PlanlagtVarselStatus.SENDT
-        planlagteVarslerSomSendesFor(dager = 20).size `should be equal to` 0
+        sendtVarsel.status shouldBe PlanlagtVarselStatus.SENDT
+        planlagteVarslerSomSendesFor(dager = 20).size shouldBe 0
 
-        notifikasjon.getEpostadresse() `should be equal to` "annen@epost.no"
-        notifikasjon.getBestillingsId() `should be equal to` sendtVarsel.id!!
-        notifikasjon.getPrefererteKanaler() `should be equal to` listOf(PrefererteKanal.EPOST)
-        notifikasjon.getFodselsnummer() `should be equal to` "123456"
-        notifikasjon.getEpostTekst() `should be equal to` SENDT_SYKEPENGESOKNAD_EPOST_TEKST
-        notifikasjon.getTittel() `should be equal to` SENDT_SYKEPENGESOKNAD_TITTEL
+        notifikasjon.getEpostadresse() shouldBe "annen@epost.no"
+        notifikasjon.getBestillingsId() shouldBe sendtVarsel.id!!
+        notifikasjon.getPrefererteKanaler() shouldBe listOf(PrefererteKanal.EPOST)
+        notifikasjon.getFodselsnummer() shouldBe "123456"
+        notifikasjon.getEpostTekst() shouldBe SENDT_SYKEPENGESOKNAD_EPOST_TEKST
+        notifikasjon.getTittel() shouldBe SENDT_SYKEPENGESOKNAD_TITTEL
         pdlMockServer?.reset()
     }
 
@@ -372,7 +371,7 @@ class VarselTest : FellesTestOppsett() {
         varselMedHendelse.dineSykmeldteHendelseOpprettet shouldNotBe null
         varselMedHendelse.dineSykmeldteHendelseFerdigstilt shouldNotBe null
 
-        dineSykmeldteHendelse.id `should be equal to` id
+        dineSykmeldteHendelse.id shouldBe id
         dineSykmeldteHendelse.ferdigstillHendelse shouldNotBe null
         dineSykmeldteHendelse.ferdigstillHendelse!!.timestamp shouldNotBe null
     }

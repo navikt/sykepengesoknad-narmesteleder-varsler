@@ -1,8 +1,8 @@
 package no.nav.helse.flex.client.pdl
 
+import io.kotest.matchers.shouldBe
 import no.nav.helse.flex.FellesTestOppsett
 import no.nav.helse.flex.mockPdlResponse
-import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.client.ExpectedCount
@@ -26,7 +26,7 @@ class PdlClientTestClass : FellesTestOppsett() {
 
         val responseData = pdlClient.hentIdenter(fnr)
 
-        responseData `should be equal to` identResponse.data
+        responseData shouldBe identResponse.data
 
         pdlMockServer!!.verify()
         pdlMockServer!!.reset()
