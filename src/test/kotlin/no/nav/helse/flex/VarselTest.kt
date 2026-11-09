@@ -434,7 +434,7 @@ class VarselTest : FellesTestOppsett() {
         shouldThrow<RuntimeException> { varselUtsendelse.sendVarsler(Instant.now()) }
         doknotifikasjonKafkaConsumer.ventPåRecords(antall = 0)
         planlagtVarselRepository.findByIdOrNull(varsel.id!!)?.status shouldBe PLANLAGT
-        planlagtVarselRepository.deleteById(varsel.id!!)
+        planlagtVarselRepository.deleteById(varsel.id)
     }
 
     private fun lagLeder(
