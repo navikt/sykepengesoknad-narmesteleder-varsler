@@ -10,7 +10,7 @@ import no.nav.helse.flex.dinesykmeldte.OpprettHendelse
 import no.nav.helse.flex.kafka.DINE_SYKMELDTE_HENDELSER_TOPIC
 import no.nav.helse.flex.kafka.DOKNOTIFIKASJON_TOPIC
 import no.nav.helse.flex.logger
-import no.nav.helse.flex.narmesteleder.NarmesteLederRepository
+import no.nav.helse.flex.narmesteleder.NarmesteLederLeser
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLeder
 import no.nav.helse.flex.serialisertTilString
 import no.nav.helse.flex.varsler.domain.PlanlagtVarsel
@@ -29,7 +29,7 @@ import java.time.OffsetDateTime
 @Component
 class VarselUtsendelse(
     private val planlagtVarselRepository: PlanlagtVarselRepository,
-    private val narmesteLederRepository: NarmesteLederRepository,
+    private val narmesteLederLeser: NarmesteLederLeser,
     private val doknotifikasjonKafkaProducer: Producer<String, NotifikasjonMedkontaktInfo>,
     private val dineSykmeldteHendelserProducer: Producer<String, String>,
     private val registry: MeterRegistry,
@@ -52,7 +52,7 @@ class VarselUtsendelse(
                 return@forEach
             }
             val narmesteLedere =
-                narmesteLederRepository.findByBrukerFnrAndOrgnummer(lestVarsel.brukerFnr, lestVarsel.orgnummer)
+                narmesteLederLeser.finnAktive(lestVarsel.brukerFnr, lestVarsel.orgnummer)
 
             if (narmesteLedere.isEmpty()) {
                 log.info(
@@ -65,8 +65,7 @@ class VarselUtsendelse(
             }
             if (narmesteLedere.size != 1) {
                 throw RuntimeException(
-                    "Fant flere nærmeste ledere for planlagt varsel ${lestVarsel.id}:" +
-                        "${narmesteLedere.map { it.narmesteLederId }}.",
+                    "Fant flere aktive nærmeste ledere for planlagt varsel",
                 )
             }
 
@@ -126,7 +125,7 @@ class VarselUtsendelse(
 
         log.info(
             "Sendt planlagt varsel ${planlagtVarsel.id} med type ${planlagtVarsel.varselType} for " +
-                "søknad ${planlagtVarsel.sykepengesoknadId} til nærmeste leder ${narmesteLeder.narmesteLederId}.",
+                "søknad ${planlagtVarsel.sykepengesoknadId} til nærmeste leder.",
         )
 
         planlagtVarselRepository.save(

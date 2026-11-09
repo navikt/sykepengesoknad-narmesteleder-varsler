@@ -19,6 +19,11 @@ aiven-kafka:
   auto-offset-reset: none
   security-protocol: SSL
 
+narmeste-leder:
+  lesekilde: ${NARMESTE_LEDER_LESEKILDE:GAMMEL}
+  esyfo-consumer-aktiv: ${NARMESTE_LEDER_ESYFO_CONSUMER_AKTIV:false}
+  esyfo-gruppe: ${NARMESTE_LEDER_ESYFO_GRUPPE:sykepengesoknad-narmesteleder-varsler-esyfo-bootstrap-v1}
+
 management:
   endpoint.prometheus.enabled: true
   endpoints.web:
@@ -39,5 +44,4 @@ no.nav.security.jwt:
           client-id: ${AZURE_APP_CLIENT_ID}
           client-secret: ${AZURE_APP_CLIENT_SECRET}
           client-auth-method: client_secret_basic
-
 

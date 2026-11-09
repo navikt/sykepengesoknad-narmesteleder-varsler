@@ -20,6 +20,7 @@ import org.springframework.kafka.listener.ContainerProperties
 
 private const val JAVA_KEYSTORE = "JKS"
 private const val PKCS12 = "PKCS12"
+const val GAMMEL_KAFKA_GRUPPE = "sykepengesoknad-narmesteleder-varsler"
 
 @Configuration
 class KafkaConfig(
@@ -32,7 +33,14 @@ class KafkaConfig(
     @param:Value("\${KAFKA_SCHEMA_REGISTRY}") private val schemaRegistryUrl: String,
     @param:Value("\${KAFKA_SCHEMA_REGISTRY_USER}") private val kafkaSchemaRegistryUsername: String,
     @param:Value("\${KAFKA_SCHEMA_REGISTRY_PASSWORD}") private val kafkaSchemaRegistryPassword: String,
+    @param:Value("\${narmeste-leder.esyfo-gruppe}") private val esyfoGruppe: String,
 ) {
+    init {
+        require(esyfoGruppe.isNotBlank() && esyfoGruppe != GAMMEL_KAFKA_GRUPPE) {
+            "ESYFO-consumer må bruke en egen, ikke-tom Kafka-gruppe"
+        }
+    }
+
     fun commonConfig() =
         mapOf(
             CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG to kafkaBrokers,
@@ -41,8 +49,6 @@ class KafkaConfig(
     private fun securityConfig() =
         mapOf(
             CommonClientConfigs.SECURITY_PROTOCOL_CONFIG to kafkaSecurityProtocol,
-            // Disables server host name verification.
-            SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG to "",
             SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG to JAVA_KEYSTORE,
             SslConfigs.SSL_KEYSTORE_TYPE_CONFIG to PKCS12,
             SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG to kafkaTruststorePath,
@@ -53,11 +59,21 @@ class KafkaConfig(
         )
 
     @Bean
-    fun aivenKafkaListenerContainerFactory(kafkaErrorHandler: KafkaErrorHandler): ConcurrentKafkaListenerContainerFactory<String, String> {
+    fun aivenKafkaListenerContainerFactory(kafkaErrorHandler: KafkaErrorHandler): ConcurrentKafkaListenerContainerFactory<String, String> =
+        listenerFactory(kafkaErrorHandler, kafkaAutoOffsetReset)
+
+    @Bean
+    fun esyfoKafkaListenerContainerFactory(kafkaErrorHandler: KafkaErrorHandler): ConcurrentKafkaListenerContainerFactory<String, String> =
+        listenerFactory(kafkaErrorHandler, "earliest")
+
+    private fun listenerFactory(
+        kafkaErrorHandler: KafkaErrorHandler,
+        offsetReset: String,
+    ): ConcurrentKafkaListenerContainerFactory<String, String> {
         val config =
             mapOf(
-                ConsumerConfig.GROUP_ID_CONFIG to "sykepengesoknad-narmesteleder-varsler",
-                ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to kafkaAutoOffsetReset,
+                ConsumerConfig.GROUP_ID_CONFIG to GAMMEL_KAFKA_GRUPPE,
+                ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to offsetReset,
                 ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG to false,
                 ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java,
                 ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java,
@@ -69,6 +85,7 @@ class KafkaConfig(
         factory.setConsumerFactory(DefaultKafkaConsumerFactory(config))
         factory.setCommonErrorHandler(kafkaErrorHandler)
         factory.containerProperties.ackMode = ContainerProperties.AckMode.MANUAL_IMMEDIATE
+        factory.containerProperties.isSyncCommits = true
         return factory
     }
 

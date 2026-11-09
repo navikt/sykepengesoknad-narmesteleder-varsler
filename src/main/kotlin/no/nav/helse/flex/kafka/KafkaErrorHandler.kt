@@ -12,7 +12,7 @@ import no.nav.helse.flex.logger as slf4jLogger
 class KafkaErrorHandler :
     DefaultErrorHandler(
         ExponentialBackOff(1000L, 1.5).apply {
-            // 8 minutter, som er mindre enn max.poll.interval.ms på 10 minutter.
+            // 8 minutter er maksimal pause, ikke slutten på retry-vinduet.
             maxInterval = 60_000L * 8
         },
     ) {
@@ -26,13 +26,20 @@ class KafkaErrorHandler :
         container: MessageListenerContainer,
     ) {
         records.forEach { record ->
-            log.error(
-                "Feil i prossessering av record med offset: ${record.offset()}, key: ${record.key()} på topic ${record.topic()}",
-                thrownException,
-            )
+            if (record.topic() in setOf(NARMESTELEDER_LEESAH_TOPIC, NARMESTELEDER_ESYFO_LEESAH_TOPIC)) {
+                log.error(
+                    "Feil i prosessering av nærmeste leder-record på topic ${record.topic()}, " +
+                        "partisjon ${record.partition()}, offset ${record.offset()}",
+                )
+            } else {
+                log.error(
+                    "Feil i prosessering av record på topic ${record.topic()}, " +
+                        "partisjon ${record.partition()}, offset ${record.offset()}",
+                )
+            }
         }
         if (records.isEmpty()) {
-            log.error("Feil i listener uten noen records", thrownException)
+            log.error("Feil i listener uten records")
         }
         super.handleRemaining(thrownException, records, consumer, container)
     }
