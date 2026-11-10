@@ -111,7 +111,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
     }
 
     @Test
-    fun `Null og kort Kafka-key avvises uten ack eller endring i projeksjon og checkpoint`() {
+    fun `Null og ikke-kanonisk Kafka-key avvises uten ack eller endring i projeksjon og checkpoint`() {
         val id = UUID.randomUUID()
         val melding = getNarmesteLederLeesah(id).serialisertTilString()
         behandle(913, 1, id, melding) shouldBe true
@@ -123,7 +123,17 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
                     antallAck++
                 }
             }
-        listOf<String?>(null, "1-1-1-1-1").forEach { key ->
+        listOf<String?>(
+            null,
+            "1-1-1-1-1",
+            id.toString().replace("-", ""),
+            id.toString().replaceFirst("-", "_"),
+            id.toString().dropLast(1) + "g",
+            " $id",
+            "$id ",
+            "urn:uuid:$id",
+            "{$id}",
+        ).forEach { key ->
             listOf<String?>(null, melding).forEach { verdi ->
                 val feil =
                     shouldThrow<IllegalStateException> {
@@ -140,6 +150,21 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
             checkpoint(914).shouldBeNull()
         }
         antallAck shouldBe 0
+    }
+
+    @Test
+    fun `Kanonisk Kafka-key godtas med store og små heksadesimale bokstaver`() {
+        val id = UUID.fromString("12345678-9abc-4def-8abc-123456789abc")
+        val melding = getNarmesteLederLeesah(id).serialisertTilString()
+
+        listOf(id.toString(), id.toString().uppercase()).forEachIndexed { offset, key ->
+            oppdatering.behandle(topic, 915, offset.toLong(), key, melding) shouldBe true
+            esyfo.findByNarmesteLederId(id).shouldNotBeNull().narmesteLederId shouldBe id
+        }
+        checkpoint(915) shouldBe 1
+        oppdatering.behandle(topic, 915, 2, id.toString().uppercase(), null) shouldBe true
+        esyfo.findByNarmesteLederId(id).shouldBeNull()
+        checkpoint(915) shouldBe 2
     }
 
     @Test

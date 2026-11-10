@@ -11,10 +11,9 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import tools.jackson.core.JacksonException
 import tools.jackson.module.kotlin.readValue
-import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
-
-private val KANONISK_UUID = Regex("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
+import kotlin.uuid.Uuid
+import kotlin.uuid.toJavaUuid
 
 @Component
 class OppdateringAvNarmesteLederEsyfo(
@@ -71,8 +70,9 @@ class OppdateringAvNarmesteLederEsyfo(
         value: String?,
     ): Boolean {
         require(topic == NARMESTELEDER_ESYFO_LEESAH_TOPIC && partition >= 0 && offset >= 0) { "Ugyldig Kafka-posisjon" }
-        require(key != null && KANONISK_UUID.matches(key)) { "Ugyldig nøkkel i nærmeste leder-record" }
-        val id = UUID.fromString(key)
+        val id =
+            key?.let { Uuid.parseHexDashOrNull(it) }?.toJavaUuid()
+                ?: throw IllegalArgumentException("Ugyldig nøkkel i nærmeste leder-record")
         val leder =
             value?.let {
                 try {
