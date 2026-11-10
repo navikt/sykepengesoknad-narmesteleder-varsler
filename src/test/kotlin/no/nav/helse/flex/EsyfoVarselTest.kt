@@ -2,19 +2,17 @@ package no.nav.helse.flex
 
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
-import io.micrometer.core.instrument.MeterRegistry
-import no.nav.doknotifikasjon.schemas.NotifikasjonMedkontaktInfo
 import no.nav.helse.flex.kafka.NARMESTELEDER_ESYFO_LEESAH_TOPIC
 import no.nav.helse.flex.narmesteleder.NarmesteLederEsyfoRepository
-import no.nav.helse.flex.narmesteleder.NarmesteLederLeser
+import no.nav.helse.flex.narmesteleder.OppdateringAvNarmesteLeder
 import no.nav.helse.flex.varsler.VarselUtsendelse
 import no.nav.helse.flex.varsler.domain.PlanlagtVarsel
+import no.nav.helse.flex.varsler.domain.PlanlagtVarselStatus.INGEN_LEDER
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselStatus.PLANLAGT
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselStatus.SENDT
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselType.MANGLENDE_SYKEPENGESOKNAD
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselType.SENDT_SYKEPENGESOKNAD
 import org.apache.kafka.clients.consumer.ConsumerConfig
-import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.AfterAll
@@ -33,17 +31,9 @@ import java.util.concurrent.TimeUnit
 class EsyfoVarselTest : FellesTestOppsett() {
     @Autowired lateinit var esyfo: NarmesteLederEsyfoRepository
 
-    @Autowired lateinit var leser: NarmesteLederLeser
+    @Autowired lateinit var gammelOppdatering: OppdateringAvNarmesteLeder
 
-    @Autowired
-    @Qualifier("oppgaveKafkaProducer")
-    lateinit var dokProducer: Producer<String, NotifikasjonMedkontaktInfo>
-
-    @Autowired
-    @Qualifier("stringStringProducer")
-    lateinit var hendelseProducer: Producer<String, String>
-
-    @Autowired lateinit var meterRegistry: MeterRegistry
+    @Autowired lateinit var varselUtsendelse: VarselUtsendelse
 
     @Autowired lateinit var jdbc: JdbcTemplate
 
@@ -65,7 +55,7 @@ class EsyfoVarselTest : FellesTestOppsett() {
     }
 
     @Test
-    fun `Separat Kafka-gruppe bygger ny tabell og begge varseltyper bruker bare valgt leser`() {
+    fun `Separat Kafka-gruppe bygger ny tabell mens begge varseltyper bruker eksisterende tabell`() {
         val container = listenerRegistry.getListenerContainer("narmesteleder-esyfo")!!
         container.isRunning shouldBe false
         factory.isBatchListener shouldBe true
@@ -92,9 +82,6 @@ class EsyfoVarselTest : FellesTestOppsett() {
         container.isRunning shouldBe true
         container.groupId shouldBe "sykepengesoknad-narmesteleder-varsler-esyfo-test-bootstrap-v1"
 
-        val valgtLeser = NarmesteLederLeser(narmesteLederRepository, esyfo, "ESYFO", true)
-        val varselUtsendelse = VarselUtsendelse(planlagtVarselRepository, valgtLeser, dokProducer, hendelseProducer, meterRegistry)
-
         await().atMost(15, TimeUnit.SECONDS).until { esyfo.findByNarmesteLederId(id) != null }
         jdbc.queryForObject(
             "SELECT last_offset FROM narmeste_leder_esyfo_offset WHERE topic = ? AND partition = ?",
@@ -103,11 +90,7 @@ class EsyfoVarselTest : FellesTestOppsett() {
             record.partition(),
         ) shouldBe record.offset()
         narmesteLederRepository.findByNarmesteLederId(id) shouldBe null
-        valgtLeser.finnAktive(leder.fnr, leder.orgnummer).map { it.narmesteLederId } shouldBe listOf(id)
-        leser.finnAktive(leder.fnr, leder.orgnummer).shouldBeEmpty()
-        NarmesteLederLeser(narmesteLederRepository, esyfo, "GAMMEL", true)
-            .finnAktive(leder.fnr, leder.orgnummer)
-            .shouldBeEmpty()
+        narmesteLederRepository.findAktiveByBrukerFnrAndOrgnummer(leder.fnr, leder.orgnummer).shouldBeEmpty()
 
         // Replay alene oppretter aldri planlagte varsler, doknotifikasjoner eller oppgaver.
         planlagtVarselRepository.findAll().toList().shouldBeEmpty()
@@ -117,7 +100,6 @@ class EsyfoVarselTest : FellesTestOppsett() {
         val inaktiv = leder.copy(aktivTom = LocalDate.now())
         kafkaProducer.send(ProducerRecord(NARMESTELEDER_ESYFO_LEESAH_TOPIC, id.toString(), inaktiv.serialisertTilString())).get()
         await().atMost(10, TimeUnit.SECONDS).until { esyfo.findByNarmesteLederId(id)?.aktivTom != null }
-        valgtLeser.finnAktive(leder.fnr, leder.orgnummer).shouldBeEmpty()
         kafkaProducer.send(ProducerRecord(NARMESTELEDER_ESYFO_LEESAH_TOPIC, id.toString(), melding)).get()
         await().atMost(10, TimeUnit.SECONDS).until { esyfo.findByNarmesteLederId(id)?.aktivTom == null }
 
@@ -135,20 +117,31 @@ class EsyfoVarselTest : FellesTestOppsett() {
                         narmesteLederId = null,
                     ),
                 )
-            varselUtsendelse.sendVarsler() shouldBe 1
+            varselUtsendelse.sendVarsler() shouldBe 0
             planlagtVarselRepository.findById(varsel.id!!).get().apply {
+                status shouldBe INGEN_LEDER
+                narmesteLederId shouldBe null
+            }
+            doknotifikasjonKafkaConsumer.hentProduserteRecords().shouldBeEmpty()
+            hendelseKafkaConsumer.hentProduserteRecords().shouldBeEmpty()
+
+            val gammelLeder = leder.copy(narmesteLederId = UUID.randomUUID())
+            gammelOppdatering.behandleMeldingFraKafka(gammelLeder.serialisertTilString())
+            val nyttVarsel = planlagtVarselRepository.save(varsel.copy(id = null))
+            varselUtsendelse.sendVarsler() shouldBe 1
+            planlagtVarselRepository.findById(nyttVarsel.id!!).get().apply {
                 status shouldBe SENDT
-                narmesteLederId shouldBe id
+                narmesteLederId shouldBe gammelLeder.narmesteLederId
             }
             doknotifikasjonKafkaConsumer.ventPåRecords(antall = 1, duration = Duration.ofSeconds(10))
             if (type == MANGLENDE_SYKEPENGESOKNAD) {
                 hendelseKafkaConsumer.ventPåRecords(antall = 1, duration = Duration.ofSeconds(10))
             }
+            gammelOppdatering.behandleMeldingFraKafka(gammelLeder.copy(aktivTom = LocalDate.now()).serialisertTilString())
         }
 
         kafkaProducer.send(ProducerRecord(NARMESTELEDER_ESYFO_LEESAH_TOPIC, id.toString(), null)).get()
         await().atMost(10, TimeUnit.SECONDS).until { esyfo.findByNarmesteLederId(id) == null }
-        valgtLeser.finnAktive(leder.fnr, leder.orgnummer).shouldBeEmpty()
         narmesteLederRepository.findByNarmesteLederId(id) shouldBe null
 
         // Gjenstart med samme gruppe: en upåført record på en annen key må fremdeles behandles.
@@ -159,6 +152,6 @@ class EsyfoVarselTest : FellesTestOppsett() {
         esyfo.findByNarmesteLederId(annenId) shouldBe null
         container.start()
         await().atMost(15, TimeUnit.SECONDS).until { esyfo.findByNarmesteLederId(annenId) != null }
-        valgtLeser.finnAktive(leder.fnr, leder.orgnummer).map { it.narmesteLederId } shouldBe listOf(annenId)
+        narmesteLederRepository.findByNarmesteLederId(annenId) shouldBe null
     }
 }

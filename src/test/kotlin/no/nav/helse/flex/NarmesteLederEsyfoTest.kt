@@ -10,7 +10,6 @@ import no.nav.helse.flex.kafka.KafkaConfig
 import no.nav.helse.flex.kafka.NARMESTELEDER_ESYFO_LEESAH_TOPIC
 import no.nav.helse.flex.kafka.NarmestelederEsyfoListener
 import no.nav.helse.flex.narmesteleder.NarmesteLederEsyfoRepository
-import no.nav.helse.flex.narmesteleder.NarmesteLederLeser
 import no.nav.helse.flex.narmesteleder.OppdateringAvNarmesteLeder
 import no.nav.helse.flex.narmesteleder.OppdateringAvNarmesteLederEsyfo
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -34,8 +33,6 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
     @Autowired lateinit var gammelOppdatering: OppdateringAvNarmesteLeder
 
     @Autowired lateinit var listener: NarmestelederEsyfoListener
-
-    @Autowired lateinit var leser: NarmesteLederLeser
 
     @Autowired lateinit var jdbc: JdbcTemplate
 
@@ -308,14 +305,14 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
     }
 
     @Test
-    fun `Eksisterende ledertabell brukes som standard og innlesing oppretter ingen varsler eller oppgaver`() {
+    fun `Innlesing endrer ikke eksisterende ledertabell og oppretter ingen varsler eller oppgaver`() {
         listenerRegistry.getListenerContainer("narmesteleder-esyfo")?.isRunning shouldBe false
         val id = UUID.randomUUID()
         val melding = getNarmesteLederLeesah(id)
         behandle(905, 1, id, melding.serialisertTilString())
         behandle(905, 2, id, melding.copy(aktivTom = LocalDate.now()).serialisertTilString())
         behandle(905, 3, id, null)
-        leser.finnAktive(melding.fnr, melding.orgnummer).shouldBeEmpty()
+        narmesteLederRepository.findAktiveByBrukerFnrAndOrgnummer(melding.fnr, melding.orgnummer).shouldBeEmpty()
         narmesteLederRepository.findByNarmesteLederId(id).shouldBeNull()
         planlagtVarselRepository.findAll().toList().shouldBeEmpty()
         doknotifikasjonKafkaConsumer.hentProduserteRecords().shouldBeEmpty()
@@ -323,7 +320,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
     }
 
     @Test
-    fun `Inaktiv relasjon slettes fra eksisterende tabell og filtreres bort fra varsling med eSyfo-tabellen`() {
+    fun `Inaktiv relasjon slettes fra eksisterende tabell og beholdes i eSyfo-tabellen`() {
         val id = UUID.randomUUID()
         val aktiv = getNarmesteLederLeesah(id).copy(orgnummer = "123123123")
         val inaktiv = aktiv.copy(aktivTom = LocalDate.now())
@@ -334,26 +331,20 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
         behandle(909, 1, id, inaktiv.serialisertTilString()) shouldBe true
         narmesteLederRepository.findByNarmesteLederId(id).shouldBeNull()
         esyfo.findByNarmesteLederId(id).shouldNotBeNull().aktivTom shouldBe inaktiv.aktivTom
-        leser.finnAktive(aktiv.fnr, aktiv.orgnummer).shouldBeEmpty()
-        NarmesteLederLeser(narmesteLederRepository, esyfo, "ESYFO", true)
-            .finnAktive(aktiv.fnr, aktiv.orgnummer)
-            .shouldBeEmpty()
+        narmesteLederRepository.findAktiveByBrukerFnrAndOrgnummer(aktiv.fnr, aktiv.orgnummer).shouldBeEmpty()
         planlagtVarselRepository.findAll().toList().shouldBeEmpty()
         doknotifikasjonKafkaConsumer.hentProduserteRecords().shouldBeEmpty()
         hendelseKafkaConsumer.hentProduserteRecords().shouldBeEmpty()
     }
 
     @Test
-    fun `ESYFO-lesing uten consumer avvises og to aktive ledere velges ikke tilfeldig`() {
-        shouldThrow<IllegalArgumentException> {
-            NarmesteLederLeser(narmesteLederRepository, esyfo, "ESYFO", false)
-        }
+    fun `flere aktive relasjoner lagres i eSyfo-tabellen uten å endre eksisterende tabell`() {
         val en = getNarmesteLederLeesah(UUID.randomUUID())
         val to = en.copy(narmesteLederId = UUID.randomUUID())
         behandle(907, 1, en.narmesteLederId, en.serialisertTilString())
         behandle(907, 2, to.narmesteLederId, to.serialisertTilString())
-        NarmesteLederLeser(narmesteLederRepository, esyfo, "ESYFO", true)
-            .finnAktive(en.fnr, en.orgnummer)
-            .size shouldBe 2
+        esyfo.findByNarmesteLederId(en.narmesteLederId).shouldNotBeNull()
+        esyfo.findByNarmesteLederId(to.narmesteLederId).shouldNotBeNull()
+        narmesteLederRepository.findAktiveByBrukerFnrAndOrgnummer(en.fnr, en.orgnummer).shouldBeEmpty()
     }
 }

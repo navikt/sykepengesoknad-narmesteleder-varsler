@@ -13,7 +13,6 @@ aiven-kafka:
   security-protocol: PLAINTEXT
 
 narmeste-leder:
-  lesekilde: GAMMEL
   esyfo-consumer-aktiv: false
   esyfo-gruppe: sykepengesoknad-narmesteleder-varsler-esyfo-test-bootstrap-v1
 

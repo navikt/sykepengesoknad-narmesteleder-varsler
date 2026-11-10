@@ -20,20 +20,4 @@ data class NarmesteLederEsyfo(
     val aktivFom: LocalDate,
     val aktivTom: LocalDate?,
     val arbeidsgiverForskutterer: Boolean?,
-) {
-    fun tilNarmesteLeder() =
-        NarmesteLeder(
-            id = id,
-            oppdatert = oppdatert,
-            timestamp = timestamp,
-            narmesteLederId = narmesteLederId,
-            orgnummer = orgnummer,
-            brukerFnr = brukerFnr,
-            narmesteLederFnr = narmesteLederFnr,
-            narmesteLederTelefonnummer = narmesteLederTelefonnummer,
-            narmesteLederEpost = narmesteLederEpost,
-            aktivFom = aktivFom,
-            aktivTom = aktivTom,
-            arbeidsgiverForskutterer = arbeidsgiverForskutterer,
-        )
-}
+)
