@@ -404,7 +404,7 @@ class VarselTest : FellesTestOppsett() {
 
     @Test
     @Order(9)
-    fun `Varsel sendes ikke etter avkrefting på gammel bane`() {
+    fun `Varsel sendes ikke etter avkrefting i eksisterende ledertabell`() {
         val orgnummer = "bare-inaktiv"
         val tidspunkt = OffsetDateTime.parse("2026-01-01T10:00:00Z")
         val inaktiv =

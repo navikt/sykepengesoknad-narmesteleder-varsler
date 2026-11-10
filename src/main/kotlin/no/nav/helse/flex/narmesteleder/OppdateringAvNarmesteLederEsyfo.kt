@@ -1,8 +1,5 @@
 package no.nav.helse.flex.narmesteleder
 
-import io.micrometer.core.instrument.Gauge
-import io.micrometer.core.instrument.MeterRegistry
-import jakarta.annotation.PostConstruct
 import no.nav.helse.flex.kafka.NARMESTELEDER_ESYFO_LEESAH_TOPIC
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
 import no.nav.helse.flex.objectMapper
@@ -11,55 +8,13 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import tools.jackson.core.JacksonException
 import tools.jackson.module.kotlin.readValue
-import java.util.concurrent.ConcurrentHashMap
 import kotlin.uuid.Uuid
 import kotlin.uuid.toJavaUuid
 
 @Component
 class OppdateringAvNarmesteLederEsyfo(
     private val jdbcTemplate: JdbcTemplate,
-    private val registry: MeterRegistry,
 ) {
-    private val registrertePartisjoner = ConcurrentHashMap.newKeySet<Int>()
-
-    @PostConstruct
-    fun registrerMetrikker() {
-        listOf("aktiv" to "IS NULL", "inaktiv" to "IS NOT NULL").forEach { (tilstand, betingelse) ->
-            Gauge
-                .builder("narmeste_leder_esyfo_antall", this) {
-                    jdbcTemplate
-                        .queryForObject(
-                            "SELECT count(*) FROM narmeste_leder_esyfo WHERE aktiv_tom $betingelse",
-                            Long::class.java,
-                        )?.toDouble() ?: 0.0
-                }.tag("tilstand", tilstand)
-                .register(registry)
-        }
-        val partisjoner =
-            jdbcTemplate.query(
-                "SELECT partition FROM narmeste_leder_esyfo_offset WHERE topic = ?",
-                { rs, _ -> rs.getInt(1) },
-                NARMESTELEDER_ESYFO_LEESAH_TOPIC,
-            )
-        partisjoner.forEach(::registrerCheckpoint)
-    }
-
-    private fun registrerCheckpoint(partition: Int) {
-        if (registrertePartisjoner.add(partition)) {
-            Gauge
-                .builder("narmeste_leder_esyfo_checkpoint", this) {
-                    jdbcTemplate
-                        .query(
-                            "SELECT last_offset FROM narmeste_leder_esyfo_offset WHERE topic = ? AND partition = ?",
-                            { rs, _ -> rs.getLong(1).toDouble() },
-                            NARMESTELEDER_ESYFO_LEESAH_TOPIC,
-                            partition,
-                        ).singleOrNull() ?: -1.0
-                }.tag("partition", partition.toString())
-                .register(registry)
-        }
-    }
-
     /** Kun kalt synkront av en Kafka-listener med én behandlingsbane per partisjon. */
     @Transactional
     fun behandle(
@@ -99,7 +54,6 @@ class OppdateringAvNarmesteLederEsyfo(
                 partition,
             ) ?: error("Mangler checkpoint")
         if (offset <= siste) {
-            registry.counter("narmeste_leder_esyfo_record", "resultat", "duplikat").increment()
             return false
         }
         if (leder == null) {
@@ -142,9 +96,6 @@ class OppdateringAvNarmesteLederEsyfo(
             topic,
             partition,
         )
-        registrerCheckpoint(partition)
-        // Tellere er observasjon, ikke transaksjonell tilstand. Checkpoint og projeksjon er atomiske.
-        registry.counter("narmeste_leder_esyfo_record", "resultat", if (leder == null) "tombstone" else "verdi").increment()
         return true
     }
 }

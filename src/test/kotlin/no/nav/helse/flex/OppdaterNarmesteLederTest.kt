@@ -115,7 +115,7 @@ class OppdaterNarmesteLederTest : FellesTestOppsett() {
     }
 
     @Test
-    fun `Gammel skrivebane bruker ikke timestamp som ny migreringsregel`() {
+    fun `Eksisterende ledertabell oppdateres også ved like og eldre tidsstempler`() {
         val id = UUID.randomUUID()
         val tid = OffsetDateTime.parse("2026-01-01T10:00:00Z")
         val aktiv = getNarmesteLederLeesah(id).copy(timestamp = tid)
@@ -141,7 +141,7 @@ class OppdaterNarmesteLederTest : FellesTestOppsett() {
     }
 
     @Test
-    fun `Ny consumer er avslått og gammel topic skriver bare til gammel tabell`() {
+    fun `eSyfo-consumeren er avslått og meldinger fra team sykmelding skriver bare til eksisterende tabell`() {
         kafkaListenerEndpointRegistry.getListenerContainer("narmesteleder-esyfo")?.isRunning shouldBe false
         val id = UUID.randomUUID()
         val tid = OffsetDateTime.parse("2026-01-01T10:00:00Z")

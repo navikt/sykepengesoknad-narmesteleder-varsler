@@ -168,7 +168,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
     }
 
     @Test
-    fun `Egen bootstrap-gruppe kan ikke være tom eller være gammel gruppe`() {
+    fun `eSyfo-consumeren kan ikke bruke tom gruppe eller gruppen for team sykmeldings topic`() {
         fun config(gruppe: String) = KafkaConfig("", "none", "PLAINTEXT", "", "", "", "", "", "", gruppe)
 
         listOf("", "   ", GAMMEL_KAFKA_GRUPPE).forEach { gruppe ->
@@ -251,7 +251,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
     }
 
     @Test
-    fun `Default er gammel aktiv leser og replay oppretter ingen varsler eller oppgaver`() {
+    fun `Eksisterende ledertabell brukes som standard og innlesing oppretter ingen varsler eller oppgaver`() {
         listenerRegistry.getListenerContainer("narmesteleder-esyfo")?.isRunning shouldBe false
         val id = UUID.randomUUID()
         val melding = getNarmesteLederLeesah(id)
@@ -266,7 +266,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
     }
 
     @Test
-    fun `Samme inaktive relasjon slettes fra gammel tabell men beholdes usynlig for varsler i ny`() {
+    fun `Inaktiv relasjon slettes fra eksisterende tabell og filtreres bort fra varsling med eSyfo-tabellen`() {
         val id = UUID.randomUUID()
         val aktiv = getNarmesteLederLeesah(id).copy(orgnummer = "123123123")
         val inaktiv = aktiv.copy(aktivTom = LocalDate.now())
