@@ -68,6 +68,63 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
     }
 
     @Test
+    fun `batch kvitteres én gang etter commit og bevarer rekkefølge og tombstones`() {
+        val første = UUID.randomUUID()
+        val andre = UUID.randomUUID()
+        val batch =
+            listOf<ConsumerRecord<String, String?>>(
+                ConsumerRecord(topic, 917, 0L, første.toString(), getNarmesteLederLeesah(første).serialisertTilString()),
+                ConsumerRecord(topic, 916, 0L, andre.toString(), getNarmesteLederLeesah(andre).serialisertTilString()),
+                ConsumerRecord<String, String?>(topic, 917, 1L, første.toString(), null),
+            )
+        var kvitteringer = 0
+        listener.listen(batch) {
+            esyfo.findByNarmesteLederId(første).shouldBeNull()
+            esyfo.findByNarmesteLederId(andre).shouldNotBeNull()
+            checkpoint(916) shouldBe 0L
+            checkpoint(917) shouldBe 1L
+            kvitteringer++
+        }
+        kvitteringer shouldBe 1
+        val lagret = esyfo.findByNarmesteLederId(andre)
+        listener.listen(batch) { kvitteringer++ }
+        kvitteringer shouldBe 2
+        esyfo.findByNarmesteLederId(andre) shouldBe lagret
+    }
+
+    @Test
+    fun `feil i batch ruller tilbake alle partisjoner uten kvittering og kan forsøkes igjen`() {
+        val første = UUID.randomUUID()
+        val andre = UUID.randomUUID()
+        val gyldig =
+            ConsumerRecord<String, String?>(topic, 918, 0L, første.toString(), getNarmesteLederLeesah(første).serialisertTilString())
+        var kvitteringer = 0
+        val feil =
+            shouldThrow<IllegalStateException> {
+                listener.listen(listOf(ConsumerRecord(topic, 919, 0L, andre.toString(), "{"), gyldig)) { kvitteringer++ }
+            }
+        feil.cause.shouldBeNull()
+        kvitteringer shouldBe 0
+        esyfo.findByNarmesteLederId(første).shouldBeNull()
+        checkpoint(918).shouldBeNull()
+        checkpoint(919).shouldBeNull()
+
+        listener.listen(
+            listOf(ConsumerRecord(topic, 919, 0L, andre.toString(), getNarmesteLederLeesah(andre).serialisertTilString()), gyldig),
+        ) { kvitteringer++ }
+        kvitteringer shouldBe 1
+        checkpoint(918) shouldBe 0L
+        checkpoint(919) shouldBe 0L
+    }
+
+    @Test
+    fun `tom batch kvitteres ikke`() {
+        var kvitteringer = 0
+        listener.listen(emptyList()) { kvitteringer++ }
+        kvitteringer shouldBe 0
+    }
+
+    @Test
     fun `Checkpoint følger siste offset ikke timestamp og tombstone forblir slettet ved omlevering`() {
         val id = UUID.randomUUID()
         val aktiv = getNarmesteLederLeesah(id)
@@ -137,7 +194,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
             listOf<String?>(null, melding).forEach { verdi ->
                 val feil =
                     shouldThrow<IllegalStateException> {
-                        listener.listen(ConsumerRecord(topic, 913, 2L, key, verdi), ack)
+                        listener.listen(listOf(ConsumerRecord(topic, 913, 2L, key, verdi)), ack)
                     }
                 feil.cause shouldBe null
                 antallAck shouldBe 0
@@ -145,7 +202,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
                 esyfo.findByNarmesteLederId(id) shouldBe lagret
             }
             shouldThrow<IllegalStateException> {
-                listener.listen(ConsumerRecord(topic, 914, 0L, key, melding), ack)
+                listener.listen(listOf(ConsumerRecord(topic, 914, 0L, key, melding)), ack)
             }
             checkpoint(914).shouldBeNull()
         }
@@ -216,17 +273,17 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
         val record = ConsumerRecord(topic, 904, 2L, id.toString(), melding)
         jdbc.execute("ALTER TABLE narmeste_leder_esyfo ADD CONSTRAINT esyfo_test_feil CHECK (orgnummer <> '999999999') NOT VALID")
         try {
-            shouldThrow<IllegalStateException> { listener.listen(record, ack) }
+            shouldThrow<IllegalStateException> { listener.listen(listOf(record), ack) }
             antallAck[0] shouldBe 0
             checkpoint(904) shouldBe 1
             esyfo.findByNarmesteLederId(id).shouldNotBeNull()
         } finally {
             jdbc.execute("ALTER TABLE narmeste_leder_esyfo DROP CONSTRAINT esyfo_test_feil")
         }
-        listener.listen(record, ack)
+        listener.listen(listOf(record), ack)
         antallAck[0] shouldBe 1
         checkpoint(904) shouldBe 2
-        listener.listen(record, ack)
+        listener.listen(listOf(record), ack)
         antallAck[0] shouldBe 2
         checkpoint(904) shouldBe 2
     }

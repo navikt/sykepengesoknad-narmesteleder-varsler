@@ -19,14 +19,15 @@ class NarmestelederEsyfoListener(
         concurrency = "1",
     )
     fun listen(
-        cr: ConsumerRecord<String, String?>,
+        records: List<ConsumerRecord<String, String?>>,
         acknowledgment: Acknowledgment,
     ) {
+        if (records.isEmpty()) return
         try {
-            oppdatering.behandle(cr.topic(), cr.partition(), cr.offset(), cr.key(), cr.value())
+            oppdatering.behandleBatch(records)
         } catch (_: Exception) {
             // Ingen cause: parser- og SQL-unntak kan inneholde Kafka-payload eller persondata.
-            throw IllegalStateException("Nærmeste leder-record feilet")
+            throw IllegalStateException("Nærmeste leder-batch feilet")
         }
         acknowledgment.acknowledge()
     }

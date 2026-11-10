@@ -13,6 +13,7 @@ import no.nav.helse.flex.varsler.domain.PlanlagtVarselStatus.PLANLAGT
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselStatus.SENDT
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselType.MANGLENDE_SYKEPENGESOKNAD
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselType.SENDT_SYKEPENGESOKNAD
+import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.awaitility.Awaitility.await
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry
 import java.time.Duration
 import java.time.Instant
@@ -47,6 +49,14 @@ class EsyfoVarselTest : FellesTestOppsett() {
 
     @Autowired lateinit var listenerRegistry: KafkaListenerEndpointRegistry
 
+    @Autowired
+    @Qualifier("esyfoKafkaListenerContainerFactory")
+    lateinit var factory: ConcurrentKafkaListenerContainerFactory<String, String>
+
+    @Autowired
+    @Qualifier("aivenKafkaListenerContainerFactory")
+    lateinit var eksisterendeFactory: ConcurrentKafkaListenerContainerFactory<String, String>
+
     @AfterAll
     fun ryddEsyfo() {
         listenerRegistry.getListenerContainer("narmesteleder-esyfo")?.stop()
@@ -57,6 +67,26 @@ class EsyfoVarselTest : FellesTestOppsett() {
     @Test
     fun `Separat Kafka-gruppe bygger ny tabell og begge varseltyper bruker bare valgt leser`() {
         val container = listenerRegistry.getListenerContainer("narmesteleder-esyfo")!!
+        container.isRunning shouldBe false
+        factory.isBatchListener shouldBe true
+        checkNotNull(factory.consumerFactory).configurationProperties[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] shouldBe "500"
+        (eksisterendeFactory.isBatchListener == true) shouldBe false
+        checkNotNull(eksisterendeFactory.consumerFactory).configurationProperties[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] shouldBe "1"
+
+        val id = UUID.randomUUID()
+        val leder = getNarmesteLederLeesah(id)
+        val melding = leder.serialisertTilString().dropLast(1) + ",\"status\":null,\"nyttFelt\":true}"
+        kafkaProducer
+            .send(
+                ProducerRecord(
+                    NARMESTELEDER_ESYFO_LEESAH_TOPIC,
+                    id.toString(),
+                    leder.copy(aktivTom = LocalDate.now()).serialisertTilString(),
+                ),
+            ).get()
+        val record = kafkaProducer.send(ProducerRecord(NARMESTELEDER_ESYFO_LEESAH_TOPIC, id.toString(), melding)).get()
+        esyfo.findByNarmesteLederId(id) shouldBe null
+
         container.start()
         await().atMost(15, TimeUnit.SECONDS).until { container.assignedPartitions?.isNotEmpty() == true }
         container.isRunning shouldBe true
@@ -65,10 +95,6 @@ class EsyfoVarselTest : FellesTestOppsett() {
         val valgtLeser = NarmesteLederLeser(narmesteLederRepository, esyfo, "ESYFO", true)
         val varselUtsendelse = VarselUtsendelse(planlagtVarselRepository, valgtLeser, dokProducer, hendelseProducer, meterRegistry)
 
-        val id = UUID.randomUUID()
-        val leder = getNarmesteLederLeesah(id)
-        val melding = leder.serialisertTilString().dropLast(1) + ",\"status\":null,\"nyttFelt\":true}"
-        val record = kafkaProducer.send(ProducerRecord(NARMESTELEDER_ESYFO_LEESAH_TOPIC, id.toString(), melding)).get()
         await().atMost(15, TimeUnit.SECONDS).until { esyfo.findByNarmesteLederId(id) != null }
         jdbc.queryForObject(
             "SELECT last_offset FROM narmeste_leder_esyfo_offset WHERE topic = ? AND partition = ?",

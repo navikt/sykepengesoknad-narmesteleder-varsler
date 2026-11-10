@@ -64,11 +64,12 @@ class KafkaConfig(
 
     @Bean
     fun esyfoKafkaListenerContainerFactory(kafkaErrorHandler: KafkaErrorHandler): ConcurrentKafkaListenerContainerFactory<String, String> =
-        listenerFactory(kafkaErrorHandler, "earliest")
+        listenerFactory(kafkaErrorHandler, "earliest", batch = true)
 
     private fun listenerFactory(
         kafkaErrorHandler: KafkaErrorHandler,
         offsetReset: String,
+        batch: Boolean = false,
     ): ConcurrentKafkaListenerContainerFactory<String, String> {
         val config =
             mapOf(
@@ -77,13 +78,14 @@ class KafkaConfig(
                 ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG to false,
                 ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java,
                 ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java,
-                ConsumerConfig.MAX_POLL_RECORDS_CONFIG to "1",
+                ConsumerConfig.MAX_POLL_RECORDS_CONFIG to if (batch) "500" else "1",
                 ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG to "600000",
             ) + commonConfig()
 
         val factory = ConcurrentKafkaListenerContainerFactory<String, String>()
         factory.setConsumerFactory(DefaultKafkaConsumerFactory(config))
         factory.setCommonErrorHandler(kafkaErrorHandler)
+        if (batch) factory.setBatchListener(true)
         factory.containerProperties.ackMode = ContainerProperties.AckMode.MANUAL_IMMEDIATE
         factory.containerProperties.isSyncCommits = true
         return factory

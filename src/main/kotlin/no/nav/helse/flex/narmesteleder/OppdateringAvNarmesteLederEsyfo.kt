@@ -3,6 +3,7 @@ package no.nav.helse.flex.narmesteleder
 import no.nav.helse.flex.kafka.NARMESTELEDER_ESYFO_LEESAH_TOPIC
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
 import no.nav.helse.flex.objectMapper
+import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -15,6 +16,14 @@ import kotlin.uuid.toJavaUuid
 class OppdateringAvNarmesteLederEsyfo(
     private val jdbcTemplate: JdbcTemplate,
 ) {
+    @Transactional(rollbackFor = [Exception::class])
+    fun behandleBatch(records: List<ConsumerRecord<String, String?>>) {
+        // Fast låserekkefølge mellom partisjoner; sorteringen bevarer record-rekkefølgen innen hver partisjon.
+        records.sortedBy { it.partition() }.forEach { record ->
+            behandle(record.topic(), record.partition(), record.offset(), record.key(), record.value())
+        }
+    }
+
     /** Kun kalt synkront av en Kafka-listener med én behandlingsbane per partisjon. */
     @Transactional
     fun behandle(
