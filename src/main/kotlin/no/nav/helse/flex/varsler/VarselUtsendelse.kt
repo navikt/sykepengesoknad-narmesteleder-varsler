@@ -65,7 +65,8 @@ class VarselUtsendelse(
             }
             if (narmesteLedere.size != 1) {
                 throw RuntimeException(
-                    "Fant flere aktive nærmeste ledere for planlagt varsel",
+                    "Fant flere nærmeste ledere for planlagt varsel ${lestVarsel.id}:" +
+                        "${narmesteLedere.map { it.narmesteLederId }}.",
                 )
             }
 
@@ -125,7 +126,7 @@ class VarselUtsendelse(
 
         log.info(
             "Sendt planlagt varsel ${planlagtVarsel.id} med type ${planlagtVarsel.varselType} for " +
-                "søknad ${planlagtVarsel.sykepengesoknadId} til nærmeste leder.",
+                "søknad ${planlagtVarsel.sykepengesoknadId} til nærmeste leder ${narmesteLeder.narmesteLederId}.",
         )
 
         planlagtVarselRepository.save(

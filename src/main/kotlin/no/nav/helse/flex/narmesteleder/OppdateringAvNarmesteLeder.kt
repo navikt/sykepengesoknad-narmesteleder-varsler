@@ -26,13 +26,17 @@ class OppdateringAvNarmesteLeder(
         if (leder.aktivTom != null) {
             if (lagret != null) {
                 narmesteLederRepository.delete(lagret)
-                log.info("Slettet inaktiv nærmeste leder")
+                log.info("Slettet narmesteleder med id ${leder.narmesteLederId}")
             } else {
-                log.info("Ignorerer inaktiv nærmeste leder som ikke finnes")
+                log.info("Ignorerer ny inaktiv narmesteleder med id ${leder.narmesteLederId}")
             }
         } else {
             narmesteLederRepository.save(leder.tilNarmesteLeder(lagret?.id))
-            log.info("Lagret aktiv nærmeste leder")
+            if (lagret != null) {
+                log.info("Oppdatert narmesteleder med id ${leder.narmesteLederId}")
+            } else {
+                log.info("Lagret narmesteleder med id ${leder.narmesteLederId}")
+            }
         }
     }
 
