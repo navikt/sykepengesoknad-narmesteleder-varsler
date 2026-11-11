@@ -26,17 +26,10 @@ class KafkaErrorHandler :
         container: MessageListenerContainer,
     ) {
         records.forEach { record ->
-            if (record.topic() in setOf(NARMESTELEDER_LEESAH_TOPIC, NARMESTELEDER_ESYFO_LEESAH_TOPIC)) {
-                log.error(
-                    "Feil i prosessering av nærmeste leder-record på topic ${record.topic()}, " +
-                        "partisjon ${record.partition()}, offset ${record.offset()}",
-                )
-            } else {
-                log.error(
-                    "Feil i prosessering av record på topic ${record.topic()}, " +
-                        "partisjon ${record.partition()}, offset ${record.offset()}",
-                )
-            }
+            log.error(
+                "Feil i prosessering av record på topic ${record.topic()}, " +
+                    "partisjon ${record.partition()}, offset ${record.offset()}",
+            )
         }
         if (records.isEmpty()) {
             log.error("Feil i listener uten records")

@@ -141,7 +141,7 @@ class OppdaterNarmesteLederTest : FellesTestOppsett() {
     }
 
     @Test
-    fun `eSyfo-consumeren er avslått og meldinger fra team sykmelding skriver bare til eksisterende tabell`() {
+    fun `Consumeren for eSyfo er avslått og meldinger fra team sykmelding skriver bare til eksisterende tabell`() {
         kafkaListenerEndpointRegistry.getListenerContainer("narmesteleder-esyfo")?.isRunning shouldBe false
         val id = UUID.randomUUID()
         val tid = OffsetDateTime.parse("2026-01-01T10:00:00Z")
