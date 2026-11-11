@@ -387,9 +387,12 @@ class VarselTest : FellesTestOppsett() {
     @Order(8)
     fun `Varsel sendes til aktiv leder når en annen leder er inaktiv`() {
         val orgnummer = "aktiv-og-inaktiv"
-        val aktivLeder = lagLeder(orgnummer, "aktiv@bedriften.nav", aktivTom = null)
+        val aktivLeder = lagLeder(orgnummer, "aktiv@bedriften.nav")
         narmesteLederRepository.save(aktivLeder)
-        narmesteLederRepository.save(lagLeder(orgnummer, "inaktiv@bedriften.nav", aktivTom = LocalDate.now()))
+        val annenLeder = getNarmesteLederLeesah(UUID.randomUUID(), epost = "inaktiv@bedriften.nav").copy(fnr = fnr, orgnummer = orgnummer)
+        oppdateringAvNarmesteLeder.behandleMeldingFraKafka(annenLeder.serialisertTilString())
+        oppdateringAvNarmesteLeder.behandleMeldingFraKafka(annenLeder.copy(aktivTom = LocalDate.now()).serialisertTilString())
+        narmesteLederRepository.findByNarmesteLederId(annenLeder.narmesteLederId).shouldBeNull()
         val varsel = lagPlanlagtVarsel(orgnummer)
 
         varselUtsendelse.sendVarsler(Instant.now()) shouldBe 1
@@ -427,8 +430,8 @@ class VarselTest : FellesTestOppsett() {
     @Order(10)
     fun `Varsel sendes ikke når flere ledere er aktive`() {
         val orgnummer = "flere-aktive"
-        narmesteLederRepository.save(lagLeder(orgnummer, "aktiv1@bedriften.nav", aktivTom = null))
-        narmesteLederRepository.save(lagLeder(orgnummer, "aktiv2@bedriften.nav", aktivTom = null))
+        narmesteLederRepository.save(lagLeder(orgnummer, "aktiv1@bedriften.nav"))
+        narmesteLederRepository.save(lagLeder(orgnummer, "aktiv2@bedriften.nav"))
         val varsel = lagPlanlagtVarsel(orgnummer)
 
         shouldThrow<RuntimeException> { varselUtsendelse.sendVarsler(Instant.now()) }
@@ -440,7 +443,6 @@ class VarselTest : FellesTestOppsett() {
     private fun lagLeder(
         orgnummer: String,
         epost: String,
-        aktivTom: LocalDate?,
     ) = NarmesteLeder(
         oppdatert = Instant.now(),
         timestamp = Instant.now(),
@@ -451,7 +453,6 @@ class VarselTest : FellesTestOppsett() {
         narmesteLederTelefonnummer = "4818494949",
         narmesteLederEpost = epost,
         aktivFom = LocalDate.now().minusDays(1),
-        aktivTom = aktivTom,
         arbeidsgiverForskutterer = true,
     )
 

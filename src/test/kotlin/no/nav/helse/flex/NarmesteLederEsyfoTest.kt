@@ -363,7 +363,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
         behandle(905, 1, id, melding.serialisertTilString())
         behandle(905, 2, id, melding.copy(aktivTom = LocalDate.now()).serialisertTilString())
         behandle(905, 3, id, null)
-        narmesteLederRepository.findAktiveByBrukerFnrAndOrgnummer(melding.fnr, melding.orgnummer).shouldBeEmpty()
+        narmesteLederRepository.findByBrukerFnrAndOrgnummer(melding.fnr, melding.orgnummer).shouldBeEmpty()
         narmesteLederRepository.findByNarmesteLederId(id).shouldBeNull()
         planlagtVarselRepository.findAll().toList().shouldBeEmpty()
         doknotifikasjonKafkaConsumer.hentProduserteRecords().shouldBeEmpty()
@@ -382,7 +382,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
         behandle(909, 1, id, inaktiv.serialisertTilString()) shouldBe true
         narmesteLederRepository.findByNarmesteLederId(id).shouldBeNull()
         esyfo.findByNarmesteLederId(id).shouldNotBeNull().aktivTom shouldBe inaktiv.aktivTom
-        narmesteLederRepository.findAktiveByBrukerFnrAndOrgnummer(aktiv.fnr, aktiv.orgnummer).shouldBeEmpty()
+        narmesteLederRepository.findByBrukerFnrAndOrgnummer(aktiv.fnr, aktiv.orgnummer).shouldBeEmpty()
         planlagtVarselRepository.findAll().toList().shouldBeEmpty()
         doknotifikasjonKafkaConsumer.hentProduserteRecords().shouldBeEmpty()
         hendelseKafkaConsumer.hentProduserteRecords().shouldBeEmpty()
@@ -396,6 +396,6 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
         behandle(907, 2, to.narmesteLederId, to.serialisertTilString())
         esyfo.findByNarmesteLederId(en.narmesteLederId).shouldNotBeNull()
         esyfo.findByNarmesteLederId(to.narmesteLederId).shouldNotBeNull()
-        narmesteLederRepository.findAktiveByBrukerFnrAndOrgnummer(en.fnr, en.orgnummer).shouldBeEmpty()
+        narmesteLederRepository.findByBrukerFnrAndOrgnummer(en.fnr, en.orgnummer).shouldBeEmpty()
     }
 }

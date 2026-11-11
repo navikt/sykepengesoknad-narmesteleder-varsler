@@ -56,5 +56,4 @@ private fun NarmesteLederLeesah.tilNarmesteLeder(id: String?): NarmesteLeder =
         arbeidsgiverForskutterer = arbeidsgiverForskutterer,
         timestamp = timestamp.toInstant(),
         oppdatert = Instant.now(),
-        aktivTom = null,
     )

@@ -107,7 +107,7 @@ class EsyfoVarselTest : FellesTestOppsett() {
             sisteRecord.partition(),
         ) shouldBe sisteRecord.offset()
         narmesteLederRepository.findByNarmesteLederId(leder.narmesteLederId) shouldBe null
-        narmesteLederRepository.findAktiveByBrukerFnrAndOrgnummer(leder.fnr, leder.orgnummer).shouldBeEmpty()
+        narmesteLederRepository.findByBrukerFnrAndOrgnummer(leder.fnr, leder.orgnummer).shouldBeEmpty()
 
         planlagtVarselRepository.findAll().toList().shouldBeEmpty()
         doknotifikasjonKafkaConsumer.hentProduserteRecords().shouldBeEmpty()

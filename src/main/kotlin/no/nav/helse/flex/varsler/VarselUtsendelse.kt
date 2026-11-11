@@ -52,7 +52,7 @@ class VarselUtsendelse(
                 return@forEach
             }
             val narmesteLedere =
-                narmesteLederRepository.findAktiveByBrukerFnrAndOrgnummer(lestVarsel.brukerFnr, lestVarsel.orgnummer)
+                narmesteLederRepository.findByBrukerFnrAndOrgnummer(lestVarsel.brukerFnr, lestVarsel.orgnummer)
 
             if (narmesteLedere.isEmpty()) {
                 log.info(
