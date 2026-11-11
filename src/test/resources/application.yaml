@@ -1,4 +1,7 @@
 spring:
+  kafka:
+    listener:
+      auto-startup: false
   profiles:
     active: test
   flyway:
@@ -13,7 +16,6 @@ aiven-kafka:
   security-protocol: PLAINTEXT
 
 narmeste-leder:
-  esyfo-consumer-aktiv: false
   esyfo-gruppe: narmesteleder-varsler-esyfo
 
 KAFKA_TRUSTSTORE_PATH: ""

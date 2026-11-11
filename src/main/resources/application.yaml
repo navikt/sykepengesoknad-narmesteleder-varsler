@@ -20,7 +20,6 @@ aiven-kafka:
   security-protocol: SSL
 
 narmeste-leder:
-  esyfo-consumer-aktiv: ${NARMESTE_LEDER_ESYFO_CONSUMER_AKTIV:false}
   esyfo-gruppe: ${NARMESTE_LEDER_ESYFO_GRUPPE:narmesteleder-varsler-esyfo}
 
 management:
