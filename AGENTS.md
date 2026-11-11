@@ -13,3 +13,8 @@ Bruk IntelliJ MCP og run configurations for formatering, bygg og tester, ikke Gr
 3. Åpne `workspace.xml` i IntelliJ og kontroller med `get_run_configurations` at konfigurasjonen er lastet inn. Kjør den med `execute_run_configuration`. Ikke commit lokale IDE-innstillinger.
 
 Ikke bruk IntelliJs terminalverktøy til å omgå begrensninger i shell-sandkassen.
+
+## Endringer i koden
+
+- Les tilsvarende produksjonskode og tester før du velger løsning. Følg mønsteret i hvert repo, ikke kopier ukritisk mellom repoer.
+- Implementer bare avtalt omfang og migreringsfase. Unngå ekstra funksjoner, opprydding og formateringsstøy.
