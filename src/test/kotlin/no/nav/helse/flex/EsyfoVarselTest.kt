@@ -80,7 +80,7 @@ class EsyfoVarselTest : FellesTestOppsett() {
         container.start()
         await().atMost(15, TimeUnit.SECONDS).until { container.assignedPartitions?.isNotEmpty() == true }
         container.isRunning shouldBe true
-        container.groupId shouldBe "sykepengesoknad-narmesteleder-varsler-esyfo-test-bootstrap-v1"
+        container.groupId shouldBe "narmesteleder-varsler-esyfo"
 
         await().atMost(15, TimeUnit.SECONDS).until { esyfo.findByNarmesteLederId(id) != null }
         jdbc.queryForObject(

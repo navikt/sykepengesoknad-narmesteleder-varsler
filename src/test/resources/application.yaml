@@ -14,7 +14,7 @@ aiven-kafka:
 
 narmeste-leder:
   esyfo-consumer-aktiv: false
-  esyfo-gruppe: sykepengesoknad-narmesteleder-varsler-esyfo-test-bootstrap-v1
+  esyfo-gruppe: narmesteleder-varsler-esyfo
 
 KAFKA_TRUSTSTORE_PATH: ""
 KAFKA_CREDSTORE_PASSWORD: ""
