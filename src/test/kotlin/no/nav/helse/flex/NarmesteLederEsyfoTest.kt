@@ -65,7 +65,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
     }
 
     @Test
-    fun `batch kvitteres én gang etter commit og bevarer rekkefølge og tombstones`() {
+    fun `Batch kvitteres én gang etter commit og bevarer rekkefølge og tombstones`() {
         val første = UUID.randomUUID()
         val andre = UUID.randomUUID()
         val batch =
@@ -90,7 +90,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
     }
 
     @Test
-    fun `feil i batch ruller tilbake alle partisjoner uten kvittering og kan forsøkes igjen`() {
+    fun `Feil i batch ruller tilbake alle partisjoner uten kvittering og kan forsøkes igjen`() {
         val første = UUID.randomUUID()
         val andre = UUID.randomUUID()
         val gyldig =
@@ -115,7 +115,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
     }
 
     @Test
-    fun `tom batch kvitteres ikke`() {
+    fun `Tom batch kvitteres ikke`() {
         var kvitteringer = 0
         listener.listen(emptyList()) { kvitteringer++ }
         kvitteringer shouldBe 0
@@ -165,7 +165,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
     }
 
     @Test
-    fun `Null og ikke-kanonisk Kafka-key avvises uten ack eller endring i projeksjon og checkpoint`() {
+    fun `Null og ugyldig Kafka-key avvises uten ack eller endring i projeksjon og checkpoint`() {
         val id = UUID.randomUUID()
         val melding = getNarmesteLederLeesah(id).serialisertTilString()
         behandle(913, 1, id, melding) shouldBe true
@@ -179,7 +179,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
             }
         listOf<String?>(
             null,
-            "1-1-1-1-1",
+            "ugyldig-uuid",
             id.toString().replace("-", ""),
             id.toString().replaceFirst("-", "_"),
             id.toString().dropLast(1) + "g",
@@ -207,7 +207,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
     }
 
     @Test
-    fun `Kanonisk Kafka-key godtas med store og små heksadesimale bokstaver`() {
+    fun `Kafka-key godtas med store og små heksadesimale bokstaver`() {
         val id = UUID.fromString("12345678-9abc-4def-8abc-123456789abc")
         val melding = getNarmesteLederLeesah(id).serialisertTilString()
 
@@ -222,7 +222,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
     }
 
     @Test
-    fun `eSyfo-consumeren kan ikke bruke tom gruppe eller gruppen for team sykmeldings topic`() {
+    fun `Consumeren for eSyfo kan ikke bruke tom gruppe eller gruppen for team sykmeldings topic`() {
         fun config(gruppe: String) = KafkaConfig("", "none", "PLAINTEXT", "", "", "", "", "", "", gruppe)
 
         listOf("", "   ", GAMMEL_KAFKA_GRUPPE).forEach { gruppe ->
@@ -338,7 +338,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
     }
 
     @Test
-    fun `flere aktive relasjoner lagres i eSyfo-tabellen uten å endre eksisterende tabell`() {
+    fun `Flere aktive relasjoner lagres i eSyfo-tabellen uten å endre eksisterende tabell`() {
         val en = getNarmesteLederLeesah(UUID.randomUUID())
         val to = en.copy(narmesteLederId = UUID.randomUUID())
         behandle(907, 1, en.narmesteLederId, en.serialisertTilString())

@@ -1,5 +1,7 @@
 # IntelliJ og Gradle
 
+Følg [testreglene for Kotlin og Spring](AGENTS-testing.md) når du skriver eller endrer tester.
+
 Bruk IntelliJ MCP og run configurations for formatering, bygg og tester, ikke Gradle i shell. Finn tilgjengelige konfigurasjoner med `get_run_configurations`.
 
 `build` kjører også tester og kan ta flere minutter. Bruk `classes` for kompilering uten tester.

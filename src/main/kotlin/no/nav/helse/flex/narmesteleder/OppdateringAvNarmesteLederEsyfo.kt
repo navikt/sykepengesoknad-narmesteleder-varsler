@@ -8,8 +8,7 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import tools.jackson.core.JacksonException
 import tools.jackson.module.kotlin.readValue
-import kotlin.uuid.Uuid
-import kotlin.uuid.toJavaUuid
+import java.util.UUID
 
 @Component
 class OppdateringAvNarmesteLederEsyfo(
@@ -32,9 +31,7 @@ class OppdateringAvNarmesteLederEsyfo(
         key: String?,
         value: String?,
     ): Boolean {
-        val id =
-            key?.let { Uuid.parseHexDashOrNull(it) }?.toJavaUuid()
-                ?: throw IllegalArgumentException("Ugyldig nøkkel i nærmeste leder-record")
+        val id = UUID.fromString(key)
         val leder =
             value?.let {
                 try {
