@@ -1,105 +1,59 @@
 package no.nav.helse.flex.narmesteleder
 
+import no.nav.helse.flex.narmesteleder.domain.NarmesteLederEsyfo
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
 import no.nav.helse.flex.objectMapper
 import org.apache.kafka.clients.consumer.ConsumerRecord
-import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
-import tools.jackson.core.JacksonException
 import tools.jackson.module.kotlin.readValue
+import java.time.Instant
 import java.util.UUID
 
 @Component
 class OppdateringAvNarmesteLederEsyfo(
-    private val jdbcTemplate: JdbcTemplate,
+    private val repository: NarmesteLederEsyfoRepository,
+    private val checkpoint: NarmesteLederEsyfoCheckpoint,
 ) {
     @Transactional(rollbackFor = [Exception::class])
     fun behandleBatch(records: List<ConsumerRecord<String, String?>>) {
-        // Fast låserekkefølge mellom partisjoner; sorteringen bevarer record-rekkefølgen innen hver partisjon.
-        records.sortedBy { it.partition() }.forEach { record ->
-            behandle(record.topic(), record.partition(), record.offset(), record.key(), record.value())
-        }
+        records.sortedBy { it.partition() }.forEach { behandle(it) }
     }
 
-    /** Kun kalt synkront av en Kafka-listener med én behandlingsbane per partisjon. */
-    @Transactional
-    fun behandle(
-        topic: String,
-        partition: Int,
-        offset: Long,
-        key: String?,
-        value: String?,
-    ): Boolean {
-        val id = UUID.fromString(key)
-        val leder =
-            value?.let {
-                try {
-                    objectMapper.readValue<NarmesteLederLeesah>(it)
-                } catch (_: JacksonException) {
-                    throw IllegalArgumentException("Ugyldig nærmeste leder-record")
-                }
-            }
-        require(leder == null || (leder.narmesteLederId == id && leder.orgnummer.matches(Regex("[0-9]{9}")))) {
-            "Ugyldig nærmeste leder-record"
-        }
+    @Transactional(rollbackFor = [Exception::class])
+    fun behandle(record: ConsumerRecord<String, String?>): Boolean {
+        val sistBehandlet = checkpoint.lasOgHentOffset(record.topic(), record.partition())
+        if (record.offset() <= sistBehandlet) return false
 
-        // Konflikttrygg init og radlås gjelder også når to pods ser en helt tom checkpoint-tabell.
-        jdbcTemplate.update(
-            "INSERT INTO narmeste_leder_esyfo_offset (topic, partition, last_offset) VALUES (?, ?, -1) ON CONFLICT DO NOTHING",
-            topic,
-            partition,
-        )
-        val siste =
-            jdbcTemplate.queryForObject(
-                "SELECT last_offset FROM narmeste_leder_esyfo_offset WHERE topic = ? AND partition = ? FOR UPDATE",
-                Long::class.java,
-                topic,
-                partition,
-            ) ?: error("Mangler checkpoint")
-        if (offset <= siste) {
-            return false
-        }
-        if (leder == null) {
-            jdbcTemplate.update("DELETE FROM narmeste_leder_esyfo WHERE narmeste_leder_id = ?", id)
+        val id = UUID.fromString(record.key())
+        val verdi = record.value()
+        if (verdi == null) {
+            repository.slett(id)
         } else {
-            jdbcTemplate.update(
-                """
-                INSERT INTO narmeste_leder_esyfo
-                    (oppdatert, narmeste_leder_id, orgnummer, bruker_fnr, narmeste_leder_fnr,
-                     narmeste_leder_telefonnummer, narmeste_leder_epost, aktiv_fom, aktiv_tom,
-                     arbeidsgiver_forskutterer, timestamp)
-                VALUES (now(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ON CONFLICT (narmeste_leder_id) DO UPDATE SET
-                    oppdatert = EXCLUDED.oppdatert,
-                    orgnummer = EXCLUDED.orgnummer,
-                    bruker_fnr = EXCLUDED.bruker_fnr,
-                    narmeste_leder_fnr = EXCLUDED.narmeste_leder_fnr,
-                    narmeste_leder_telefonnummer = EXCLUDED.narmeste_leder_telefonnummer,
-                    narmeste_leder_epost = EXCLUDED.narmeste_leder_epost,
-                    aktiv_fom = EXCLUDED.aktiv_fom,
-                    aktiv_tom = EXCLUDED.aktiv_tom,
-                    arbeidsgiver_forskutterer = EXCLUDED.arbeidsgiver_forskutterer,
-                    timestamp = EXCLUDED.timestamp
-                """.trimIndent(),
-                id,
-                leder.orgnummer,
-                leder.fnr,
-                leder.narmesteLederFnr,
-                leder.narmesteLederTelefonnummer,
-                leder.narmesteLederEpost,
-                leder.aktivFom,
-                leder.aktivTom,
-                leder.arbeidsgiverForskutterer,
-                leder.timestamp,
-            )
+            val melding = objectMapper.readValue<NarmesteLederLeesah>(verdi)
+            require(melding.narmesteLederId == id) { "Nøkkel stemmer ikke med ESYFO-payload" }
+            lagre(melding)
         }
-        jdbcTemplate.update(
-            "UPDATE narmeste_leder_esyfo_offset SET last_offset = ? WHERE topic = ? AND partition = ?",
-            offset,
-            topic,
-            partition,
-        )
+        checkpoint.lagreOffset(record.topic(), record.partition(), record.offset())
         return true
+    }
+
+    private fun lagre(melding: NarmesteLederLeesah) {
+        require(melding.orgnummer.matches(Regex("[0-9]{9}"))) { "Ugyldig orgnummer i ESYFO-payload" }
+        repository.lagre(
+            NarmesteLederEsyfo(
+                oppdatert = Instant.now(),
+                timestamp = melding.timestamp.toInstant(),
+                narmesteLederId = melding.narmesteLederId,
+                orgnummer = melding.orgnummer,
+                brukerFnr = melding.fnr,
+                narmesteLederFnr = melding.narmesteLederFnr,
+                narmesteLederTelefonnummer = melding.narmesteLederTelefonnummer,
+                narmesteLederEpost = melding.narmesteLederEpost,
+                aktivFom = melding.aktivFom,
+                aktivTom = melding.aktivTom,
+                arbeidsgiverForskutterer = melding.arbeidsgiverForskutterer,
+            ),
+        )
     }
 }

@@ -19,7 +19,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry
 import org.springframework.kafka.support.Acknowledgment
+import tools.jackson.core.JacksonException
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -51,7 +53,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
         offset: Long,
         id: UUID,
         melding: String?,
-    ): Boolean = oppdatering.behandle(topic, partisjon, offset, id.toString(), melding)
+    ): Boolean = oppdatering.behandle(ConsumerRecord(topic, partisjon, offset, id.toString(), melding))
 
     private fun checkpoint(partisjon: Int): Long? {
         val offseter =
@@ -122,6 +124,43 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
     }
 
     @Test
+    fun `Lagring oppdaterer alle relasjonsfeltene uten å endre radens ID`() {
+        val id = UUID.randomUUID()
+        val første = getNarmesteLederLeesah(id)
+        behandle(921, 0, id, første.serialisertTilString()) shouldBe true
+        val opprinnelig = esyfo.findByNarmesteLederId(id).shouldNotBeNull()
+        val oppdatert =
+            første.copy(
+                orgnummer = "123456789",
+                fnr = "00000000000",
+                narmesteLederFnr = "00000000000",
+                narmesteLederTelefonnummer = "00000000",
+                narmesteLederEpost = "leder@example.test",
+                aktivFom = LocalDate.parse("2026-01-01"),
+                aktivTom = LocalDate.parse("2026-02-01"),
+                arbeidsgiverForskutterer = false,
+                timestamp = OffsetDateTime.parse("2026-02-01T10:00:00Z"),
+            )
+
+        behandle(921, 1, id, oppdatert.serialisertTilString()) shouldBe true
+
+        val lagret = esyfo.findByNarmesteLederId(id).shouldNotBeNull()
+        lagret shouldBe
+            opprinnelig.copy(
+                oppdatert = lagret.oppdatert,
+                timestamp = oppdatert.timestamp.toInstant(),
+                orgnummer = oppdatert.orgnummer,
+                brukerFnr = oppdatert.fnr,
+                narmesteLederFnr = oppdatert.narmesteLederFnr,
+                narmesteLederTelefonnummer = oppdatert.narmesteLederTelefonnummer,
+                narmesteLederEpost = oppdatert.narmesteLederEpost,
+                aktivFom = oppdatert.aktivFom,
+                aktivTom = oppdatert.aktivTom,
+                arbeidsgiverForskutterer = oppdatert.arbeidsgiverForskutterer,
+            )
+    }
+
+    @Test
     fun `Checkpoint følger siste offset ikke timestamp og tombstone forblir slettet ved omlevering`() {
         val id = UUID.randomUUID()
         val aktiv = getNarmesteLederLeesah(id)
@@ -155,10 +194,10 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
                 ",\"status\":\"NY_STATUS\",\"ekstra\":1}"
         behandle(902, 1, id, melding) shouldBe true
         esyfo.findByNarmesteLederId(id).shouldNotBeNull()
-        shouldThrow<IllegalArgumentException> { oppdatering.behandle(topic, 902, 2, "ugyldig", null) }
+        shouldThrow<IllegalArgumentException> { oppdatering.behandle(ConsumerRecord(topic, 902, 2L, "ugyldig", null)) }
         shouldThrow<IllegalArgumentException> { behandle(902, 2, UUID.randomUUID(), melding) }
         shouldThrow<IllegalArgumentException> { behandle(902, 2, id, melding.replace("999999999", "999")) }
-        shouldThrow<IllegalArgumentException> { behandle(902, 2, id, "{ugyldig") }
+        shouldThrow<JacksonException> { behandle(902, 2, id, "{ugyldig") }
         checkpoint(902) shouldBe 1
         behandle(902, 2, id, null) shouldBe true
         checkpoint(902) shouldBe 2
@@ -212,13 +251,25 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
         val melding = getNarmesteLederLeesah(id).serialisertTilString()
 
         listOf(id.toString(), id.toString().uppercase()).forEachIndexed { offset, key ->
-            oppdatering.behandle(topic, 915, offset.toLong(), key, melding) shouldBe true
+            oppdatering.behandle(ConsumerRecord(topic, 915, offset.toLong(), key, melding)) shouldBe true
             esyfo.findByNarmesteLederId(id).shouldNotBeNull().narmesteLederId shouldBe id
         }
         checkpoint(915) shouldBe 1
-        oppdatering.behandle(topic, 915, 2, id.toString().uppercase(), null) shouldBe true
+        oppdatering.behandle(ConsumerRecord(topic, 915, 2L, id.toString().uppercase(), null)) shouldBe true
         esyfo.findByNarmesteLederId(id).shouldBeNull()
         checkpoint(915) shouldBe 2
+    }
+
+    @Test
+    fun `Allerede behandlet offset ignoreres før nøkkel og payload leses`() {
+        val id = UUID.randomUUID()
+        behandle(920, 1, id, getNarmesteLederLeesah(id).serialisertTilString()) shouldBe true
+        val lagret = esyfo.findByNarmesteLederId(id).shouldNotBeNull()
+
+        oppdatering.behandle(ConsumerRecord(topic, 920, 1L, null, "{ugyldig")) shouldBe false
+
+        esyfo.findByNarmesteLederId(id) shouldBe lagret
+        checkpoint(920) shouldBe 1L
     }
 
     @Test
