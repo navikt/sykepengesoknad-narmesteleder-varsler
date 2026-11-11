@@ -28,7 +28,7 @@ class OppdateringAvNarmesteLederEsyfo(
         val id = UUID.fromString(record.key())
         val verdi = record.value()
         if (verdi == null) {
-            repository.slett(id)
+            repository.deleteByNarmesteLederId(id)
         } else {
             val melding = objectMapper.readValue<NarmesteLederLeesah>(verdi)
             require(melding.narmesteLederId == id) { "Nøkkel stemmer ikke med ESYFO-payload" }
@@ -40,8 +40,10 @@ class OppdateringAvNarmesteLederEsyfo(
 
     private fun lagre(melding: NarmesteLederLeesah) {
         require(melding.orgnummer.matches(Regex("[0-9]{9}"))) { "Ugyldig orgnummer i ESYFO-payload" }
-        repository.lagre(
+        val eksisterende = repository.findByNarmesteLederId(melding.narmesteLederId)
+        repository.save(
             NarmesteLederEsyfo(
+                id = eksisterende?.id,
                 oppdatert = Instant.now(),
                 timestamp = melding.timestamp.toInstant(),
                 narmesteLederId = melding.narmesteLederId,

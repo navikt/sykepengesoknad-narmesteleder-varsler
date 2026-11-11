@@ -5,6 +5,7 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import no.nav.helse.flex.kafka.NARMESTELEDER_ESYFO_LEESAH_TOPIC
 import no.nav.helse.flex.kafka.NARMESTELEDER_LEESAH_TOPIC
+import no.nav.helse.flex.narmesteleder.NarmesteLederEsyfoRepository
 import no.nav.helse.flex.narmesteleder.OppdateringAvNarmesteLeder
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -16,6 +17,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.*
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 class OppdaterNarmesteLederTest : FellesTestOppsett() {
@@ -24,6 +26,9 @@ class OppdaterNarmesteLederTest : FellesTestOppsett() {
 
     @Autowired
     lateinit var kafkaListenerEndpointRegistry: KafkaListenerEndpointRegistry
+
+    @Autowired
+    lateinit var esyfo: NarmesteLederEsyfoRepository
 
     @Test
     fun `Oppretter ny nærmeste leder hvis den ikke finnes fra før og er aktiv`() {
@@ -141,27 +146,67 @@ class OppdaterNarmesteLederTest : FellesTestOppsett() {
     }
 
     @Test
-    fun `Consumeren for eSyfo er avslått og meldinger fra team sykmelding skriver bare til eksisterende tabell`() {
-        kafkaListenerEndpointRegistry.getListenerContainer("narmesteleder-esyfo")?.isRunning shouldBe false
-        val id = UUID.randomUUID()
-        val tid = OffsetDateTime.parse("2026-01-01T10:00:00Z")
-        val nyere = getNarmesteLederLeesah(id).copy(timestamp = tid)
-        kafkaProducer.send(ProducerRecord(NARMESTELEDER_LEESAH_TOPIC, id.toString(), null)).get()
-        kafkaProducer.send(ProducerRecord(NARMESTELEDER_LEESAH_TOPIC, id.toString(), nyere.serialisertTilString())).get()
-        await().atMost(10, TimeUnit.SECONDS).until {
-            narmesteLederRepository.findByNarmesteLederId(id) != null
+    fun `Begge consumers oppdaterer bare sin egen tabell for samme relasjon`() {
+        val container = checkNotNull(kafkaListenerEndpointRegistry.getListenerContainer("narmesteleder-esyfo"))
+        val gammel = getNarmesteLederLeesah(UUID.randomUUID()).copy(timestamp = OffsetDateTime.parse("2026-01-01T10:00:00Z"))
+        val ny = gammel.copy(narmesteLederEpost = "esyfo@nav.no")
+        try {
+            container.start()
+            publiserTilBeggeTabeller(gammel, ny)
+            kontrollerGammelOppdateringMedAktivEsyfoConsumer(gammel, ny)
+            kontrollerEsyfoOppdateringMedAktivGammelConsumer(gammel, ny)
+        } finally {
+            val stoppet = CountDownLatch(1)
+            container.stop { stoppet.countDown() }
+            check(stoppet.await(20, TimeUnit.SECONDS))
+            esyfo.deleteByNarmesteLederId(gammel.narmesteLederId)
         }
-        narmesteLederRepository
-            .findByNarmesteLederId(id)
-            .shouldNotBeNull()
-            .aktivTom
-            .shouldBeNull()
-        kafkaProducer.send(ProducerRecord(NARMESTELEDER_ESYFO_LEESAH_TOPIC, id.toString(), nyere.serialisertTilString())).get()
-        narmesteLederRepository
-            .findByNarmesteLederId(id)
-            .shouldNotBeNull()
-            .aktivTom
-            .shouldBeNull()
+    }
+
+    private fun publiserTilBeggeTabeller(
+        gammel: NarmesteLederLeesah,
+        ny: NarmesteLederLeesah,
+    ) {
+        kafkaProducer.send(ProducerRecord(NARMESTELEDER_LEESAH_TOPIC, gammel.narmesteLederId.toString(), null)).get()
+        sendNarmesteLederLeesah(gammel)
+        sendEsyfoMelding(ny)
+        await().atMost(20, TimeUnit.SECONDS).untilAsserted {
+            narmesteLederRepository.findByNarmesteLederId(gammel.narmesteLederId)?.narmesteLederEpost shouldBe gammel.narmesteLederEpost
+            esyfo.findByNarmesteLederId(ny.narmesteLederId)?.narmesteLederEpost shouldBe ny.narmesteLederEpost
+        }
+    }
+
+    private fun kontrollerGammelOppdateringMedAktivEsyfoConsumer(
+        gammel: NarmesteLederLeesah,
+        ny: NarmesteLederLeesah,
+    ) {
+        val lagretEsyfo = esyfo.findByNarmesteLederId(ny.narmesteLederId).shouldNotBeNull()
+        val eldre = gammel.copy(timestamp = gammel.timestamp.minusDays(1), narmesteLederEpost = "oppdatert@nav.no")
+        sendNarmesteLederLeesah(eldre)
+        await().atMost(20, TimeUnit.SECONDS).untilAsserted {
+            narmesteLederRepository.findByNarmesteLederId(gammel.narmesteLederId)?.narmesteLederEpost shouldBe eldre.narmesteLederEpost
+        }
+        esyfo.findByNarmesteLederId(ny.narmesteLederId) shouldBe lagretEsyfo
+    }
+
+    private fun kontrollerEsyfoOppdateringMedAktivGammelConsumer(
+        gammel: NarmesteLederLeesah,
+        ny: NarmesteLederLeesah,
+    ) {
+        val lagretGammel = narmesteLederRepository.findByNarmesteLederId(gammel.narmesteLederId).shouldNotBeNull()
+        val oppdatert = ny.copy(narmesteLederEpost = "oppdatert-esyfo@nav.no")
+        sendEsyfoMelding(oppdatert)
+        await().atMost(20, TimeUnit.SECONDS).untilAsserted {
+            esyfo.findByNarmesteLederId(ny.narmesteLederId)?.narmesteLederEpost shouldBe oppdatert.narmesteLederEpost
+        }
+        narmesteLederRepository.findByNarmesteLederId(gammel.narmesteLederId) shouldBe lagretGammel
+    }
+
+    private fun sendEsyfoMelding(melding: NarmesteLederLeesah) {
+        kafkaProducer
+            .send(
+                ProducerRecord(NARMESTELEDER_ESYFO_LEESAH_TOPIC, 0, melding.narmesteLederId.toString(), melding.serialisertTilString()),
+            ).get()
     }
 }
 
