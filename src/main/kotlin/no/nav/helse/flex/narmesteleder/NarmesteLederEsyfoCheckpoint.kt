@@ -1,5 +1,7 @@
 package no.nav.helse.flex.narmesteleder
 
+import no.nav.helse.flex.narmesteleder.domain.NarmesteLederEsyfoOffset
+import no.nav.helse.flex.narmesteleder.domain.NarmesteLederEsyfoOffsetId
 import org.springframework.stereotype.Repository
 
 interface NarmesteLederEsyfoCheckpoint {
@@ -17,7 +19,7 @@ interface NarmesteLederEsyfoCheckpoint {
 
 @Repository("narmesteLederEsyfoCheckpoint")
 class DatabaseNarmesteLederEsyfoCheckpoint(
-    private val repository: NarmesteLederEsyfoRepository,
+    private val repository: NarmesteLederEsyfoOffsetRepository,
 ) : NarmesteLederEsyfoCheckpoint {
     override fun lasOgHentOffset(
         topic: String,
@@ -32,6 +34,6 @@ class DatabaseNarmesteLederEsyfoCheckpoint(
         partition: Int,
         offset: Long,
     ) {
-        repository.lagreOffset(topic, partition, offset)
+        repository.save(NarmesteLederEsyfoOffset(NarmesteLederEsyfoOffsetId(topic, partition), offset))
     }
 }
