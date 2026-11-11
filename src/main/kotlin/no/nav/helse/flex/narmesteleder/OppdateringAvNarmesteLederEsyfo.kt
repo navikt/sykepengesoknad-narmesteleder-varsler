@@ -1,6 +1,5 @@
 package no.nav.helse.flex.narmesteleder
 
-import no.nav.helse.flex.kafka.NARMESTELEDER_ESYFO_LEESAH_TOPIC
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
 import no.nav.helse.flex.objectMapper
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -33,7 +32,6 @@ class OppdateringAvNarmesteLederEsyfo(
         key: String?,
         value: String?,
     ): Boolean {
-        require(topic == NARMESTELEDER_ESYFO_LEESAH_TOPIC && partition >= 0 && offset >= 0) { "Ugyldig Kafka-posisjon" }
         val id =
             key?.let { Uuid.parseHexDashOrNull(it) }?.toJavaUuid()
                 ?: throw IllegalArgumentException("Ugyldig nøkkel i nærmeste leder-record")
