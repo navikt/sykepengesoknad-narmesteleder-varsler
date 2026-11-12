@@ -100,7 +100,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
         var kvitteringer = 0
         val feil =
             shouldThrow<IllegalStateException> {
-                listener.listen(listOf(ConsumerRecord(topic, 919, 0L, andre.toString(), "{"), gyldig)) { kvitteringer++ }
+                listener.listen(listOf(gyldig, ConsumerRecord(topic, 919, 0L, andre.toString(), "{"))) { kvitteringer++ }
             }
         feil.cause.shouldBeNull()
         kvitteringer shouldBe 0

@@ -17,7 +17,7 @@ class OppdateringAvNarmesteLederEsyfo(
 ) {
     @Transactional(rollbackFor = [Exception::class])
     fun behandleBatch(records: List<ConsumerRecord<String, String?>>) {
-        records.sortedBy { it.partition() }.forEach { behandle(it) }
+        records.forEach { behandle(it) }
     }
 
     @Transactional(rollbackFor = [Exception::class])
