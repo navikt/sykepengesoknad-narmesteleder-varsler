@@ -3,6 +3,7 @@ package no.nav.helse.flex
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import no.nav.helse.flex.kafka.NARMESTELEDER_ESYFO_LEESAH_TOPIC
+import no.nav.helse.flex.kafka.NARMESTELEDER_LEESAH_TOPIC
 import no.nav.helse.flex.narmesteleder.NarmesteLederEsyfoRepository
 import no.nav.helse.flex.narmesteleder.OppdateringAvNarmesteLeder
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
@@ -75,6 +76,9 @@ class EsyfoVarselTest : FellesTestOppsett() {
 
     private fun kontrollerConsumerInnstillinger(container: MessageListenerContainer) {
         container.isRunning shouldBe false
+        listenerRegistry.listenerContainers
+            .single { it.containerProperties.topics?.contains(NARMESTELEDER_LEESAH_TOPIC) == true }
+            .isRunning shouldBe true
         factory.isBatchListener shouldBe true
         checkNotNull(factory.consumerFactory).configurationProperties[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] shouldBe "500"
         (eksisterendeFactory.isBatchListener == true) shouldBe false
