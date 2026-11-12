@@ -6,7 +6,7 @@ import no.nav.helse.flex.objectMapper
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
-import tools.jackson.module.kotlin.readValue
+import tools.jackson.databind.DeserializationFeature
 import java.time.Instant
 import java.util.UUID
 
@@ -15,6 +15,12 @@ class OppdateringAvNarmesteLederEsyfo(
     private val repository: NarmesteLederEsyfoRepository,
     private val checkpoint: NarmesteLederEsyfoCheckpoint,
 ) {
+    private val meldingsleser =
+        objectMapper
+            .readerFor(
+                NarmesteLederLeesah::class.java,
+            ).without(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+
     @Transactional(rollbackFor = [Exception::class])
     fun behandleBatch(records: List<ConsumerRecord<String, String?>>) {
         records.forEach { behandle(it) }
@@ -30,7 +36,7 @@ class OppdateringAvNarmesteLederEsyfo(
         if (verdi == null) {
             repository.deleteByNarmesteLederId(id)
         } else {
-            val melding = objectMapper.readValue<NarmesteLederLeesah>(verdi)
+            val melding = meldingsleser.readValue<NarmesteLederLeesah>(verdi)
             require(melding.narmesteLederId == id) { "Nøkkel stemmer ikke med ESYFO-payload" }
             lagre(melding)
         }

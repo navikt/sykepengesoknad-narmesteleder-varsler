@@ -4,7 +4,6 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import no.nav.helse.flex.kafka.NARMESTELEDER_ESYFO_LEESAH_TOPIC
-import no.nav.helse.flex.kafka.NARMESTELEDER_LEESAH_TOPIC
 import no.nav.helse.flex.narmesteleder.NarmesteLederEsyfoRepository
 import no.nav.helse.flex.narmesteleder.OppdateringAvNarmesteLeder
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
@@ -167,7 +166,6 @@ class OppdaterNarmesteLederTest : FellesTestOppsett() {
         gammel: NarmesteLederLeesah,
         ny: NarmesteLederLeesah,
     ) {
-        kafkaProducer.send(ProducerRecord(NARMESTELEDER_LEESAH_TOPIC, gammel.narmesteLederId.toString(), null)).get()
         sendNarmesteLederLeesah(gammel)
         sendEsyfoMelding(ny)
         await().atMost(20, TimeUnit.SECONDS).untilAsserted {

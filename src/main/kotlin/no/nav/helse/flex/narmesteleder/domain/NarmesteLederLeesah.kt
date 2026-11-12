@@ -1,11 +1,9 @@
 package no.nav.helse.flex.narmesteleder.domain
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 data class NarmesteLederLeesah(
     val narmesteLederId: UUID,
     val fnr: String,

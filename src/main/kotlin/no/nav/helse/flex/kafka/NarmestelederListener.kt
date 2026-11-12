@@ -15,17 +15,12 @@ class NarmestelederListener(
         containerFactory = "aivenKafkaListenerContainerFactory",
     )
     fun listen(
-        cr: ConsumerRecord<String, String?>,
+        cr: ConsumerRecord<String, String>,
         acknowledgment: Acknowledgment,
     ) {
-        try {
-            cr.value()?.let(oppdateringAvNarmesteLeder::behandleMeldingFraKafka)
-        } catch (_: Exception) {
-            throw IllegalStateException("Nærmeste leder-record feilet")
-        }
+        oppdateringAvNarmesteLeder.behandleMeldingFraKafka(cr.value())
         acknowledgment.acknowledge()
     }
 }
 
 const val NARMESTELEDER_LEESAH_TOPIC = "teamsykmelding.syfo-narmesteleder-leesah"
-const val NARMESTELEDER_ESYFO_LEESAH_TOPIC = "team-esyfo.syfo-narmesteleder-leesah"
