@@ -49,6 +49,7 @@ class KafkaConfig(
     private fun securityConfig() =
         mapOf(
             CommonClientConfigs.SECURITY_PROTOCOL_CONFIG to kafkaSecurityProtocol,
+            SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG to "",
             SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG to JAVA_KEYSTORE,
             SslConfigs.SSL_KEYSTORE_TYPE_CONFIG to PKCS12,
             SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG to kafkaTruststorePath,
