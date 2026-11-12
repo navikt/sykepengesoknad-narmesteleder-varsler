@@ -20,6 +20,7 @@ import org.springframework.kafka.listener.ContainerProperties
 
 private const val JAVA_KEYSTORE = "JKS"
 private const val PKCS12 = "PKCS12"
+const val GAMMEL_KAFKA_GRUPPE = "sykepengesoknad-narmesteleder-varsler"
 
 @Configuration
 class KafkaConfig(
@@ -32,7 +33,14 @@ class KafkaConfig(
     @param:Value("\${KAFKA_SCHEMA_REGISTRY}") private val schemaRegistryUrl: String,
     @param:Value("\${KAFKA_SCHEMA_REGISTRY_USER}") private val kafkaSchemaRegistryUsername: String,
     @param:Value("\${KAFKA_SCHEMA_REGISTRY_PASSWORD}") private val kafkaSchemaRegistryPassword: String,
+    @param:Value("\${narmeste-leder.esyfo-gruppe}") private val esyfoGruppe: String,
 ) {
+    init {
+        require(esyfoGruppe.isNotBlank() && esyfoGruppe != GAMMEL_KAFKA_GRUPPE) {
+            "ESYFO-consumer må bruke en egen, ikke-tom Kafka-gruppe"
+        }
+    }
+
     fun commonConfig() =
         mapOf(
             CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG to kafkaBrokers,
@@ -41,7 +49,6 @@ class KafkaConfig(
     private fun securityConfig() =
         mapOf(
             CommonClientConfigs.SECURITY_PROTOCOL_CONFIG to kafkaSecurityProtocol,
-            // Disables server host name verification.
             SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG to "",
             SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG to JAVA_KEYSTORE,
             SslConfigs.SSL_KEYSTORE_TYPE_CONFIG to PKCS12,
@@ -70,6 +77,26 @@ class KafkaConfig(
         factory.setCommonErrorHandler(kafkaErrorHandler)
         factory.containerProperties.ackMode = ContainerProperties.AckMode.MANUAL_IMMEDIATE
         return factory
+    }
+
+    @Bean
+    fun esyfoKafkaListenerContainerFactory(kafkaErrorHandler: KafkaErrorHandler): ConcurrentKafkaListenerContainerFactory<String, String> {
+        val config =
+            mapOf(
+                ConsumerConfig.GROUP_ID_CONFIG to esyfoGruppe,
+                ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest",
+                ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG to false,
+                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java,
+                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java,
+                ConsumerConfig.MAX_POLL_RECORDS_CONFIG to "500",
+                ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG to "600000",
+            ) + commonConfig()
+        return ConcurrentKafkaListenerContainerFactory<String, String>().apply {
+            setConsumerFactory(DefaultKafkaConsumerFactory(config))
+            setCommonErrorHandler(kafkaErrorHandler)
+            setBatchListener(true)
+            containerProperties.ackMode = ContainerProperties.AckMode.MANUAL_IMMEDIATE
+        }
     }
 
     @Bean

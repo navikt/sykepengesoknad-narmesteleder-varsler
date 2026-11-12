@@ -12,6 +12,10 @@ aiven-kafka:
   auto-offset-reset: earliest
   security-protocol: PLAINTEXT
 
+narmeste-leder:
+  esyfo-auto-startup: false
+  esyfo-gruppe: narmesteleder-varsler-esyfo
+
 KAFKA_TRUSTSTORE_PATH: ""
 KAFKA_CREDSTORE_PASSWORD: ""
 KAFKA_KEYSTORE_PATH: ""

@@ -17,5 +17,6 @@ db_flags:
   pgaudit.log_parameter: "on"
   pgaudit.log_relation: "on"
 env:
+  ESYFO_KAFKA_CONCURRENCY: '3'
   PDL_BASE_URL: https://pdl-api.prod-fss-pub.nais.io
   PDL_API_AAD_CLIENT_ID: prod-fss.pdl.pdl-api

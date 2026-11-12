@@ -19,6 +19,9 @@ aiven-kafka:
   auto-offset-reset: none
   security-protocol: SSL
 
+narmeste-leder:
+  esyfo-gruppe: ${NARMESTE_LEDER_ESYFO_GRUPPE:narmesteleder-varsler-esyfo}
+
 management:
   endpoint.prometheus.enabled: true
   endpoints.web:
