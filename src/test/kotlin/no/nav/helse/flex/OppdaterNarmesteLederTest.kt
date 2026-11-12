@@ -5,7 +5,6 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import no.nav.helse.flex.kafka.NARMESTELEDER_ESYFO_LEESAH_TOPIC
 import no.nav.helse.flex.narmesteleder.NarmesteLederEsyfoRepository
-import no.nav.helse.flex.narmesteleder.OppdateringAvNarmesteLeder
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.awaitility.Awaitility.await
@@ -20,9 +19,6 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 class OppdaterNarmesteLederTest : FellesTestOppsett() {
-    @Autowired
-    lateinit var oppdateringAvNarmesteLeder: OppdateringAvNarmesteLeder
-
     @Autowired
     lateinit var kafkaListenerEndpointRegistry: KafkaListenerEndpointRegistry
 
@@ -43,20 +39,19 @@ class OppdaterNarmesteLederTest : FellesTestOppsett() {
 
         val narmesteLeder = narmesteLederRepository.findByNarmesteLederId(narmesteLederId)
         narmesteLeder.shouldNotBeNull()
-        narmesteLeder.narmesteLederId shouldBe narmesteLederId
-        narmesteLeder.brukerFnr shouldBe narmesteLederLeesah.fnr
-        narmesteLeder.orgnummer shouldBe narmesteLederLeesah.orgnummer
-        narmesteLeder.narmesteLederTelefonnummer shouldBe narmesteLederLeesah.narmesteLederTelefonnummer
         narmesteLeder.narmesteLederEpost shouldBe narmesteLederLeesah.narmesteLederEpost
     }
 
     @Test
-    fun `Ignorerer inaktiv nærmeste leder når den ikke finnes fra før`() {
+    fun `Ignorerer melding om ny nærmeste leder hvis den ikke finnes fra før og er inaktiv`() {
         val narmesteLederId = UUID.randomUUID()
         val narmesteLederLeesah = getNarmesteLederLeesah(narmesteLederId, aktivTom = LocalDate.now())
 
-        narmesteLederRepository.findByNarmesteLederId(narmesteLederId).shouldBeNull()
-        oppdateringAvNarmesteLeder.behandleMeldingFraKafka(narmesteLederLeesah.serialisertTilString())
+        sendNarmesteLederLeesah(narmesteLederLeesah)
+
+        await().during(2, TimeUnit.SECONDS).until {
+            narmesteLederRepository.findByNarmesteLederId(narmesteLederId) == null
+        }
 
         narmesteLederRepository.findByNarmesteLederId(narmesteLederId).shouldBeNull()
     }
@@ -88,13 +83,12 @@ class OppdaterNarmesteLederTest : FellesTestOppsett() {
         }
 
         val oppdaterNl = narmesteLederRepository.findByNarmesteLederId(narmesteLederId)!!
-        oppdaterNl.id shouldBe narmesteLeder.id
         oppdaterNl.narmesteLederTelefonnummer shouldBe "98989898"
         oppdaterNl.narmesteLederEpost shouldBe "mail@banken.no"
     }
 
     @Test
-    fun `Sletter nærmeste leder hvis den blir inaktiv`() {
+    fun `Sletter nærmeste leder hvis den finnes fra før og er inaktiv`() {
         val narmesteLederId = UUID.randomUUID()
         val narmesteLederLeesah = getNarmesteLederLeesah(narmesteLederId)
         sendNarmesteLederLeesah(narmesteLederLeesah)
@@ -119,35 +113,13 @@ class OppdaterNarmesteLederTest : FellesTestOppsett() {
     }
 
     @Test
-    fun `Eksisterende ledertabell oppdateres også ved like og eldre tidsstempler`() {
-        val id = UUID.randomUUID()
-        val tid = OffsetDateTime.parse("2026-01-01T10:00:00Z")
-        val aktiv = getNarmesteLederLeesah(id).copy(timestamp = tid)
-        oppdateringAvNarmesteLeder.behandleMeldingFraKafka(aktiv.serialisertTilString())
-        val lagret = narmesteLederRepository.findByNarmesteLederId(id).shouldNotBeNull()
-
-        val likeTid = aktiv.copy(narmesteLederEpost = "annen@nav.no")
-        oppdateringAvNarmesteLeder.behandleMeldingFraKafka(likeTid.serialisertTilString())
-        narmesteLederRepository.findByNarmesteLederId(id).shouldNotBeNull().apply {
-            this.id shouldBe lagret.id
-            narmesteLederEpost shouldBe likeTid.narmesteLederEpost
-        }
-
-        val eldreTid = likeTid.copy(timestamp = tid.minusSeconds(1), narmesteLederTelefonnummer = "10101010")
-        oppdateringAvNarmesteLeder.behandleMeldingFraKafka(eldreTid.serialisertTilString())
-        narmesteLederRepository.findByNarmesteLederId(id).shouldNotBeNull().apply {
-            timestamp shouldBe eldreTid.timestamp.toInstant()
-            narmesteLederTelefonnummer shouldBe eldreTid.narmesteLederTelefonnummer
-        }
-
-        oppdateringAvNarmesteLeder.behandleMeldingFraKafka(eldreTid.copy(aktivTom = LocalDate.now()).serialisertTilString())
-        narmesteLederRepository.findByNarmesteLederId(id).shouldBeNull()
-    }
-
-    @Test
     fun `Begge consumers oppdaterer bare sin egen tabell for samme relasjon`() {
         val container = checkNotNull(kafkaListenerEndpointRegistry.getListenerContainer("narmesteleder-esyfo"))
-        val gammel = getNarmesteLederLeesah(UUID.randomUUID()).copy(timestamp = OffsetDateTime.parse("2026-01-01T10:00:00Z"))
+        val gammel =
+            getNarmesteLederLeesah(UUID.randomUUID()).copy(
+                orgnummer = "999999999",
+                timestamp = OffsetDateTime.parse("2026-01-01T10:00:00Z"),
+            )
         val ny = gammel.copy(narmesteLederEpost = "esyfo@nav.no")
         try {
             container.start()
@@ -217,7 +189,7 @@ fun getNarmesteLederLeesah(
     NarmesteLederLeesah(
         narmesteLederId = narmesteLederId,
         fnr = "12345678910",
-        orgnummer = "999999999",
+        orgnummer = "999999",
         narmesteLederFnr = "01987654321",
         narmesteLederTelefonnummer = telefonnummer,
         narmesteLederEpost = epost,

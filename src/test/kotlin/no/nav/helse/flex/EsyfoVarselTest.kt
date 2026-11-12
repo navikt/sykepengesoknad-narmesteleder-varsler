@@ -62,7 +62,7 @@ class EsyfoVarselTest : FellesTestOppsett() {
     fun `Separat Kafka-gruppe bygger ny tabell mens begge varseltyper bruker eksisterende tabell`() {
         val container = checkNotNull(listenerRegistry.getListenerContainer("narmesteleder-esyfo"))
         kontrollerConsumerInnstillinger(container)
-        val leder = getNarmesteLederLeesah(UUID.randomUUID())
+        val leder = getNarmesteLederLeesah(UUID.randomUUID()).copy(orgnummer = "999999999")
         val sisteHistoriskeRecord = publiserHistorikkMensConsumerenErAv(leder)
 
         startEsyfoConsumer(container)

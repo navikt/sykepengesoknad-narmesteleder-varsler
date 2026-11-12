@@ -42,6 +42,8 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
 
     private val topic = NARMESTELEDER_ESYFO_LEESAH_TOPIC
 
+    private fun esyfoMelding(id: UUID) = getNarmesteLederLeesah(id).copy(orgnummer = "999999999")
+
     @AfterAll
     fun ryddEsyfo() {
         esyfo.deleteAll()
@@ -72,8 +74,8 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
         val andre = UUID.randomUUID()
         val batch =
             listOf<ConsumerRecord<String, String?>>(
-                ConsumerRecord(topic, 917, 0L, første.toString(), getNarmesteLederLeesah(første).serialisertTilString()),
-                ConsumerRecord(topic, 916, 0L, andre.toString(), getNarmesteLederLeesah(andre).serialisertTilString()),
+                ConsumerRecord(topic, 917, 0L, første.toString(), esyfoMelding(første).serialisertTilString()),
+                ConsumerRecord(topic, 916, 0L, andre.toString(), esyfoMelding(andre).serialisertTilString()),
                 ConsumerRecord<String, String?>(topic, 917, 1L, første.toString(), null),
             )
         var kvitteringer = 0
@@ -96,7 +98,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
         val første = UUID.randomUUID()
         val andre = UUID.randomUUID()
         val gyldig =
-            ConsumerRecord<String, String?>(topic, 918, 0L, første.toString(), getNarmesteLederLeesah(første).serialisertTilString())
+            ConsumerRecord<String, String?>(topic, 918, 0L, første.toString(), esyfoMelding(første).serialisertTilString())
         var kvitteringer = 0
         val feil =
             shouldThrow<IllegalStateException> {
@@ -109,7 +111,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
         checkpoint(919).shouldBeNull()
 
         listener.listen(
-            listOf(ConsumerRecord(topic, 919, 0L, andre.toString(), getNarmesteLederLeesah(andre).serialisertTilString()), gyldig),
+            listOf(ConsumerRecord(topic, 919, 0L, andre.toString(), esyfoMelding(andre).serialisertTilString()), gyldig),
         ) { kvitteringer++ }
         kvitteringer shouldBe 1
         checkpoint(918) shouldBe 0L
@@ -126,7 +128,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
     @Test
     fun `Lagring oppdaterer alle relasjonsfeltene uten å endre radens ID`() {
         val id = UUID.randomUUID()
-        val første = getNarmesteLederLeesah(id)
+        val første = esyfoMelding(id)
         behandle(921, 0, id, første.serialisertTilString()) shouldBe true
         val opprinnelig = esyfo.findByNarmesteLederId(id).shouldNotBeNull()
         val oppdatert =
@@ -163,7 +165,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
     @Test
     fun `Checkpoint følger siste offset ikke timestamp og tombstone forblir slettet ved omlevering`() {
         val id = UUID.randomUUID()
-        val aktiv = getNarmesteLederLeesah(id)
+        val aktiv = esyfoMelding(id)
         val inaktiv = aktiv.copy(aktivTom = LocalDate.now(), timestamp = aktiv.timestamp.minusDays(1))
         behandle(901, 4, id, aktiv.serialisertTilString()) shouldBe true
         behandle(901, 5, id, inaktiv.serialisertTilString()) shouldBe true
@@ -190,7 +192,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
     fun `Ukjente felter og status tåles mens ugyldig key orgnummer og mismatch ikke flytter checkpoint`() {
         val id = UUID.randomUUID()
         val melding =
-            getNarmesteLederLeesah(id).serialisertTilString().dropLast(1) +
+            esyfoMelding(id).serialisertTilString().dropLast(1) +
                 ",\"status\":\"NY_STATUS\",\"ekstra\":1}"
         behandle(902, 1, id, melding) shouldBe true
         esyfo.findByNarmesteLederId(id).shouldNotBeNull()
@@ -206,7 +208,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
     @Test
     fun `Null og ugyldig Kafka-key avvises uten ack eller endring i projeksjon og checkpoint`() {
         val id = UUID.randomUUID()
-        val melding = getNarmesteLederLeesah(id).serialisertTilString()
+        val melding = esyfoMelding(id).serialisertTilString()
         behandle(913, 1, id, melding) shouldBe true
         val lagret = esyfo.findByNarmesteLederId(id).shouldNotBeNull()
         var antallAck = 0
@@ -248,7 +250,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
     @Test
     fun `Kafka-key godtas med store og små heksadesimale bokstaver`() {
         val id = UUID.fromString("12345678-9abc-4def-8abc-123456789abc")
-        val melding = getNarmesteLederLeesah(id).serialisertTilString()
+        val melding = esyfoMelding(id).serialisertTilString()
 
         listOf(id.toString(), id.toString().uppercase()).forEachIndexed { offset, key ->
             oppdatering.behandle(ConsumerRecord(topic, 915, offset.toLong(), key, melding)) shouldBe true
@@ -263,7 +265,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
     @Test
     fun `Allerede behandlet offset ignoreres før nøkkel og payload leses`() {
         val id = UUID.randomUUID()
-        behandle(920, 1, id, getNarmesteLederLeesah(id).serialisertTilString()) shouldBe true
+        behandle(920, 1, id, esyfoMelding(id).serialisertTilString()) shouldBe true
         val lagret = esyfo.findByNarmesteLederId(id).shouldNotBeNull()
 
         oppdatering.behandle(ConsumerRecord(topic, 920, 1L, null, "{ugyldig")) shouldBe false
@@ -285,7 +287,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
     @Test
     fun `Første checkpoint serialiseres ved samtidige skriv og eldre offset kan ikke overskrive`() {
         val id = UUID.randomUUID()
-        val aktiv = getNarmesteLederLeesah(id)
+        val aktiv = esyfoMelding(id)
         val pool = Executors.newFixedThreadPool(2)
         val start = CountDownLatch(1)
         try {
@@ -309,7 +311,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
     @Test
     fun `Feil i SQL ruller tilbake både oppdatering og checkpoint og gir ikke ack`() {
         val id = UUID.randomUUID()
-        val melding = getNarmesteLederLeesah(id).serialisertTilString()
+        val melding = esyfoMelding(id).serialisertTilString()
         behandle(904, 1, id, melding)
         val antallAck = intArrayOf(0)
         val ack =
@@ -339,7 +341,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
     @Test
     fun `Feil etter tombstone ruller tilbake slettingen og checkpoint`() {
         val id = UUID.randomUUID()
-        behandle(906, 1, id, getNarmesteLederLeesah(id).serialisertTilString())
+        behandle(906, 1, id, esyfoMelding(id).serialisertTilString())
         jdbc.execute(
             "ALTER TABLE narmeste_leder_esyfo_offset ADD CONSTRAINT esyfo_test_checkpoint CHECK (last_offset <> 2) NOT VALID",
         )
@@ -359,7 +361,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
     fun `Innlesing endrer ikke eksisterende ledertabell og oppretter ingen varsler eller oppgaver`() {
         listenerRegistry.getListenerContainer("narmesteleder-esyfo")?.isRunning shouldBe false
         val id = UUID.randomUUID()
-        val melding = getNarmesteLederLeesah(id)
+        val melding = esyfoMelding(id)
         behandle(905, 1, id, melding.serialisertTilString())
         behandle(905, 2, id, melding.copy(aktivTom = LocalDate.now()).serialisertTilString())
         behandle(905, 3, id, null)
@@ -373,7 +375,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
     @Test
     fun `Inaktiv relasjon slettes fra eksisterende tabell og beholdes i eSyfo-tabellen`() {
         val id = UUID.randomUUID()
-        val aktiv = getNarmesteLederLeesah(id).copy(orgnummer = "123123123")
+        val aktiv = esyfoMelding(id).copy(orgnummer = "123123123")
         val inaktiv = aktiv.copy(aktivTom = LocalDate.now())
         gammelOppdatering.behandleMeldingFraKafka(aktiv.serialisertTilString())
         narmesteLederRepository.findByNarmesteLederId(id).shouldNotBeNull()
@@ -390,7 +392,7 @@ class NarmesteLederEsyfoTest : FellesTestOppsett() {
 
     @Test
     fun `Flere aktive relasjoner lagres i eSyfo-tabellen uten å endre eksisterende tabell`() {
-        val en = getNarmesteLederLeesah(UUID.randomUUID())
+        val en = esyfoMelding(UUID.randomUUID())
         val to = en.copy(narmesteLederId = UUID.randomUUID())
         behandle(907, 1, en.narmesteLederId, en.serialisertTilString())
         behandle(907, 2, to.narmesteLederId, to.serialisertTilString())

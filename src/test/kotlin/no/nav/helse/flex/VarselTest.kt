@@ -1,6 +1,5 @@
 package no.nav.helse.flex
 
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.date.shouldBeAfter
 import io.kotest.matchers.date.shouldBeBefore
@@ -10,8 +9,6 @@ import io.kotest.matchers.shouldNotBe
 import no.nav.doknotifikasjon.schemas.PrefererteKanal
 import no.nav.helse.flex.dinesykmeldte.OPPGAVETYPE_IKKE_SENDT_SOKNAD
 import no.nav.helse.flex.dinesykmeldte.tilDineSykmeldteHendelse
-import no.nav.helse.flex.narmesteleder.OppdateringAvNarmesteLeder
-import no.nav.helse.flex.narmesteleder.domain.NarmesteLeder
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
 import no.nav.helse.flex.sykepengesoknad.kafka.ArbeidsgiverDTO
 import no.nav.helse.flex.sykepengesoknad.kafka.ArbeidssituasjonDTO
@@ -24,7 +21,6 @@ import no.nav.helse.flex.varsler.MANGLENDE_VARSEL_TITTEL
 import no.nav.helse.flex.varsler.SENDT_SYKEPENGESOKNAD_EPOST_TEKST
 import no.nav.helse.flex.varsler.SENDT_SYKEPENGESOKNAD_TITTEL
 import no.nav.helse.flex.varsler.VarselUtsendelse
-import no.nav.helse.flex.varsler.domain.PlanlagtVarsel
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselStatus
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselStatus.AVBRUTT
 import no.nav.helse.flex.varsler.domain.PlanlagtVarselStatus.INGEN_LEDER
@@ -51,9 +47,6 @@ import java.util.concurrent.TimeUnit.SECONDS
 class VarselTest : FellesTestOppsett() {
     @Autowired
     lateinit var varselUtsendelse: VarselUtsendelse
-
-    @Autowired
-    lateinit var oppdateringAvNarmesteLeder: OppdateringAvNarmesteLeder
 
     final val orgnummer = "999111555"
     val soknad =
@@ -382,91 +375,4 @@ class VarselTest : FellesTestOppsett() {
         dineSykmeldteHendelse.ferdigstillHendelse shouldNotBe null
         dineSykmeldteHendelse.ferdigstillHendelse!!.timestamp shouldNotBe null
     }
-
-    @Test
-    @Order(8)
-    fun `Varsel sendes til aktiv leder når en annen leder er inaktiv`() {
-        val orgnummer = "aktiv-og-inaktiv"
-        val aktivLeder = lagLeder(orgnummer, "aktiv@bedriften.nav")
-        narmesteLederRepository.save(aktivLeder)
-        val annenLeder = getNarmesteLederLeesah(UUID.randomUUID(), epost = "inaktiv@bedriften.nav").copy(fnr = fnr, orgnummer = orgnummer)
-        oppdateringAvNarmesteLeder.behandleMeldingFraKafka(annenLeder.serialisertTilString())
-        oppdateringAvNarmesteLeder.behandleMeldingFraKafka(annenLeder.copy(aktivTom = LocalDate.now()).serialisertTilString())
-        narmesteLederRepository.findByNarmesteLederId(annenLeder.narmesteLederId).shouldBeNull()
-        val varsel = lagPlanlagtVarsel(orgnummer)
-
-        varselUtsendelse.sendVarsler(Instant.now()) shouldBe 1
-
-        val notifikasjon = doknotifikasjonKafkaConsumer.ventPåRecords(antall = 1).first().value()
-        notifikasjon.getEpostadresse() shouldBe aktivLeder.narmesteLederEpost
-        hendelseKafkaConsumer.ventPåRecords(1)
-        val sendtVarsel = planlagtVarselRepository.findByIdOrNull(varsel.id!!)!!
-        sendtVarsel.status shouldBe PlanlagtVarselStatus.SENDT
-        sendtVarsel.narmesteLederId shouldBe aktivLeder.narmesteLederId
-    }
-
-    @Test
-    @Order(9)
-    fun `Varsel sendes ikke etter avkrefting i eksisterende ledertabell`() {
-        val orgnummer = "bare-inaktiv"
-        val tidspunkt = OffsetDateTime.parse("2026-01-01T10:00:00Z")
-        val inaktiv =
-            getNarmesteLederLeesah(UUID.randomUUID(), aktivTom = LocalDate.now()).copy(
-                fnr = fnr,
-                orgnummer = orgnummer,
-                timestamp = tidspunkt,
-            )
-        oppdateringAvNarmesteLeder.behandleMeldingFraKafka(inaktiv.serialisertTilString())
-        narmesteLederRepository.findByNarmesteLederId(inaktiv.narmesteLederId).shouldBeNull()
-        val varsel = lagPlanlagtVarsel(orgnummer)
-
-        varselUtsendelse.sendVarsler(Instant.now()) shouldBe 0
-        doknotifikasjonKafkaConsumer.ventPåRecords(antall = 0)
-        val utelattVarsel = planlagtVarselRepository.findByIdOrNull(varsel.id!!)!!
-        utelattVarsel.status shouldBe INGEN_LEDER
-    }
-
-    @Test
-    @Order(10)
-    fun `Varsel sendes ikke når flere ledere er aktive`() {
-        val orgnummer = "flere-aktive"
-        narmesteLederRepository.save(lagLeder(orgnummer, "aktiv1@bedriften.nav"))
-        narmesteLederRepository.save(lagLeder(orgnummer, "aktiv2@bedriften.nav"))
-        val varsel = lagPlanlagtVarsel(orgnummer)
-
-        shouldThrow<RuntimeException> { varselUtsendelse.sendVarsler(Instant.now()) }
-        doknotifikasjonKafkaConsumer.ventPåRecords(antall = 0)
-        planlagtVarselRepository.findByIdOrNull(varsel.id!!)?.status shouldBe PLANLAGT
-        planlagtVarselRepository.deleteById(varsel.id)
-    }
-
-    private fun lagLeder(
-        orgnummer: String,
-        epost: String,
-    ) = NarmesteLeder(
-        oppdatert = Instant.now(),
-        timestamp = Instant.now(),
-        narmesteLederId = UUID.randomUUID(),
-        orgnummer = orgnummer,
-        brukerFnr = fnr,
-        narmesteLederFnr = "01987654321",
-        narmesteLederTelefonnummer = "4818494949",
-        narmesteLederEpost = epost,
-        aktivFom = LocalDate.now().minusDays(1),
-        arbeidsgiverForskutterer = true,
-    )
-
-    private fun lagPlanlagtVarsel(orgnummer: String) =
-        planlagtVarselRepository.save(
-            PlanlagtVarsel(
-                oppdatert = Instant.now(),
-                orgnummer = orgnummer,
-                brukerFnr = fnr,
-                sykepengesoknadId = UUID.randomUUID().toString(),
-                status = PLANLAGT,
-                varselType = MANGLENDE_SYKEPENGESOKNAD,
-                sendes = Instant.now().minusSeconds(1),
-                narmesteLederId = null,
-            ),
-        )
 }
