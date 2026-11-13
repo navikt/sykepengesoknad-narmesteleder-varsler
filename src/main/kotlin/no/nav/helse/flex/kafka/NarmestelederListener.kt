@@ -13,6 +13,7 @@ class NarmestelederListener(
     @KafkaListener(
         topics = [NARMESTELEDER_LEESAH_TOPIC],
         containerFactory = "aivenKafkaListenerContainerFactory",
+        autoStartup = "\${narmeste-leder.teamsykmelding-listener-aktiv:false}",
     )
     fun listen(
         cr: ConsumerRecord<String, String>,

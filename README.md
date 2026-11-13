@@ -21,7 +21,7 @@ nærmeste leder er angitt oppdateres status til `INGEN_LEDER`.
 
 ## Oppdatering av nærmeste leder
 
-Applikasjonen konsumerer Kafka-topicet `teamsykmelding.syfo-narmesteleder-leesah` og lagrer mottatt informasjon om nærmeste leder
+Applikasjonen konsumerer Kafka-topicet `team-esyfo.syfo-narmesteleder-leesah` og lagrer mottatt informasjon om nærmeste leder
 i databasen. Det gjøres ingen synkrone kall for å oppdatere egne data.
 
 ## Hvordan teste?

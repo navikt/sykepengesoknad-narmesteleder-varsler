@@ -6,7 +6,7 @@ import no.nav.doknotifikasjon.schemas.NotifikasjonMedkontaktInfo
 import no.nav.helse.flex.kafka.DINE_SYKMELDTE_HENDELSER_TOPIC
 import no.nav.helse.flex.kafka.DOKNOTIFIKASJON_TOPIC
 import no.nav.helse.flex.kafka.FLEX_SYKEPENGESOKNAD_TOPIC
-import no.nav.helse.flex.kafka.NARMESTELEDER_LEESAH_TOPIC
+import no.nav.helse.flex.kafka.NARMESTELEDER_ESYFO_LEESAH_TOPIC
 import no.nav.helse.flex.narmesteleder.NarmesteLederRepository
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
 import no.nav.helse.flex.sykepengesoknad.kafka.SykepengesoknadDTO
@@ -114,7 +114,7 @@ abstract class FellesTestOppsett {
         kafkaProducer
             .send(
                 ProducerRecord(
-                    NARMESTELEDER_LEESAH_TOPIC,
+                    NARMESTELEDER_ESYFO_LEESAH_TOPIC,
                     null,
                     nl.narmesteLederId.toString(),
                     nl.serialisertTilString(),
