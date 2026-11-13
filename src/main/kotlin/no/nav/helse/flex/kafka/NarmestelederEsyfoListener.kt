@@ -14,9 +14,6 @@ class NarmestelederEsyfoListener(
     @KafkaListener(
         topics = [NARMESTELEDER_ESYFO_LEESAH_TOPIC],
         containerFactory = "aivenKafkaListenerContainerFactory",
-        properties = ["auto.offset.reset = latest"],
-        containerPostProcessor = NARMESTELEDER_STARTPOSISJON,
-        autoStartup = "\${narmeste-leder.esyfo-listener-aktiv:true}",
     )
     fun listen(
         cr: ConsumerRecord<String, String?>,
