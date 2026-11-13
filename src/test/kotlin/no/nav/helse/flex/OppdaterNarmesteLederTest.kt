@@ -3,9 +3,13 @@ package no.nav.helse.flex
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import no.nav.helse.flex.kafka.NARMESTELEDER_ESYFO_LEESAH_TOPIC
+import no.nav.helse.flex.narmesteleder.OppdateringAvNarmesteLeder
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
+import org.apache.kafka.clients.producer.ProducerRecord
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -13,6 +17,9 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 class OppdaterNarmesteLederTest : FellesTestOppsett() {
+    @Autowired
+    lateinit var oppdateringAvNarmesteLeder: OppdateringAvNarmesteLeder
+
     @Test
     fun `Oppretter ny nærmeste leder hvis den ikke finnes fra før og er aktiv`() {
         val narmesteLederId = UUID.randomUUID()
@@ -98,6 +105,36 @@ class OppdaterNarmesteLederTest : FellesTestOppsett() {
             narmesteLederRepository.findByNarmesteLederId(narmesteLederId) == null
         }
         narmesteLederRepository.findByNarmesteLederId(narmesteLederId).shouldBeNull()
+    }
+
+    @Test
+    fun `Tombstone sletter nærmeste leder`() {
+        val narmesteLederId = UUID.randomUUID()
+        sendNarmesteLederLeesah(getNarmesteLederLeesah(narmesteLederId))
+        await().atMost(10, TimeUnit.SECONDS).until {
+            narmesteLederRepository.findByNarmesteLederId(narmesteLederId) != null
+        }
+
+        kafkaProducer
+            .send(ProducerRecord<String, String>(NARMESTELEDER_ESYFO_LEESAH_TOPIC, null, narmesteLederId.toString(), null))
+            .get()
+
+        await().atMost(10, TimeUnit.SECONDS).until {
+            narmesteLederRepository.findByNarmesteLederId(narmesteLederId) == null
+        }
+    }
+
+    @Test
+    fun `Ignorerer tombstone for ukjent nærmeste leder`() {
+        val kjentNarmesteLederId = UUID.randomUUID()
+        sendNarmesteLederLeesah(getNarmesteLederLeesah(kjentNarmesteLederId))
+        await().atMost(10, TimeUnit.SECONDS).until {
+            narmesteLederRepository.findByNarmesteLederId(kjentNarmesteLederId) != null
+        }
+
+        oppdateringAvNarmesteLeder.behandleTombstone(UUID.randomUUID())
+
+        narmesteLederRepository.findByNarmesteLederId(kjentNarmesteLederId).shouldNotBeNull()
     }
 }
 
