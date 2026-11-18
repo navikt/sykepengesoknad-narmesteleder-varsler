@@ -72,6 +72,12 @@ class VarselUtsendelse(
 
             // Sender e-post til nærmeste leder om at det finnes sykepengesøknader som ikke er sendt inn.
             val narmesteLeder = velgNarmesteLeder(narmesteLedere, identer)
+            if (identer.gjeldende != null && narmesteLeder.brukerFnr != identer.gjeldende) {
+                log.warn(
+                    "Gjeldende ident har ingen nærmeste leder for planlagt varsel ${lestVarsel.id}. Bruker nærmeste " +
+                        "leder ${narmesteLeder.narmesteLederId}, som er registrert på en annen ident.",
+                )
+            }
             lagreOppslagMetrikk(if (narmesteLeder.brukerFnr == lestVarsel.brukerFnr) "eksakt" else "annen_ident")
             sendNotifikasjonTilNarmesteLeder(lestVarsel, narmesteLeder)
 
@@ -227,10 +233,6 @@ class VarselUtsendelse(
             ).increment()
     }
 
-    // 🔴 Rød sone: avgjør hvilke PDL-feil som gir fallback og hvilke som stopper kjøringen.
-    // Feil som gjelder én person (not_found, bad_request) skal aldri stoppe kjøringen. Da ville varselet
-    // blokkert alle senere kjøringer, fordi findFirst300ByStatusAndSendesIsBefore ikke sorterer.
-    // Alle andre feil stopper kjøringen, og varselet står som PLANLAGT til neste kjøring.
     private fun hentIdenterForOppslag(planlagtVarsel: PlanlagtVarsel): FolkeregisterIdenter {
         val brukerFnr = planlagtVarsel.brukerFnr
         val identer =
