@@ -3,6 +3,7 @@ package no.nav.helse.flex.varsler
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tags
 import no.nav.doknotifikasjon.schemas.NotifikasjonMedkontaktInfo
+import no.nav.helse.flex.client.pdl.PdlGraphQlFeil
 import no.nav.helse.flex.dinesykmeldte.DineSykmeldteHendelse
 import no.nav.helse.flex.dinesykmeldte.FerdigstillHendelse
 import no.nav.helse.flex.dinesykmeldte.OPPGAVETYPE_IKKE_SENDT_SOKNAD
@@ -54,7 +55,7 @@ class VarselUtsendelse(
                 )
                 return@forEach
             }
-            val identer = hentIdenterForOppslag(lestVarsel.brukerFnr)
+            val identer = hentIdenterForOppslag(lestVarsel)
             val narmesteLedere =
                 narmesteLederRepository.findByBrukerFnrInAndOrgnummer(identer.alle(), lestVarsel.orgnummer)
 
@@ -144,12 +145,16 @@ class VarselUtsendelse(
     ): NotifikasjonMedkontaktInfo {
         val notifikasjon =
             when (planlagtVarsel.varselType) {
-                PlanlagtVarselType.SENDT_SYKEPENGESOKNAD -> skapSendtSøknadVarsel(planlagtVarsel.id!!, narmesteLeder)
-                PlanlagtVarselType.MANGLENDE_SYKEPENGESOKNAD ->
+                PlanlagtVarselType.SENDT_SYKEPENGESOKNAD -> {
+                    skapSendtSøknadVarsel(planlagtVarsel.id!!, narmesteLeder)
+                }
+
+                PlanlagtVarselType.MANGLENDE_SYKEPENGESOKNAD -> {
                     skapManglendeSøknadVarsel(
                         planlagtVarsel.id!!,
                         narmesteLeder,
                     )
+                }
             }
         return notifikasjon
     }
@@ -222,19 +227,47 @@ class VarselUtsendelse(
             ).increment()
     }
 
-    // 🔴 Rød sone: hvilke PDL-feil som gir fallback og hvilke som stopper kjøringen. Skrives av utvikleren.
-    // - Kall identService.hentFolkeregisterIdenterMedHistorikkForFnr(brukerFnr).
-    // - PdlGraphQlFeil der alle koder er "not_found" eller "bad_request" (feil som gjelder én person):
-    //   tellPdlFeil("funksjonell") og returner FolkeregisterIdenter.kunOriginal(brukerFnr).
-    //   En slik feil skal aldri stoppe kjøringen, ellers blokkerer varselet alle senere kjøringer.
-    // - Alle andre PdlGraphQlFeil (unauthorized, forbidden, server_error, ukjent, tom liste) og PdlTekniskFeil/
-    //   andre exceptions: tellPdlFeil("teknisk") og kast videre. Kjøringen stopper, varselet står som PLANLAGT.
-    // - Svar der originalIdentFunnet == false: tellPdlFeil("inkonsistent") og returner kunOriginal(brukerFnr).
-    // - Logg aldri identer eller exception-meldinger med identer. Varsel-id er nok.
-    private fun hentIdenterForOppslag(brukerFnr: String): FolkeregisterIdenter = TODO("🔴 Rød sone: implementeres av utvikleren")
+    // 🔴 Rød sone: avgjør hvilke PDL-feil som gir fallback og hvilke som stopper kjøringen.
+    // Feil som gjelder én person (not_found, bad_request) skal aldri stoppe kjøringen. Da ville varselet
+    // blokkert alle senere kjøringer, fordi findFirst300ByStatusAndSendesIsBefore ikke sorterer.
+    // Alle andre feil stopper kjøringen, og varselet står som PLANLAGT til neste kjøring.
+    private fun hentIdenterForOppslag(planlagtVarsel: PlanlagtVarsel): FolkeregisterIdenter {
+        val brukerFnr = planlagtVarsel.brukerFnr
+        val identer =
+            try {
+                identService.hentFolkeregisterIdenterMedHistorikkForFnr(brukerFnr)
+            } catch (e: PdlGraphQlFeil) {
+                if (e.koder.isNotEmpty() && e.koder.all { it in PDL_FEILKODER_FOR_EN_PERSON }) {
+                    log.warn(
+                        "PDL fant ikke identer for planlagt varsel ${planlagtVarsel.id}. Koder: ${e.koder}. " +
+                            "Slår opp nærmeste leder med fnr fra varselet.",
+                    )
+                    tellPdlFeil("funksjonell")
+                    return FolkeregisterIdenter.kunOriginal(brukerFnr)
+                }
+                tellPdlFeil("teknisk")
+                throw e
+            } catch (e: Exception) {
+                tellPdlFeil("teknisk")
+                throw e
+            }
+
+        if (!identer.originalIdentFunnet) {
+            log.warn(
+                "Svaret fra PDL inneholdt ikke fnr-et fra planlagt varsel ${planlagtVarsel.id}. " +
+                    "Slår opp nærmeste leder med fnr fra varselet.",
+            )
+            tellPdlFeil("inkonsistent")
+            return FolkeregisterIdenter.kunOriginal(brukerFnr)
+        }
+        return identer
+    }
 
     private fun lagreOppslagMetrikk(treff: String) = registry.counter("narmeste_leder_oppslag", Tags.of("treff", treff)).increment()
 
-    @Suppress("unused")
     private fun tellPdlFeil(type: String) = registry.counter("pdl_identer_feil", Tags.of("type", type)).increment()
+
+    private companion object {
+        val PDL_FEILKODER_FOR_EN_PERSON = setOf("not_found", "bad_request")
+    }
 }
