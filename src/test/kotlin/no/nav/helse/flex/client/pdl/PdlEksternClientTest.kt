@@ -63,7 +63,7 @@ class PdlEksternClientTest : FellesTestOppsett() {
         path shouldBe "/graphql"
         method shouldBe "POST"
         tema shouldBe "SYK"
-        behandlingsnummer shouldBe "B229"
+        behandlingsnummer shouldBe "B139"
         authorization.shouldNotBeNull().shouldStartWith("Bearer ey")
         body.shouldNotBeNull().also {
             it shouldContain "historikk: true"

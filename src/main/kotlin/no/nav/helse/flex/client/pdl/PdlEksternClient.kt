@@ -19,7 +19,7 @@ private const val TEMA_SYK = "SYK"
 private const val BEHANDLINGSNUMMER_HEADER = "Behandlingsnummer"
 
 // Se behandlinger: https://behandlingskatalog.ansatt.nav.no/process/purpose/SYKEPENGER
-private const val BEHANDLINGSNUMMER = "B229"
+private const val BEHANDLINGSNUMMER = "B139"
 
 @Component
 class PdlEksternClient(
