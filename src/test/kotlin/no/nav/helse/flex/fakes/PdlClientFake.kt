@@ -1,6 +1,6 @@
 package no.nav.helse.flex.fakes
 
-import no.nav.helse.flex.client.pdl.FOLKEREGISTERIDENT
+import no.nav.helse.flex.client.pdl.IdentGruppe.FOLKEREGISTERIDENT
 import no.nav.helse.flex.client.pdl.PdlClient
 import no.nav.helse.flex.client.pdl.PdlIdent
 

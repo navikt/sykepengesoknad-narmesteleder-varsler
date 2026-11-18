@@ -8,6 +8,9 @@ import io.kotest.matchers.string.shouldStartWith
 import mockwebserver3.Dispatcher
 import mockwebserver3.MockResponse
 import no.nav.helse.flex.FellesTestOppsett
+import no.nav.helse.flex.client.pdl.IdentGruppe.AKTORID
+import no.nav.helse.flex.client.pdl.IdentGruppe.FOLKEREGISTERIDENT
+import no.nav.helse.flex.client.pdl.IdentGruppe.UKJENT
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -69,6 +72,24 @@ class PdlEksternClientTest : FellesTestOppsett() {
             it shouldContain "historikk: true"
             it shouldContain "\"ident\":\"$ident\""
         }
+    }
+
+    @Test
+    fun `Tåler ukjent identgruppe fra PDL`() {
+        val responseBody =
+            """
+            {"data":{"hentIdenter":{"identer":[
+              {"ident":"12345678901","gruppe":"FOLKEREGISTERIDENT","historisk":false},
+              {"ident":"ny-ident","gruppe":"NY_GRUPPE","historisk":false}
+            ]}}}
+            """.trimIndent()
+        pdlMockWebServer.dispatcher = dispatcherWith(responseBody)
+
+        pdlEksternClient.hentIdenterMedHistorikk("12345678901") shouldBe
+            listOf(
+                PdlIdent(FOLKEREGISTERIDENT, "12345678901", historisk = false),
+                PdlIdent(UKJENT, "ny-ident", historisk = false),
+            )
     }
 
     @Test

@@ -3,7 +3,7 @@ package no.nav.helse.flex
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
-import no.nav.helse.flex.client.pdl.FOLKEREGISTERIDENT
+import no.nav.helse.flex.client.pdl.IdentGruppe.FOLKEREGISTERIDENT
 import no.nav.helse.flex.client.pdl.PdlGraphQlFeil
 import no.nav.helse.flex.client.pdl.PdlIdent
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLeder

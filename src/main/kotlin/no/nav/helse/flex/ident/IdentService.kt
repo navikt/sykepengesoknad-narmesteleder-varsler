@@ -1,6 +1,6 @@
 package no.nav.helse.flex.ident
 
-import no.nav.helse.flex.client.pdl.FOLKEREGISTERIDENT
+import no.nav.helse.flex.client.pdl.IdentGruppe.FOLKEREGISTERIDENT
 import no.nav.helse.flex.client.pdl.PdlClient
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component

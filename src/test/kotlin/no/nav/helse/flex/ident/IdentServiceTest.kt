@@ -4,9 +4,9 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import no.nav.helse.flex.FellesTestOppsett
-import no.nav.helse.flex.client.pdl.AKTORID
-import no.nav.helse.flex.client.pdl.FOLKEREGISTERIDENT
-import no.nav.helse.flex.client.pdl.NPID
+import no.nav.helse.flex.client.pdl.IdentGruppe.AKTORID
+import no.nav.helse.flex.client.pdl.IdentGruppe.FOLKEREGISTERIDENT
+import no.nav.helse.flex.client.pdl.IdentGruppe.NPID
 import no.nav.helse.flex.client.pdl.PdlGraphQlFeil
 import no.nav.helse.flex.client.pdl.PdlIdent
 import org.awaitility.Awaitility.await
