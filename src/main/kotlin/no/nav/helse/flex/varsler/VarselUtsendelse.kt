@@ -66,7 +66,6 @@ class VarselUtsendelse(
                 )
                 planlagtVarselRepository.save(lestVarsel.copy(oppdatert = Instant.now(), status = INGEN_LEDER))
                 lagreMetrikk(INGEN_LEDER, lestVarsel.varselType)
-                lagreOppslagMetrikk("ingen")
                 return@forEach
             }
 
@@ -78,7 +77,6 @@ class VarselUtsendelse(
                         "leder ${narmesteLeder.narmesteLederId}, som er registrert på en annen ident.",
                 )
             }
-            lagreOppslagMetrikk(if (narmesteLeder.brukerFnr == lestVarsel.brukerFnr) "eksakt" else "annen_ident")
             sendNotifikasjonTilNarmesteLeder(lestVarsel, narmesteLeder)
 
             // Oppretter oppgave i Dine Sykmeldte som gjør at ikke sendte søknader kan identifiseres.
@@ -239,19 +237,14 @@ class VarselUtsendelse(
             try {
                 identService.hentFolkeregisterIdenterMedHistorikkForFnr(brukerFnr)
             } catch (e: PdlGraphQlFeil) {
-                if (e.koder.isNotEmpty() && e.koder.all { it in PDL_FEILKODER_FOR_EN_PERSON }) {
-                    log.warn(
-                        "PDL fant ikke identer for planlagt varsel ${planlagtVarsel.id}. Koder: ${e.koder}. " +
-                            "Slår opp nærmeste leder med fnr fra varselet.",
-                    )
-                    tellPdlFeil("funksjonell")
-                    return FolkeregisterIdenter.kunOriginal(brukerFnr)
+                if (e.koder.isEmpty() || !e.koder.all { it in PDL_FEILKODER_FOR_EN_PERSON }) {
+                    throw e
                 }
-                tellPdlFeil("teknisk")
-                throw e
-            } catch (e: Exception) {
-                tellPdlFeil("teknisk")
-                throw e
+                log.warn(
+                    "PDL fant ikke identer for planlagt varsel ${planlagtVarsel.id}. Koder: ${e.koder}. " +
+                        "Slår opp nærmeste leder med fnr fra varselet.",
+                )
+                return FolkeregisterIdenter.kunOriginal(brukerFnr)
             }
 
         if (!identer.originalIdentFunnet) {
@@ -259,15 +252,10 @@ class VarselUtsendelse(
                 "Svaret fra PDL inneholdt ikke fnr-et fra planlagt varsel ${planlagtVarsel.id}. " +
                     "Slår opp nærmeste leder med fnr fra varselet.",
             )
-            tellPdlFeil("inkonsistent")
             return FolkeregisterIdenter.kunOriginal(brukerFnr)
         }
         return identer
     }
-
-    private fun lagreOppslagMetrikk(treff: String) = registry.counter("narmeste_leder_oppslag", Tags.of("treff", treff)).increment()
-
-    private fun tellPdlFeil(type: String) = registry.counter("pdl_identer_feil", Tags.of("type", type)).increment()
 
     private companion object {
         val PDL_FEILKODER_FOR_EN_PERSON = setOf("not_found", "bad_request")
