@@ -21,6 +21,9 @@ aiven-kafka:
 
 management:
   endpoint.prometheus.enabled: true
+  health:
+    redis:
+      enabled: false # Valkey gir ikke tilgang til "info", som Redis-helsesjekken bruker
   endpoints.web:
     base-path: /internal
     exposure.include: health,prometheus
@@ -39,5 +42,4 @@ no.nav.security.jwt:
           client-id: ${AZURE_APP_CLIENT_ID}
           client-secret: ${AZURE_APP_CLIENT_SECRET}
           client-auth-method: client_secret_basic
-
 

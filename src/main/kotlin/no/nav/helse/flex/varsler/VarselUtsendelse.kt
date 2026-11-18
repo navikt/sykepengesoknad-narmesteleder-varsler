@@ -7,6 +7,8 @@ import no.nav.helse.flex.dinesykmeldte.DineSykmeldteHendelse
 import no.nav.helse.flex.dinesykmeldte.FerdigstillHendelse
 import no.nav.helse.flex.dinesykmeldte.OPPGAVETYPE_IKKE_SENDT_SOKNAD
 import no.nav.helse.flex.dinesykmeldte.OpprettHendelse
+import no.nav.helse.flex.ident.FolkeregisterIdenter
+import no.nav.helse.flex.ident.IdentService
 import no.nav.helse.flex.kafka.DINE_SYKMELDTE_HENDELSER_TOPIC
 import no.nav.helse.flex.kafka.DOKNOTIFIKASJON_TOPIC
 import no.nav.helse.flex.logger
@@ -30,6 +32,7 @@ import java.time.OffsetDateTime
 class VarselUtsendelse(
     private val planlagtVarselRepository: PlanlagtVarselRepository,
     private val narmesteLederRepository: NarmesteLederRepository,
+    private val identService: IdentService,
     private val doknotifikasjonKafkaProducer: Producer<String, NotifikasjonMedkontaktInfo>,
     private val dineSykmeldteHendelserProducer: Producer<String, String>,
     private val registry: MeterRegistry,
@@ -51,8 +54,9 @@ class VarselUtsendelse(
                 )
                 return@forEach
             }
+            val identer = hentIdenterForOppslag(lestVarsel.brukerFnr)
             val narmesteLedere =
-                narmesteLederRepository.findByBrukerFnrAndOrgnummer(lestVarsel.brukerFnr, lestVarsel.orgnummer)
+                narmesteLederRepository.findByBrukerFnrInAndOrgnummer(identer.alle(), lestVarsel.orgnummer)
 
             if (narmesteLedere.isEmpty()) {
                 log.info(
@@ -61,17 +65,13 @@ class VarselUtsendelse(
                 )
                 planlagtVarselRepository.save(lestVarsel.copy(oppdatert = Instant.now(), status = INGEN_LEDER))
                 lagreMetrikk(INGEN_LEDER, lestVarsel.varselType)
+                lagreOppslagMetrikk("ingen")
                 return@forEach
-            }
-            if (narmesteLedere.size != 1) {
-                throw RuntimeException(
-                    "Fant flere nærmeste ledere for planlagt varsel ${lestVarsel.id}:" +
-                        "${narmesteLedere.map { it.narmesteLederId }}.",
-                )
             }
 
             // Sender e-post til nærmeste leder om at det finnes sykepengesøknader som ikke er sendt inn.
-            val narmesteLeder = narmesteLedere.first()
+            val narmesteLeder = velgNarmesteLeder(narmesteLedere, identer)
+            lagreOppslagMetrikk(if (narmesteLeder.brukerFnr == lestVarsel.brukerFnr) "eksakt" else "annen_ident")
             sendNotifikasjonTilNarmesteLeder(lestVarsel, narmesteLeder)
 
             // Oppretter oppgave i Dine Sykmeldte som gjør at ikke sendte søknader kan identifiseres.
@@ -221,4 +221,20 @@ class VarselUtsendelse(
                 ),
             ).increment()
     }
+
+    // 🔴 Rød sone: hvilke PDL-feil som gir fallback og hvilke som stopper kjøringen. Skrives av utvikleren.
+    // - Kall identService.hentFolkeregisterIdenterMedHistorikkForFnr(brukerFnr).
+    // - PdlGraphQlFeil der alle koder er "not_found" eller "bad_request" (feil som gjelder én person):
+    //   tellPdlFeil("funksjonell") og returner FolkeregisterIdenter.kunOriginal(brukerFnr).
+    //   En slik feil skal aldri stoppe kjøringen, ellers blokkerer varselet alle senere kjøringer.
+    // - Alle andre PdlGraphQlFeil (unauthorized, forbidden, server_error, ukjent, tom liste) og PdlTekniskFeil/
+    //   andre exceptions: tellPdlFeil("teknisk") og kast videre. Kjøringen stopper, varselet står som PLANLAGT.
+    // - Svar der originalIdentFunnet == false: tellPdlFeil("inkonsistent") og returner kunOriginal(brukerFnr).
+    // - Logg aldri identer eller exception-meldinger med identer. Varsel-id er nok.
+    private fun hentIdenterForOppslag(brukerFnr: String): FolkeregisterIdenter = TODO("🔴 Rød sone: implementeres av utvikleren")
+
+    private fun lagreOppslagMetrikk(treff: String) = registry.counter("narmeste_leder_oppslag", Tags.of("treff", treff)).increment()
+
+    @Suppress("unused")
+    private fun tellPdlFeil(type: String) = registry.counter("pdl_identer_feil", Tags.of("type", type)).increment()
 }

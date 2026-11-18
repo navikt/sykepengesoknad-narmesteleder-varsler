@@ -9,8 +9,8 @@ import java.util.*
 interface NarmesteLederRepository : CrudRepository<NarmesteLeder, String> {
     fun findByNarmesteLederId(narmesteLederId: UUID): NarmesteLeder?
 
-    fun findByBrukerFnrAndOrgnummer(
-        brukerFnr: String,
+    fun findByBrukerFnrInAndOrgnummer(
+        brukerFnr: Collection<String>,
         orgnummer: String,
     ): List<NarmesteLeder>
 }

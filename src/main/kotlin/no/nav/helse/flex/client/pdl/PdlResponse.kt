@@ -2,9 +2,10 @@ package no.nav.helse.flex.client.pdl
 
 const val AKTORID = "AKTORID"
 const val FOLKEREGISTERIDENT = "FOLKEREGISTERIDENT"
+const val NPID = "NPID"
 
 data class HentIdenterResponse(
-    val data: HentIdenterResponseData,
+    val data: HentIdenterResponseData?,
     val errors: List<ResponseError>?,
 )
 
@@ -26,6 +27,7 @@ data class HentIdenter(
 data class PdlIdent(
     val gruppe: String,
     val ident: String,
+    val historisk: Boolean = false,
 )
 
 data class ErrorLocation(

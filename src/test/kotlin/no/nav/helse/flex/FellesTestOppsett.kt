@@ -1,8 +1,10 @@
 package no.nav.helse.flex
 
 import io.kotest.matchers.collections.shouldBeEmpty
-import jakarta.annotation.PostConstruct
+import mockwebserver3.MockWebServer
 import no.nav.doknotifikasjon.schemas.NotifikasjonMedkontaktInfo
+import no.nav.helse.flex.fakes.FakesTestConfig
+import no.nav.helse.flex.fakes.PdlClientFake
 import no.nav.helse.flex.kafka.DINE_SYKMELDTE_HENDELSER_TOPIC
 import no.nav.helse.flex.kafka.DOKNOTIFIKASJON_TOPIC
 import no.nav.helse.flex.kafka.FLEX_SYKEPENGESOKNAD_TOPIC
@@ -19,11 +21,13 @@ import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.web.client.MockRestServiceServer
-import org.springframework.web.client.RestTemplate
+import org.springframework.cache.CacheManager
+import org.springframework.context.annotation.Import
+import org.testcontainers.containers.GenericContainer
 import org.testcontainers.kafka.KafkaContainer
 import org.testcontainers.postgresql.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
@@ -32,9 +36,12 @@ import java.time.temporal.ChronoUnit
 
 private class PostgreSQLContainer18 : PostgreSQLContainer("postgres:18-alpine")
 
+private class ValkeyContainer : GenericContainer<ValkeyContainer>(DockerImageName.parse("valkey/valkey:8.1-alpine"))
+
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest
 @EnableMockOAuth2Server
+@Import(FakesTestConfig::class)
 abstract class FellesTestOppsett {
     @Autowired
     lateinit var kafkaProducer: Producer<String, String>
@@ -45,10 +52,11 @@ abstract class FellesTestOppsett {
     @Autowired
     lateinit var hendelseKafkaConsumer: Consumer<String, String>
 
-    var pdlMockServer: MockRestServiceServer? = null
+    @Autowired
+    lateinit var pdlClientFake: PdlClientFake
 
     @Autowired
-    lateinit var pdlRestTemplate: RestTemplate
+    lateinit var cacheManager: CacheManager
 
     @Autowired
     lateinit var narmesteLederRepository: NarmesteLederRepository
@@ -60,6 +68,8 @@ abstract class FellesTestOppsett {
     final val aktorId = "aktorid123"
 
     companion object {
+        val pdlMockWebServer = MockWebServer()
+
         init {
             PostgreSQLContainer18().also {
                 it.start()
@@ -72,14 +82,23 @@ abstract class FellesTestOppsett {
                 it.start()
                 System.setProperty("KAFKA_BROKERS", it.bootstrapServers)
             }
+
+            pdlMockWebServer.start()
+            System.setProperty("PDL_BASE_URL", "http://${pdlMockWebServer.hostName}:${pdlMockWebServer.port}")
+
+            ValkeyContainer().withExposedPorts(6379).also {
+                it.start()
+                System.setProperty("VALKEY_URI_IDENTER", "redis://${it.host}:${it.getMappedPort(6379)}")
+                System.setProperty("VALKEY_USERNAME_IDENTER", "default")
+                System.setProperty("VALKEY_PASSWORD_IDENTER", "")
+            }
         }
     }
 
-    @PostConstruct
-    fun setupRestServiceServers() {
-        if (pdlMockServer == null) {
-            pdlMockServer = MockRestServiceServer.createServer(pdlRestTemplate)
-        }
+    @BeforeEach
+    fun nullstillPdlOgIdentCache() {
+        pdlClientFake.reset()
+        cacheManager.getCache("flex-folkeregister-identer-med-historikk")?.clear()
     }
 
     @AfterAll
