@@ -35,7 +35,7 @@ class PdlEksternClient(
         }
         """.trimIndent()
 
-    @Retryable(excludes = [PdlGraphQlFeil::class])
+    @Retryable(excludes = [PdlGraphQlFeil::class], delayString = "\${pdl.retry.delay:1s}")
     override fun hentIdenterMedHistorikk(ident: String): List<PdlIdent> {
         val request =
             GraphQLRequest(

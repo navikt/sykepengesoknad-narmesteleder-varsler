@@ -36,3 +36,4 @@ no.nav.security.jwt:
 
 
 elector.path: dont_look_for_leader
+pdl.retry.delay: 10ms
