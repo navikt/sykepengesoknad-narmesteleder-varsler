@@ -6,6 +6,7 @@ import org.springframework.kafka.annotation.EnableKafka
 import org.springframework.resilience.annotation.EnableResilientMethods
 import org.springframework.scheduling.annotation.EnableScheduling
 import tools.jackson.databind.ObjectMapper
+import tools.jackson.databind.cfg.EnumFeature
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.kotlinModule
 
@@ -23,6 +24,7 @@ val objectMapper: ObjectMapper =
     JsonMapper
         .builder()
         .addModule(kotlinModule())
+        .enable(EnumFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE)
         .build()
 
 fun Any.serialisertTilString(): String = objectMapper.writeValueAsString(this)
