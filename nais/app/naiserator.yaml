@@ -71,7 +71,7 @@ spec:
       enabled: true
       tenant: {{azureTenant}}
   valkey:
-    - instance: identer
+    - instance: narmesteleder-identer
       access: readwrite
   leaderElection: true
   env:
