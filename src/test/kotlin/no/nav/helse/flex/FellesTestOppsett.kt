@@ -9,6 +9,8 @@ import no.nav.helse.flex.kafka.DINE_SYKMELDTE_HENDELSER_TOPIC
 import no.nav.helse.flex.kafka.DOKNOTIFIKASJON_TOPIC
 import no.nav.helse.flex.kafka.FLEX_SYKEPENGESOKNAD_TOPIC
 import no.nav.helse.flex.kafka.NARMESTELEDER_ESYFO_LEESAH_TOPIC
+import no.nav.helse.flex.mockdispatcher.FellesQueueDispatcher
+import no.nav.helse.flex.mockdispatcher.PdlMockDispatcher
 import no.nav.helse.flex.narmesteleder.NarmesteLederRepository
 import no.nav.helse.flex.narmesteleder.domain.NarmesteLederLeesah
 import no.nav.helse.flex.sykepengesoknad.kafka.SykepengesoknadDTO
@@ -20,6 +22,7 @@ import org.apache.kafka.clients.consumer.Consumer
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
@@ -83,6 +86,7 @@ abstract class FellesTestOppsett {
                 System.setProperty("KAFKA_BROKERS", it.bootstrapServers)
             }
 
+            pdlMockWebServer.dispatcher = PdlMockDispatcher
             pdlMockWebServer.start()
             System.setProperty("PDL_BASE_URL", "http://${pdlMockWebServer.hostName}:${pdlMockWebServer.port}")
 
@@ -99,6 +103,15 @@ abstract class FellesTestOppsett {
     fun nullstillPdlOgIdentCache() {
         pdlClientFake.reset()
         cacheManager.getCache("flex-folkeregister-identer-med-historikk")?.clear()
+    }
+
+    @AfterEach
+    fun `Alle svar som er lagt i kø i mock-dispatcherne er brukt`() {
+        FellesQueueDispatcher.alle().forEach { dispatcher ->
+            val harResponserIgjen = dispatcher.harResponserIgjen()
+            dispatcher.clear()
+            check(!harResponserIgjen) { "Det er ubrukte svar igjen i ${dispatcher::class.simpleName}" }
+        }
     }
 
     @AfterAll
