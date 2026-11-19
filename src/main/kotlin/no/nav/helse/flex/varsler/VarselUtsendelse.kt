@@ -58,6 +58,13 @@ class VarselUtsendelse(
             val identer = hentIdenterForOppslag(lestVarsel)
             val narmesteLedere =
                 narmesteLederRepository.findByBrukerFnrInAndOrgnummer(identer.alle(), lestVarsel.orgnummer)
+            log.info(
+                "[dev-identer] Planlagt varsel ${lestVarsel.id}: antall identer=${identer.alle().size}, " +
+                    "gjeldende ident funnet=${identer.gjeldende != null}, " +
+                    "varselets fnr er gjeldende=${identer.gjeldende == lestVarsel.brukerFnr}, " +
+                    "fnr funnet i PDL=${identer.originalIdentFunnet}, " +
+                    "ledere=${narmesteLedere.map { "${it.narmesteLederId} (${registrertPa(it, lestVarsel, identer)})" }}",
+            )
 
             if (narmesteLedere.isEmpty()) {
                 log.info(
@@ -71,6 +78,10 @@ class VarselUtsendelse(
 
             // Sender e-post til nærmeste leder om at det finnes sykepengesøknader som ikke er sendt inn.
             val narmesteLeder = velgNarmesteLeder(narmesteLedere, identer)
+            log.info(
+                "[dev-identer] Valgte nærmeste leder ${narmesteLeder.narmesteLederId} " +
+                    "(${registrertPa(narmesteLeder, lestVarsel, identer)}) for planlagt varsel ${lestVarsel.id}.",
+            )
             if (identer.gjeldende != null && narmesteLeder.brukerFnr != identer.gjeldende) {
                 log.warn(
                     "Gjeldende ident har ingen nærmeste leder for planlagt varsel ${lestVarsel.id}. Bruker nærmeste " +
@@ -255,6 +266,16 @@ class VarselUtsendelse(
             return FolkeregisterIdenter.kunOriginal(brukerFnr)
         }
         return identer
+    }
+
+    private fun registrertPa(
+        narmesteLeder: NarmesteLeder,
+        planlagtVarsel: PlanlagtVarsel,
+        identer: FolkeregisterIdenter,
+    ): String {
+        val varseletsFnr = if (narmesteLeder.brukerFnr == planlagtVarsel.brukerFnr) "varselets fnr" else "annen ident"
+        val gjeldende = if (narmesteLeder.brukerFnr == identer.gjeldende) "gjeldende" else "ikke gjeldende"
+        return "$varseletsFnr, $gjeldende"
     }
 
     private companion object {
