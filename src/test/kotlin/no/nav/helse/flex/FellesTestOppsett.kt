@@ -96,9 +96,9 @@ abstract class FellesTestOppsett {
 
             ValkeyContainer().withExposedPorts(6379).also {
                 it.start()
-                System.setProperty("VALKEY_URI_IDENTER", "redis://${it.host}:${it.getMappedPort(6379)}")
-                System.setProperty("VALKEY_USERNAME_IDENTER", "default")
-                System.setProperty("VALKEY_PASSWORD_IDENTER", "")
+                System.setProperty("VALKEY_URI_NARMESTELEDER_IDENTER", "redis://${it.host}:${it.getMappedPort(6379)}")
+                System.setProperty("VALKEY_USERNAME_NARMESTELEDER_IDENTER", "default")
+                System.setProperty("VALKEY_PASSWORD_NARMESTELEDER_IDENTER", "")
             }
         }
     }

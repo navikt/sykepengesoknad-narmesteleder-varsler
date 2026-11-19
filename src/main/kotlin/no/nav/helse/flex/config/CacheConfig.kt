@@ -18,9 +18,9 @@ import java.time.Duration
 @Configuration
 @EnableCaching
 class CacheConfig(
-    @param:Value("\${VALKEY_URI_IDENTER}") val valkeyUriString: String,
-    @param:Value("\${VALKEY_USERNAME_IDENTER}") val valkeyUsername: String,
-    @param:Value("\${VALKEY_PASSWORD_IDENTER}") val valkeyPassword: String,
+    @param:Value("\${VALKEY_URI_NARMESTELEDER_IDENTER}") val valkeyUriString: String,
+    @param:Value("\${VALKEY_USERNAME_NARMESTELEDER_IDENTER}") val valkeyUsername: String,
+    @param:Value("\${VALKEY_PASSWORD_NARMESTELEDER_IDENTER}") val valkeyPassword: String,
 ) {
     @Bean
     fun redisConnectionFactory(): LettuceConnectionFactory {
