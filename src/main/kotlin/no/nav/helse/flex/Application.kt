@@ -2,6 +2,7 @@ package no.nav.helse.flex
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
+import org.springframework.cache.annotation.EnableCaching
 import org.springframework.kafka.annotation.EnableKafka
 import org.springframework.resilience.annotation.EnableResilientMethods
 import org.springframework.scheduling.annotation.EnableScheduling
@@ -11,6 +12,7 @@ import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.kotlinModule
 
 @SpringBootApplication
+@EnableCaching
 @EnableKafka
 @EnableResilientMethods
 @EnableScheduling
