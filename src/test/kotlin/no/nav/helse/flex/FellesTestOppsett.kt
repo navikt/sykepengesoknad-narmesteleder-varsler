@@ -3,6 +3,7 @@ package no.nav.helse.flex
 import io.kotest.matchers.collections.shouldBeEmpty
 import mockwebserver3.MockWebServer
 import no.nav.doknotifikasjon.schemas.NotifikasjonMedkontaktInfo
+import no.nav.helse.flex.fakes.Fake
 import no.nav.helse.flex.fakes.FakesTestConfig
 import no.nav.helse.flex.fakes.PdlClientFake
 import no.nav.helse.flex.kafka.DINE_SYKMELDTE_HENDELSER_TOPIC
@@ -59,6 +60,9 @@ abstract class FellesTestOppsett {
     lateinit var pdlClientFake: PdlClientFake
 
     @Autowired
+    lateinit var fakes: List<Fake>
+
+    @Autowired
     lateinit var cacheManager: CacheManager
 
     @Autowired
@@ -100,9 +104,9 @@ abstract class FellesTestOppsett {
     }
 
     @BeforeEach
-    fun nullstillPdlOgIdentCache() {
-        pdlClientFake.reset()
-        cacheManager.getCache("flex-folkeregister-identer-med-historikk")?.clear()
+    fun `Nullstill fakes og cacher`() {
+        fakes.forEach { it.reset() }
+        cacheManager.cacheNames.forEach { cacheManager.getCache(it)?.clear() }
     }
 
     @AfterEach

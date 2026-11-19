@@ -4,7 +4,9 @@ import no.nav.helse.flex.client.pdl.IdentGruppe.FOLKEREGISTERIDENT
 import no.nav.helse.flex.client.pdl.PdlClient
 import no.nav.helse.flex.client.pdl.PdlIdent
 
-class PdlClientFake : PdlClient {
+class PdlClientFake :
+    PdlClient,
+    Fake {
     private val identer = mutableMapOf<String, List<PdlIdent>>()
     private val feil = mutableMapOf<String, Exception>()
     private val registrerteKall = mutableListOf<String>()
@@ -28,7 +30,7 @@ class PdlClientFake : PdlClient {
         this.feil[ident] = feil
     }
 
-    fun reset() {
+    override fun reset() {
         identer.clear()
         feil.clear()
         registrerteKall.clear()
