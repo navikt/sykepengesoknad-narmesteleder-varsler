@@ -1,10 +1,19 @@
 package no.nav.helse.flex.client.pdl
 
-const val AKTORID = "AKTORID"
-const val FOLKEREGISTERIDENT = "FOLKEREGISTERIDENT"
+import com.fasterxml.jackson.annotation.JsonEnumDefaultValue
+
+enum class IdentGruppe {
+    AKTORID,
+    FOLKEREGISTERIDENT,
+    NPID,
+
+    // En ny gruppe fra PDL skal ikke gi feil ved deserialisering og stoppe kjøringen.
+    @JsonEnumDefaultValue
+    UKJENT,
+}
 
 data class HentIdenterResponse(
-    val data: HentIdenterResponseData,
+    val data: HentIdenterResponseData?,
     val errors: List<ResponseError>?,
 )
 
@@ -24,8 +33,9 @@ data class HentIdenter(
 )
 
 data class PdlIdent(
-    val gruppe: String,
+    val gruppe: IdentGruppe,
     val ident: String,
+    val historisk: Boolean = false,
 )
 
 data class ErrorLocation(

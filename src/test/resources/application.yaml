@@ -7,6 +7,16 @@ spring:
     hikari:
       minimum-idle: 1
       maximum-pool-size: 3
+  data:
+    redis:
+      ssl.enabled: false
+      username: ${VALKEY_USERNAME_NARMESTELEDER_IDENTER}
+      password: ${VALKEY_PASSWORD_NARMESTELEDER_IDENTER}
+      host: ${VALKEY_HOST_NARMESTELEDER_IDENTER}
+      port: ${VALKEY_PORT_NARMESTELEDER_IDENTER}
+  cache:
+    redis:
+      time-to-live: 1h
 
 aiven-kafka:
   auto-offset-reset: earliest
@@ -35,5 +45,5 @@ no.nav.security.jwt:
           client-auth-method: client_secret_basic
 
 
-PDL_BASE_URL: "https://pdl-api.dev-fss-pub.nais.io"
 elector.path: dont_look_for_leader
+pdl.retry.delay: 10ms
