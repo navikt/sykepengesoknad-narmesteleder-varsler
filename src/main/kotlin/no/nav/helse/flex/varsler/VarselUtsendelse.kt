@@ -3,10 +3,13 @@ package no.nav.helse.flex.varsler
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tags
 import no.nav.doknotifikasjon.schemas.NotifikasjonMedkontaktInfo
+import no.nav.helse.flex.client.pdl.PdlGraphQlFeil
 import no.nav.helse.flex.dinesykmeldte.DineSykmeldteHendelse
 import no.nav.helse.flex.dinesykmeldte.FerdigstillHendelse
 import no.nav.helse.flex.dinesykmeldte.OPPGAVETYPE_IKKE_SENDT_SOKNAD
 import no.nav.helse.flex.dinesykmeldte.OpprettHendelse
+import no.nav.helse.flex.ident.FolkeregisterIdenter
+import no.nav.helse.flex.ident.IdentService
 import no.nav.helse.flex.kafka.DINE_SYKMELDTE_HENDELSER_TOPIC
 import no.nav.helse.flex.kafka.DOKNOTIFIKASJON_TOPIC
 import no.nav.helse.flex.logger
@@ -30,6 +33,7 @@ import java.time.OffsetDateTime
 class VarselUtsendelse(
     private val planlagtVarselRepository: PlanlagtVarselRepository,
     private val narmesteLederRepository: NarmesteLederRepository,
+    private val identService: IdentService,
     private val doknotifikasjonKafkaProducer: Producer<String, NotifikasjonMedkontaktInfo>,
     private val dineSykmeldteHendelserProducer: Producer<String, String>,
     private val registry: MeterRegistry,
@@ -51,8 +55,9 @@ class VarselUtsendelse(
                 )
                 return@forEach
             }
+            val identer = hentIdenterForOppslag(lestVarsel)
             val narmesteLedere =
-                narmesteLederRepository.findByBrukerFnrAndOrgnummer(lestVarsel.brukerFnr, lestVarsel.orgnummer)
+                narmesteLederRepository.findByBrukerFnrInAndOrgnummer(identer.alle(), lestVarsel.orgnummer)
 
             if (narmesteLedere.isEmpty()) {
                 log.info(
@@ -63,15 +68,15 @@ class VarselUtsendelse(
                 lagreMetrikk(INGEN_LEDER, lestVarsel.varselType)
                 return@forEach
             }
-            if (narmesteLedere.size != 1) {
-                throw RuntimeException(
-                    "Fant flere nærmeste ledere for planlagt varsel ${lestVarsel.id}:" +
-                        "${narmesteLedere.map { it.narmesteLederId }}.",
-                )
-            }
 
             // Sender e-post til nærmeste leder om at det finnes sykepengesøknader som ikke er sendt inn.
-            val narmesteLeder = narmesteLedere.first()
+            val narmesteLeder = velgNarmesteLeder(narmesteLedere, identer)
+            if (identer.gjeldende != null && narmesteLeder.brukerFnr != identer.gjeldende) {
+                log.warn(
+                    "Gjeldende ident har ingen nærmeste leder for planlagt varsel ${lestVarsel.id}. Bruker nærmeste " +
+                        "leder ${narmesteLeder.narmesteLederId}, som er registrert på en annen ident.",
+                )
+            }
             sendNotifikasjonTilNarmesteLeder(lestVarsel, narmesteLeder)
 
             // Oppretter oppgave i Dine Sykmeldte som gjør at ikke sendte søknader kan identifiseres.
@@ -144,12 +149,16 @@ class VarselUtsendelse(
     ): NotifikasjonMedkontaktInfo {
         val notifikasjon =
             when (planlagtVarsel.varselType) {
-                PlanlagtVarselType.SENDT_SYKEPENGESOKNAD -> skapSendtSøknadVarsel(planlagtVarsel.id!!, narmesteLeder)
-                PlanlagtVarselType.MANGLENDE_SYKEPENGESOKNAD ->
+                PlanlagtVarselType.SENDT_SYKEPENGESOKNAD -> {
+                    skapSendtSøknadVarsel(planlagtVarsel.id!!, narmesteLeder)
+                }
+
+                PlanlagtVarselType.MANGLENDE_SYKEPENGESOKNAD -> {
                     skapManglendeSøknadVarsel(
                         planlagtVarsel.id!!,
                         narmesteLeder,
                     )
+                }
             }
         return notifikasjon
     }
@@ -220,5 +229,35 @@ class VarselUtsendelse(
                     type.name,
                 ),
             ).increment()
+    }
+
+    private fun hentIdenterForOppslag(planlagtVarsel: PlanlagtVarsel): FolkeregisterIdenter {
+        val brukerFnr = planlagtVarsel.brukerFnr
+        val identer =
+            try {
+                identService.hentFolkeregisterIdenterMedHistorikkForFnr(brukerFnr)
+            } catch (e: PdlGraphQlFeil) {
+                if (e.koder.isEmpty() || !e.koder.all { it in PDL_FEILKODER_FOR_EN_PERSON }) {
+                    throw e
+                }
+                log.warn(
+                    "PDL fant ikke identer for planlagt varsel ${planlagtVarsel.id}. Koder: ${e.koder}. " +
+                        "Slår opp nærmeste leder med fnr fra varselet.",
+                )
+                return FolkeregisterIdenter.kunOriginal(brukerFnr)
+            }
+
+        if (!identer.originalIdentFunnet) {
+            log.warn(
+                "Svaret fra PDL inneholdt ikke fnr-et fra planlagt varsel ${planlagtVarsel.id}. " +
+                    "Slår opp nærmeste leder med fnr fra varselet.",
+            )
+            return FolkeregisterIdenter.kunOriginal(brukerFnr)
+        }
+        return identer
+    }
+
+    private companion object {
+        val PDL_FEILKODER_FOR_EN_PERSON = setOf("not_found", "bad_request")
     }
 }

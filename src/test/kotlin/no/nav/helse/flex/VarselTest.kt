@@ -132,7 +132,6 @@ class VarselTest : FellesTestOppsett() {
     @Test
     @Order(2)
     fun `Vi mottar en søknad med status SENDT og avbryter manglende søknad varsel og planlegger SENDT søknad varsel `() {
-        mockPdlResponse()
         planlagtVarselRepository.findBySykepengesoknadId(soknad.id).size shouldBe 1
         planlagteVarslerSomSendesFor(dager = 20).size shouldBe 1
         planlagteVarslerSomSendesFor(dager = 3).size shouldBe 0
@@ -163,7 +162,6 @@ class VarselTest : FellesTestOppsett() {
         avbruttVarsel.status shouldBe AVBRUTT
 
         planlagteVarslerSomSendesFor(dager = 3).size shouldBe 1
-        pdlMockServer?.reset()
     }
 
     @Test
@@ -291,7 +289,6 @@ class VarselTest : FellesTestOppsett() {
     @Test
     @Order(6)
     fun `Vi mottar en søknad med status SENDT og planlegger en NY søknad varsel som vi sender ut`() {
-        mockPdlResponse()
         planlagteVarslerSomSendesFor(dager = 20).size shouldBe 0
         val id = UUID.randomUUID().toString()
         val soknaden =
@@ -338,7 +335,6 @@ class VarselTest : FellesTestOppsett() {
         notifikasjon.getFodselsnummer() shouldBe "123456"
         notifikasjon.getEpostTekst() shouldBe SENDT_SYKEPENGESOKNAD_EPOST_TEKST
         notifikasjon.getTittel() shouldBe SENDT_SYKEPENGESOKNAD_TITTEL
-        pdlMockServer?.reset()
     }
 
     @Test

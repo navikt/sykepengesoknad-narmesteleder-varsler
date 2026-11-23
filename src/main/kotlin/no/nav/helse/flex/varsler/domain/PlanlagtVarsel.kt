@@ -1,9 +1,11 @@
 package no.nav.helse.flex.varsler.domain
 
 import org.springframework.data.annotation.Id
+import org.springframework.data.relational.core.mapping.Table
 import java.time.Instant
 import java.util.*
 
+@Table
 data class PlanlagtVarsel(
     @Id
     val id: String? = null,
